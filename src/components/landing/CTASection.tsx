@@ -43,7 +43,7 @@ export function CTASection() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button 
                   size="lg"
-                  className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6 h-auto font-semibold shadow-lg"
+                  className="bg-background text-primary hover:bg-background/90 text-lg px-8 py-6 h-auto font-semibold shadow-lg"
                 >
                   Зарегистрироваться
                   <ArrowRight className="ml-2 w-5 h-5" />
