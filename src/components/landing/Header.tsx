@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthDialog } from "./AuthDialog";
 
 const navLinks = [
   { label: "Преимущества", href: "#benefits" },
@@ -38,12 +39,14 @@ export function Header() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-              Войти
-            </Button>
-            <Button className="gradient-primary text-primary-foreground hover:opacity-90 glow-primary">
-              Регистрация
-            </Button>
+            <AuthDialog 
+              trigger={<Button variant="ghost" className="text-muted-foreground hover:text-foreground">Войти</Button>}
+              defaultTab="login"
+            />
+            <AuthDialog 
+              trigger={<Button className="gradient-primary text-primary-foreground hover:opacity-90 glow-primary">Регистрация</Button>}
+              defaultTab="register"
+            />
           </div>
 
           {/* Mobile Menu Button */}
@@ -70,12 +73,14 @@ export function Header() {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Button variant="ghost" className="justify-start text-muted-foreground">
-                  Войти
-                </Button>
-                <Button className="gradient-primary text-primary-foreground">
-                  Регистрация
-                </Button>
+                <AuthDialog 
+                  trigger={<Button variant="ghost" className="justify-start text-muted-foreground">Войти</Button>}
+                  defaultTab="login"
+                />
+                <AuthDialog 
+                  trigger={<Button className="gradient-primary text-primary-foreground">Регистрация</Button>}
+                  defaultTab="register"
+                />
               </div>
             </nav>
           </div>
