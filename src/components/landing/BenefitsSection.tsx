@@ -34,6 +34,21 @@ const benefits = [
   }
 ];
 
+function BenefitCard({ benefit, index }: { benefit: typeof benefits[number]; index: number }) {
+  return (
+    <div className="group glass rounded-2xl p-6 hover-glow transition-all duration-300">
+      <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center mb-5 group-hover:glow-primary transition-shadow">
+        <benefit.icon className="w-7 h-7 text-primary-foreground" />
+      </div>
+      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-sm font-bold text-muted-foreground mb-4">
+        {index + 1}
+      </div>
+      <h3 className="text-xl font-semibold text-foreground mb-3">{benefit.title}</h3>
+      <p className="text-muted-foreground leading-relaxed">{benefit.description}</p>
+    </div>
+  );
+}
+
 export function BenefitsSection() {
   return (
     <section id="benefits" className="py-20 relative">
@@ -52,33 +67,15 @@ export function BenefitsSection() {
           </p>
         </div>
 
-        {/* Benefits Grid */}
+        {/* Benefits - top row 3 cards, bottom row 2 centered */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {benefits.map((benefit, index) => (
-            <div
-              key={index}
-              className={`group glass rounded-2xl p-6 hover-glow transition-all duration-300 ${
-                index === 4 ? 'md:col-span-2 lg:col-span-1' : ''
-              }`}
-            >
-              {/* Icon */}
-              <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center mb-5 group-hover:glow-primary transition-shadow">
-                <benefit.icon className="w-7 h-7 text-primary-foreground" />
-              </div>
-
-              {/* Number Badge */}
-              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-sm font-bold text-muted-foreground mb-4">
-                {index + 1}
-              </div>
-
-              {/* Content */}
-              <h3 className="text-xl font-semibold text-foreground mb-3">
-                {benefit.title}
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {benefit.description}
-              </p>
-            </div>
+          {benefits.slice(0, 3).map((benefit, index) => (
+            <BenefitCard key={index} benefit={benefit} index={index} />
+          ))}
+        </div>
+        <div className="grid md:grid-cols-2 gap-6 mt-6 max-w-[calc(66.666%+0.75rem)] mx-auto">
+          {benefits.slice(3).map((benefit, index) => (
+            <BenefitCard key={index + 3} benefit={benefit} index={index + 3} />
           ))}
         </div>
       </div>
