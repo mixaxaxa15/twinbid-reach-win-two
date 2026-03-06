@@ -11,6 +11,8 @@ import DashboardCampaigns from "./pages/DashboardCampaigns";
 import DashboardStatistics from "./pages/DashboardStatistics";
 import DashboardBalance from "./pages/DashboardBalance";
 import DashboardSettings from "./pages/DashboardSettings";
+import CreateCampaign from "./pages/CreateCampaign";
+import EditCampaign from "./pages/EditCampaign";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />}>
             <Route index element={<DashboardOverview />} />
             <Route path="campaigns" element={<DashboardCampaigns />} />
+            <Route path="campaigns/create" element={<CreateCampaign />} />
+            <Route path="campaigns/:id/edit" element={<EditCampaign />} />
             <Route path="statistics" element={<DashboardStatistics />} />
             <Route path="balance" element={<DashboardBalance />} />
             <Route path="settings" element={<DashboardSettings />} />
