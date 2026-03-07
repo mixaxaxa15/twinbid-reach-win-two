@@ -14,24 +14,26 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface Campaign {
-  id: string; name: string; status: "active" | "paused" | "draft" | "completed";
+  id: string; name: string; status: "active" | "paused" | "draft" | "completed" | "moderation";
   format: string; budget: number; spent: number; impressions: number; clicks: number; ctr: number; cpm: number;
   startDate: string; endDate: string;
 }
 
 const initialCampaigns: Campaign[] = [
-  { id: "1", name: "Летняя распродажа 2024", status: "active", format: "Баннер", budget: 50000, spent: 23400, impressions: 45230, clicks: 2890, ctr: 6.39, cpm: 517, startDate: "2024-06-01", endDate: "2024-08-31" },
-  { id: "2", name: "Новая коллекция", status: "active", format: "Popunder", budget: 100000, spent: 67800, impressions: 89120, clicks: 5670, ctr: 6.36, cpm: 761, startDate: "2024-05-15", endDate: "2024-09-15" },
-  { id: "3", name: "Бренд-кампания", status: "paused", format: "Native", budget: 30000, spent: 15200, impressions: 28900, clicks: 1240, ctr: 4.29, cpm: 526, startDate: "2024-04-01", endDate: "2024-07-01" },
-  { id: "4", name: "Тестовая кампания", status: "draft", format: "In-page Push", budget: 25000, spent: 0, impressions: 0, clicks: 0, ctr: 0, cpm: 0, startDate: "", endDate: "" },
-  { id: "5", name: "Осенний запуск", status: "completed", format: "Баннер", budget: 75000, spent: 74200, impressions: 152000, clicks: 9120, ctr: 6.0, cpm: 488, startDate: "2024-09-01", endDate: "2024-11-30" },
+  { id: "10001", name: "Летняя распродажа 2024", status: "active", format: "Баннер", budget: 5000, spent: 2340, impressions: 45230, clicks: 2890, ctr: 6.39, cpm: 2.5, startDate: "2024-06-01", endDate: "2024-08-31" },
+  { id: "10002", name: "Новая коллекция", status: "active", format: "Popunder", budget: 10000, spent: 6780, impressions: 89120, clicks: 5670, ctr: 6.36, cpm: 3.1, startDate: "2024-05-15", endDate: "2024-09-15" },
+  { id: "10003", name: "Бренд-кампания", status: "paused", format: "Native", budget: 3000, spent: 1520, impressions: 28900, clicks: 1240, ctr: 4.29, cpm: 2.0, startDate: "2024-04-01", endDate: "2024-07-01" },
+  { id: "10004", name: "Тестовая кампания", status: "draft", format: "In-page Push", budget: 2500, spent: 0, impressions: 0, clicks: 0, ctr: 0, cpm: 1.8, startDate: "", endDate: "" },
+  { id: "10005", name: "Осенний запуск", status: "completed", format: "Баннер", budget: 7500, spent: 7420, impressions: 152000, clicks: 9120, ctr: 6.0, cpm: 2.2, startDate: "2024-09-01", endDate: "2024-11-30" },
+  { id: "10006", name: "Ретаргетинг Q1", status: "moderation", format: "Native", budget: 4000, spent: 0, impressions: 0, clicks: 0, ctr: 0, cpm: 2.8, startDate: "2025-01-01", endDate: "2025-03-31" },
 ];
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; className: string }> = {
   active: { label: "Активна", className: "bg-green-500/10 text-green-500 border-green-500/20" },
   paused: { label: "На паузе", className: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
   draft: { label: "Черновик", className: "bg-muted text-muted-foreground border-border" },
   completed: { label: "Завершена", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+  moderation: { label: "На модерации", className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
 };
 
 export default function DashboardCampaigns() {
@@ -42,7 +44,7 @@ export default function DashboardCampaigns() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const filtered = campaigns.filter((c) => {
-    const s = c.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const s = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.id.includes(searchQuery);
     const st = statusFilter === "all" || c.status === statusFilter;
     return s && st;
   });
@@ -58,7 +60,8 @@ export default function DashboardCampaigns() {
 
   const deleteCampaign = (id: string) => { setCampaigns((p) => p.filter((c) => c.id !== id)); toast.success("Кампания удалена"); };
   const duplicateCampaign = (c: Campaign) => {
-    setCampaigns((p) => [...p, { ...c, id: Date.now().toString(), name: `${c.name} (копия)`, status: "draft" as const, spent: 0, impressions: 0, clicks: 0, ctr: 0, cpm: 0 }]);
+    const newId = String(Math.max(...campaigns.map(x => parseInt(x.id))) + 1);
+    setCampaigns((p) => [...p, { ...c, id: newId, name: `${c.name} (копия)`, status: "draft" as const, spent: 0, impressions: 0, clicks: 0, ctr: 0 }]);
     toast.success("Кампания скопирована");
   };
 
@@ -78,7 +81,7 @@ export default function DashboardCampaigns() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Поиск по названию..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-background border-border" />
+            <Input placeholder="Поиск по названию или ID..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-background border-border" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px] bg-background border-border"><Filter className="h-4 w-4 mr-2" /><SelectValue placeholder="Все статусы" /></SelectTrigger>
@@ -87,6 +90,7 @@ export default function DashboardCampaigns() {
               <SelectItem value="active">Активные</SelectItem>
               <SelectItem value="paused">На паузе</SelectItem>
               <SelectItem value="draft">Черновики</SelectItem>
+              <SelectItem value="moderation">На модерации</SelectItem>
               <SelectItem value="completed">Завершённые</SelectItem>
             </SelectContent>
           </Select>
@@ -94,9 +98,9 @@ export default function DashboardCampaigns() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Всего</p><p className="text-2xl font-bold">{campaigns.length}</p></CardContent></Card>
-          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Активных</p><p className="text-2xl font-bold text-green-500">{campaigns.filter((c) => c.status === "active").length}</p></CardContent></Card>
-          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Бюджет</p><p className="text-2xl font-bold">{campaigns.reduce((s, c) => s + c.budget, 0).toLocaleString()} ₽</p></CardContent></Card>
-          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Потрачено</p><p className="text-2xl font-bold">{campaigns.reduce((s, c) => s + c.spent, 0).toLocaleString()} ₽</p></CardContent></Card>
+          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Активных</p><p className="text-2xl font-bold text-green-500">{campaigns.filter(c => c.status === "active").length}</p></CardContent></Card>
+          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Бюджет</p><p className="text-2xl font-bold">${campaigns.reduce((s, c) => s + c.budget, 0).toLocaleString()}</p></CardContent></Card>
+          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Потрачено</p><p className="text-2xl font-bold">${campaigns.reduce((s, c) => s + c.spent, 0).toLocaleString()}</p></CardContent></Card>
         </div>
 
         <Card className="bg-card border-border">
@@ -105,6 +109,7 @@ export default function DashboardCampaigns() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">ID</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Название</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Статус</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Формат</th>
@@ -118,11 +123,12 @@ export default function DashboardCampaigns() {
                 <tbody>
                   {filtered.map((campaign) => (
                     <tr key={campaign.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                      <td className="py-4 px-4 text-muted-foreground font-mono text-sm">{campaign.id}</td>
                       <td className="py-4 px-4 font-medium">{campaign.name}</td>
                       <td className="py-4 px-4"><Badge variant="outline" className={cn("font-normal", statusConfig[campaign.status].className)}>{statusConfig[campaign.status].label}</Badge></td>
                       <td className="py-4 px-4 text-muted-foreground">{campaign.format}</td>
-                      <td className="py-4 px-4 text-right">{campaign.budget.toLocaleString()} ₽</td>
-                      <td className="py-4 px-4 text-right">{campaign.spent.toLocaleString()} ₽</td>
+                      <td className="py-4 px-4 text-right">${campaign.budget.toLocaleString()}</td>
+                      <td className="py-4 px-4 text-right">${campaign.spent.toLocaleString()}</td>
                       <td className="py-4 px-4 text-right">{campaign.impressions.toLocaleString()}</td>
                       <td className="py-4 px-4 text-right">{campaign.ctr}%</td>
                       <td className="py-4 px-4 text-right">
@@ -135,7 +141,7 @@ export default function DashboardCampaigns() {
                             <DropdownMenuSeparator />
                             {campaign.status === "active" ? (
                               <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Pause className="h-4 w-4" /> Приостановить</DropdownMenuItem>
-                            ) : campaign.status !== "completed" ? (
+                            ) : campaign.status !== "completed" && campaign.status !== "moderation" ? (
                               <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Play className="h-4 w-4" /> Запустить</DropdownMenuItem>
                             ) : null}
                             <DropdownMenuItem className="gap-2 text-destructive" onClick={() => deleteCampaign(campaign.id)}><Trash2 className="h-4 w-4" /> Удалить</DropdownMenuItem>
@@ -144,7 +150,7 @@ export default function DashboardCampaigns() {
                       </td>
                     </tr>
                   ))}
-                  {filtered.length === 0 && <tr><td colSpan={8} className="py-12 text-center text-muted-foreground">Кампании не найдены</td></tr>}
+                  {filtered.length === 0 && <tr><td colSpan={9} className="py-12 text-center text-muted-foreground">Кампании не найдены</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -154,18 +160,18 @@ export default function DashboardCampaigns() {
 
       <Dialog open={!!viewCampaign} onOpenChange={() => setViewCampaign(null)}>
         <DialogContent className="sm:max-w-[600px] bg-card border-border">
-          <DialogHeader><DialogTitle>{viewCampaign?.name}</DialogTitle><DialogDescription>Детали кампании</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>{viewCampaign?.name}</DialogTitle><DialogDescription>ID: {viewCampaign?.id}</DialogDescription></DialogHeader>
           {viewCampaign && (
             <div className="grid grid-cols-2 gap-4 mt-4">
               {[
                 ["Статус", <Badge variant="outline" className={cn("font-normal", statusConfig[viewCampaign.status].className)}>{statusConfig[viewCampaign.status].label}</Badge>],
                 ["Формат", viewCampaign.format],
-                ["Бюджет", `${viewCampaign.budget.toLocaleString()} ₽`],
-                ["Потрачено", `${viewCampaign.spent.toLocaleString()} ₽`],
+                ["Бюджет", `$${viewCampaign.budget.toLocaleString()}`],
+                ["Потрачено", `$${viewCampaign.spent.toLocaleString()}`],
                 ["Показы", viewCampaign.impressions.toLocaleString()],
                 ["Клики", viewCampaign.clicks.toLocaleString()],
                 ["CTR", `${viewCampaign.ctr}%`],
-                ["CPM", `${viewCampaign.cpm} ₽`],
+                ["CPM", `$${viewCampaign.cpm}`],
               ].map(([label, val], i) => (
                 <div key={i} className="space-y-1"><p className="text-sm text-muted-foreground">{label as string}</p><div className="font-medium">{val}</div></div>
               ))}
