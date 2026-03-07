@@ -6,90 +6,136 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Plus, X, Save } from "lucide-react";
+import { ArrowLeft, Plus, X, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+
+type ListMode = "none" | "white" | "black";
+
+interface ListState {
+  mode: ListMode;
+  items: string[];
+  input: string;
+}
+
+const defaultList = (): ListState => ({ mode: "none", items: [], input: "" });
 
 export default function EditCampaign() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // General
+  // General — format is read-only
   const [name, setName] = useState("Летняя распродажа 2024");
-  const [adFormat, setAdFormat] = useState("banner");
+  const adFormat = "banner";
+  const formatLabel = "Баннер";
   const [description, setDescription] = useState("Кампания для продвижения летней коллекции");
-
-  // Targeting
-  const [geo, setGeo] = useState("russia");
-  const [ageFrom, setAgeFrom] = useState("18");
-  const [ageTo, setAgeTo] = useState("45");
-  const [device, setDevice] = useState("all");
+  const [link, setLink] = useState("https://example.com/landing");
+  const [imageUrl, setImageUrl] = useState("https://example.com/banner.jpg");
+  const [adText, setAdText] = useState("Скидки до 50% на всё!");
 
   // Budget
-  const [dailyBudget, setDailyBudget] = useState("5000");
-  const [totalBudget, setTotalBudget] = useState("150000");
+  const [totalBudget, setTotalBudget] = useState("5000");
+  const [dailyBudget, setDailyBudget] = useState("");
+  const [cpm, setCpm] = useState("2.50");
   const [startDate, setStartDate] = useState("2024-06-01");
   const [endDate, setEndDate] = useState("2024-08-31");
 
-  // Black/White lists
-  const [geoMode, setGeoMode] = useState<"none" | "white" | "black">("none");
-  const [geoItems, setGeoItems] = useState<string[]>([]);
-  const [geoInput, setGeoInput] = useState("");
+  // Targeting & Lists (unified)
+  const [lists, setLists] = useState<Record<string, ListState>>({
+    country: defaultList(),
+    city: defaultList(),
+    deviceType: defaultList(),
+    os: defaultList(),
+    osVersion: defaultList(),
+    browser: defaultList(),
+    dayOfWeek: defaultList(),
+    hour: defaultList(),
+    subid: defaultList(),
+    sites: defaultList(),
+  });
 
-  const [subidMode, setSubidMode] = useState<"none" | "white" | "black">("none");
-  const [subidItems, setSubidItems] = useState<string[]>([]);
-  const [subidInput, setSubidInput] = useState("");
-
-  const [deviceMode, setDeviceMode] = useState<"none" | "white" | "black">("none");
-  const [deviceItems, setDeviceItems] = useState<string[]>([]);
-  const [deviceInput, setDeviceInput] = useState("");
-
-  const addItem = (input: string, setInput: (v: string) => void, items: string[], setItems: (v: string[]) => void) => {
-    const t = input.trim();
-    if (t && !items.includes(t)) setItems([...items, t]);
-    setInput("");
+  const updateList = (key: string, updates: Partial<ListState>) => {
+    setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
   };
 
-  const ListSection = ({
-    label, mode, setMode, items, setItems, input, setInput, placeholder
-  }: {
-    label: string; mode: "none" | "white" | "black"; setMode: (v: any) => void;
-    items: string[]; setItems: (v: string[]) => void;
-    input: string; setInput: (v: string) => void; placeholder: string;
-  }) => (
-    <div className="space-y-3">
-      <Label>{label}</Label>
-      <div className="flex gap-2">
-        {(["none", "white", "black"] as const).map((m) => (
-          <Button key={m} type="button" size="sm"
-            variant={mode === m ? "default" : "outline"}
-            onClick={() => setMode(m)}
-            className={mode === m ? (m === "white" ? "bg-green-600 text-white" : m === "black" ? "bg-red-600 text-white" : "bg-primary text-primary-foreground") : "border-border"}>
-            {m === "none" ? "Нет" : m === "white" ? "Whitelist" : "Blacklist"}
-          </Button>
-        ))}
-      </div>
-      {mode !== "none" && (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder={placeholder} className="bg-background border-border flex-1"
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addItem(input, setInput, items, setItems))} />
-            <Button type="button" size="icon" variant="outline" onClick={() => addItem(input, setInput, items, setItems)} className="border-border"><Plus className="h-4 w-4" /></Button>
+  const addItem = (key: string) => {
+    const list = lists[key];
+    const t = list.input.trim();
+    if (t && !list.items.includes(t)) {
+      updateList(key, { items: [...list.items, t], input: "" });
+    } else {
+      updateList(key, { input: "" });
+    }
+  };
+
+  const removeItem = (key: string, item: string) => {
+    updateList(key, { items: lists[key].items.filter(i => i !== item) });
+  };
+
+  const targetingConfigs = [
+    { key: "country", label: "Страны", placeholder: "US, DE, BR..." },
+    { key: "city", label: "Города", placeholder: "New York, Berlin..." },
+    { key: "deviceType", label: "Тип устройства", placeholder: "Mobile, Desktop, Tablet..." },
+    { key: "os", label: "ОС", placeholder: "Android, iOS, Windows..." },
+    { key: "osVersion", label: "Версия ОС", placeholder: "Android 14, iOS 17..." },
+    { key: "browser", label: "Браузер", placeholder: "Chrome, Safari, Firefox..." },
+    { key: "dayOfWeek", label: "День недели", placeholder: "Mon, Tue, Wed..." },
+    { key: "hour", label: "Час показа", placeholder: "0, 1, 2, ... 23" },
+    { key: "subid", label: "SubID", placeholder: "sub_landing_1..." },
+    { key: "sites", label: "Сайты", placeholder: "example.com, site.net..." },
+  ];
+
+  const ListSection = ({ config }: { config: typeof targetingConfigs[0] }) => {
+    const list = lists[config.key];
+    return (
+      <div className="space-y-3 p-4 rounded-lg bg-background/50 border border-border/50">
+        <div className="flex items-center justify-between">
+          <Label className="font-medium">{config.label}</Label>
+          <div className="flex gap-1.5">
+            {(["none", "white", "black"] as const).map((m) => (
+              <Button key={m} type="button" size="sm" variant="outline"
+                onClick={() => updateList(config.key, { mode: m })}
+                className={
+                  list.mode === m
+                    ? m === "white" ? "bg-green-600 text-white border-green-600 hover:bg-green-700 hover:text-white" 
+                      : m === "black" ? "bg-red-600 text-white border-red-600 hover:bg-red-700 hover:text-white" 
+                      : "bg-primary text-primary-foreground border-primary"
+                    : "border-border"
+                }>
+                {m === "none" ? "Выкл" : m === "white" ? "White" : "Black"}
+              </Button>
+            ))}
           </div>
-          {items.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {items.map((item) => (
-                <Badge key={item} variant="outline" className="gap-1 border-border">
-                  {item}<X className="h-3 w-3 cursor-pointer" onClick={() => setItems(items.filter((i) => i !== item))} />
-                </Badge>
-              ))}
-            </div>
-          )}
         </div>
-      )}
-    </div>
-  );
+        {list.mode !== "none" && (
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Input value={list.input} onChange={(e) => updateList(config.key, { input: e.target.value })}
+                placeholder={config.placeholder} className="bg-background border-border flex-1"
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addItem(config.key))} />
+              <Button type="button" size="icon" variant="outline" onClick={() => addItem(config.key)} className="border-border">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {list.items.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {list.items.map((item) => (
+                  <Badge key={item} variant="outline" className={`gap-1 ${list.mode === "white" ? "border-green-500/30 text-green-400" : "border-red-500/30 text-red-400"}`}>
+                    {item}<X className="h-3 w-3 cursor-pointer" onClick={() => removeItem(config.key, item)} />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const handleSave = () => {
+    toast.success("Кампания сохранена и отправлена на модерацию");
+    navigate("/dashboard/campaigns");
+  };
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -103,11 +149,15 @@ export default function EditCampaign() {
         </div>
       </div>
 
+      <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+        <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0" />
+        <p className="text-sm text-yellow-500">После сохранения изменений кампания будет отправлена на модерацию</p>
+      </div>
+
       <Tabs defaultValue="general">
         <TabsList className="bg-card border border-border">
           <TabsTrigger value="general">Основное</TabsTrigger>
-          <TabsTrigger value="targeting">Таргетинг</TabsTrigger>
-          <TabsTrigger value="lists">Списки</TabsTrigger>
+          <TabsTrigger value="targeting">Таргетинг и списки</TabsTrigger>
           <TabsTrigger value="budget">Бюджет</TabsTrigger>
         </TabsList>
 
@@ -120,21 +170,24 @@ export default function EditCampaign() {
               </div>
               <div className="space-y-2">
                 <Label>Формат рекламы</Label>
-                <Select value={adFormat} onValueChange={setAdFormat}>
-                  <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    <SelectItem value="banner">Баннер</SelectItem>
-                    <SelectItem value="popunder">Popunder</SelectItem>
-                    <SelectItem value="native">Native</SelectItem>
-                    <SelectItem value="push">In-page Push</SelectItem>
-                    <SelectItem value="video">Видео (VAST)</SelectItem>
-                    <SelectItem value="ctv">CTV/OTT</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input value={formatLabel} disabled className="bg-muted border-border text-muted-foreground cursor-not-allowed" />
+                <p className="text-xs text-muted-foreground">Формат нельзя изменить после создания</p>
               </div>
               <div className="space-y-2">
-                <Label>Описание</Label>
-                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="bg-background border-border resize-none" rows={3} />
+                <Label>Ссылка</Label>
+                <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." className="bg-background border-border" />
+              </div>
+              <div className="space-y-2">
+                <Label>URL изображения</Label>
+                <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className="bg-background border-border" />
+              </div>
+              <div className="space-y-2">
+                <Label>Текст объявления</Label>
+                <Textarea value={adText} onChange={(e) => setAdText(e.target.value)} className="bg-background border-border resize-none" rows={3} />
+              </div>
+              <div className="space-y-2">
+                <Label>Описание (опционально)</Label>
+                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="bg-background border-border resize-none" rows={2} />
               </div>
             </CardContent>
           </Card>
@@ -142,65 +195,14 @@ export default function EditCampaign() {
 
         <TabsContent value="targeting">
           <Card className="bg-card border-border">
-            <CardContent className="space-y-5 pt-6">
-              <div className="space-y-2">
-                <Label>География</Label>
-                <Select value={geo} onValueChange={setGeo}>
-                  <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    <SelectItem value="russia">Россия</SelectItem>
-                    <SelectItem value="cis">СНГ</SelectItem>
-                    <SelectItem value="europe">Европа</SelectItem>
-                    <SelectItem value="usa">США</SelectItem>
-                    <SelectItem value="worldwide">Весь мир</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Возраст аудитории</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">От</Label>
-                    <Select value={ageFrom} onValueChange={setAgeFrom}>
-                      <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
-                      <SelectContent className="bg-card border-border">
-                        {[18, 25, 35, 45, 55].map((a) => <SelectItem key={a} value={a.toString()}>{a}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">До</Label>
-                    <Select value={ageTo} onValueChange={setAgeTo}>
-                      <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
-                      <SelectContent className="bg-card border-border">
-                        {[25, 35, 45, 55, 65].map((a) => <SelectItem key={a} value={a.toString()}>{a === 65 ? "65+" : String(a)}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Устройства</Label>
-                <Select value={device} onValueChange={setDevice}>
-                  <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    <SelectItem value="all">Все</SelectItem>
-                    <SelectItem value="mobile">Мобильные</SelectItem>
-                    <SelectItem value="desktop">Десктоп</SelectItem>
-                    <SelectItem value="tablet">Планшеты</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="lists">
-          <Card className="bg-card border-border">
-            <CardContent className="space-y-6 pt-6">
-              <ListSection label="Гео" mode={geoMode} setMode={setGeoMode} items={geoItems} setItems={setGeoItems} input={geoInput} setInput={setGeoInput} placeholder="RU, US, DE..." />
-              <ListSection label="SubID" mode={subidMode} setMode={setSubidMode} items={subidItems} setItems={setSubidItems} input={subidInput} setInput={setSubidInput} placeholder="sub_landing_1..." />
-              <ListSection label="Устройства" mode={deviceMode} setMode={setDeviceMode} items={deviceItems} setItems={setDeviceItems} input={deviceInput} setInput={setDeviceInput} placeholder="Android, iOS, Windows..." />
+            <CardHeader>
+              <CardTitle className="text-lg">Таргетинг и списки</CardTitle>
+              <p className="text-sm text-muted-foreground">Для каждого параметра выберите режим: Whitelist (только эти значения) или Blacklist (исключить эти значения)</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {targetingConfigs.map((config) => (
+                <ListSection key={config.key} config={config} />
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
@@ -209,20 +211,28 @@ export default function EditCampaign() {
           <Card className="bg-card border-border">
             <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
-                <Label>Дневной бюджет</Label>
-                <div className="relative">
-                  <Input type="number" value={dailyBudget} onChange={(e) => setDailyBudget(e.target.value)} className="bg-background border-border pr-8" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">₽</span>
+                <Label>Общий бюджет *</Label>
+                <div className="relative max-w-xs">
+                  <Input type="number" value={totalBudget} onChange={(e) => setTotalBudget(e.target.value)} className="bg-background border-border pr-8" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Обязательное поле</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Дневной бюджет (опционально)</Label>
+                <div className="relative max-w-xs">
+                  <Input type="number" value={dailyBudget} onChange={(e) => setDailyBudget(e.target.value)} placeholder="Без ограничений" className="bg-background border-border pr-8" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Общий бюджет</Label>
-                <div className="relative">
-                  <Input type="number" value={totalBudget} onChange={(e) => setTotalBudget(e.target.value)} className="bg-background border-border pr-8" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">₽</span>
+                <Label>CPM (стоимость за 1000 показов) *</Label>
+                <div className="relative max-w-xs">
+                  <Input type="number" step="0.01" value={cpm} onChange={(e) => setCpm(e.target.value)} placeholder="2.50" className="bg-background border-border pr-8" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 max-w-md">
                 <div className="space-y-2">
                   <Label>Дата начала</Label>
                   <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-background border-border" />
@@ -237,8 +247,8 @@ export default function EditCampaign() {
         </TabsContent>
       </Tabs>
 
-      <Button onClick={() => { toast.success("Кампания сохранена"); navigate("/dashboard/campaigns"); }} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-        <Save className="h-4 w-4 mr-2" /> Сохранить
+      <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Save className="h-4 w-4 mr-2" /> Сохранить и отправить на модерацию
       </Button>
     </div>
   );

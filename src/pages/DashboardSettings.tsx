@@ -12,13 +12,10 @@ import { toast } from "sonner";
 
 export default function DashboardSettings() {
   const [profile, setProfile] = useState({
-    company: "ООО «Компания»",
-    email: "info@company.ru",
-    phone: "+7 (999) 123-45-67",
-    website: "https://company.ru",
-    contactName: "Иван Иванов",
-    inn: "7712345678",
-    timezone: "europe_moscow",
+    email: "user@example.com",
+    contactName: "John Doe",
+    telegram: "@gregtwinbid",
+    timezone: "utc_0",
   });
 
   const [notifications, setNotifications] = useState({
@@ -27,7 +24,7 @@ export default function DashboardSettings() {
     emailReport: false,
     pushCampaign: true,
     pushBalance: true,
-    balanceThreshold: "5000",
+    balanceThreshold: "100",
   });
 
   const handleSave = () => toast.success("Настройки сохранены");
@@ -49,46 +46,37 @@ export default function DashboardSettings() {
 
         <TabsContent value="profile">
           <Card className="bg-card border-border">
-            <CardHeader><CardTitle className="text-lg">Информация о компании</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">Профиль</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Название компании</Label>
-                  <Input value={profile.company} onChange={(e) => setProfile({ ...profile, company: e.target.value })} className="bg-background border-border" />
-                </div>
-                <div className="space-y-2">
-                  <Label>ИНН</Label>
-                  <Input value={profile.inn} onChange={(e) => setProfile({ ...profile, inn: e.target.value })} className="bg-background border-border" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Контактное лицо</Label>
+                  <Label>Имя</Label>
                   <Input value={profile.contactName} onChange={(e) => setProfile({ ...profile, contactName: e.target.value })} className="bg-background border-border" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Телефон</Label>
-                  <Input value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
                   <Label>Email</Label>
                   <Input value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Сайт</Label>
-                  <Input value={profile.website} onChange={(e) => setProfile({ ...profile, website: e.target.value })} className="bg-background border-border" />
+                  <Label>Telegram (опционально)</Label>
+                  <Input value={profile.telegram} onChange={(e) => setProfile({ ...profile, telegram: e.target.value })} placeholder="@username" className="bg-background border-border" />
                 </div>
-              </div>
-              <div className="space-y-2 max-w-xs">
-                <Label>Часовой пояс</Label>
-                <Select value={profile.timezone} onValueChange={(v) => setProfile({ ...profile, timezone: v })}>
-                  <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    <SelectItem value="europe_moscow">Москва (UTC+3)</SelectItem>
-                    <SelectItem value="europe_samara">Самара (UTC+4)</SelectItem>
-                    <SelectItem value="asia_yekaterinburg">Екатеринбург (UTC+5)</SelectItem>
-                    <SelectItem value="asia_novosibirsk">Новосибирск (UTC+7)</SelectItem>
-                    <SelectItem value="asia_vladivostok">Владивосток (UTC+10)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label>Часовой пояс</Label>
+                  <Select value={profile.timezone} onValueChange={(v) => setProfile({ ...profile, timezone: v })}>
+                    <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      <SelectItem value="utc_m5">UTC-5 (EST)</SelectItem>
+                      <SelectItem value="utc_0">UTC+0 (GMT)</SelectItem>
+                      <SelectItem value="utc_1">UTC+1 (CET)</SelectItem>
+                      <SelectItem value="utc_2">UTC+2 (EET)</SelectItem>
+                      <SelectItem value="utc_3">UTC+3 (MSK)</SelectItem>
+                      <SelectItem value="utc_5_30">UTC+5:30 (IST)</SelectItem>
+                      <SelectItem value="utc_8">UTC+8 (CST)</SelectItem>
+                      <SelectItem value="utc_9">UTC+9 (JST)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />Сохранить</Button>
             </CardContent>
@@ -108,10 +96,7 @@ export default function DashboardSettings() {
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between">
                     <Label>{item.label}</Label>
-                    <Switch
-                      checked={notifications[item.key]}
-                      onCheckedChange={(c) => setNotifications({ ...notifications, [item.key]: c })}
-                    />
+                    <Switch checked={notifications[item.key]} onCheckedChange={(c) => setNotifications({ ...notifications, [item.key]: c })} />
                   </div>
                 ))}
               </div>
@@ -124,10 +109,7 @@ export default function DashboardSettings() {
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between">
                     <Label>{item.label}</Label>
-                    <Switch
-                      checked={notifications[item.key]}
-                      onCheckedChange={(c) => setNotifications({ ...notifications, [item.key]: c })}
-                    />
+                    <Switch checked={notifications[item.key]} onCheckedChange={(c) => setNotifications({ ...notifications, [item.key]: c })} />
                   </div>
                 ))}
               </div>
@@ -135,12 +117,8 @@ export default function DashboardSettings() {
               <div className="space-y-2 max-w-xs">
                 <Label>Порог баланса для уведомления</Label>
                 <div className="relative">
-                  <Input
-                    value={notifications.balanceThreshold}
-                    onChange={(e) => setNotifications({ ...notifications, balanceThreshold: e.target.value })}
-                    className="bg-background border-border pr-8"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">₽</span>
+                  <Input value={notifications.balanceThreshold} onChange={(e) => setNotifications({ ...notifications, balanceThreshold: e.target.value })} className="bg-background border-border pr-8" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                 </div>
               </div>
               <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />Сохранить</Button>
@@ -198,11 +176,6 @@ export default function DashboardSettings() {
                 <Label>Postback URL</Label>
                 <Input placeholder="https://your-tracker.com/postback?click_id={click_id}" className="bg-background border-border max-w-lg" />
                 <p className="text-xs text-muted-foreground">URL для отправки конверсий в вашу трекинг-систему</p>
-              </div>
-              <div className="space-y-2">
-                <Label>S2S Tracking</Label>
-                <Input placeholder="https://your-tracker.com/impression?campaign_id={campaign_id}" className="bg-background border-border max-w-lg" />
-                <p className="text-xs text-muted-foreground">Server-to-server трекинг показов</p>
               </div>
               <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />Сохранить</Button>
             </CardContent>

@@ -48,13 +48,19 @@ export function CTASection() {
                   Зарегистрироваться
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-                <Button 
-                  size="lg"
-                  variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6 h-auto bg-transparent"
+                <a 
+                  href="https://t.me/GregTwinbid"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  Связаться с нами
-                </Button>
+                  <Button 
+                    size="lg"
+                    variant="outline"
+                    className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6 h-auto bg-transparent"
+                  >
+                    Связаться с нами
+                  </Button>
+                </a>
               </div>
 
               {/* Trust Indicators */}
