@@ -203,8 +203,8 @@ export default function DashboardStatistics() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-6">
-        <div className="space-y-3">
-          <label className="text-sm text-muted-foreground font-medium">Кампании</label>
+        <div className="flex flex-col gap-2">
+          <label className="text-base text-muted-foreground font-medium mb-1">Кампании</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
@@ -229,8 +229,8 @@ export default function DashboardStatistics() {
           </Popover>
         </div>
 
-        <div className="space-y-3">
-          <label className="text-sm text-muted-foreground font-medium">Период</label>
+        <div className="flex flex-col gap-2">
+          <label className="text-base text-muted-foreground font-medium mb-1">Период</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
