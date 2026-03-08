@@ -29,7 +29,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
 export default function DashboardCampaigns() {
   const navigate = useNavigate();
-  const { campaigns, updateCampaign, deleteCampaign: ctxDelete } = useCampaigns();
+  const { campaigns, updateCampaign, deleteCampaign: ctxDelete, addCampaign } = useCampaigns();
   const [viewCampaign, setViewCampaign] = useState<Campaign | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
