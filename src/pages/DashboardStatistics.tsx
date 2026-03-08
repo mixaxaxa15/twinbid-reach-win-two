@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, MousePointer, Target, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowUpDown, CalendarIcon, RefreshCw } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { format } from "date-fns";
+import { format, parse, isWithinInterval, startOfDay } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -16,67 +16,69 @@ type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices";
 type SortKey = "label" | "impressions" | "clicks" | "spent";
 type SortDir = "asc" | "desc";
 
-const generateDateData = () => [
-  { label: "01.03.2026", impressions: 4200, clicks: 280, spent: 2100 },
-  { label: "02.03.2026", impressions: 5100, clicks: 340, spent: 2550 },
-  { label: "03.03.2026", impressions: 3800, clicks: 250, spent: 1900 },
-  { label: "04.03.2026", impressions: 6200, clicks: 410, spent: 3100 },
-  { label: "05.03.2026", impressions: 5800, clicks: 380, spent: 2900 },
-  { label: "06.03.2026", impressions: 7100, clicks: 470, spent: 3550 },
-  { label: "07.03.2026", impressions: 4900, clicks: 320, spent: 2450 },
-  { label: "08.03.2026", impressions: 5500, clicks: 360, spent: 2750 },
-];
+// Deterministic pseudo-random based on seed string
+function seedRandom(seed: string) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) { h = Math.imul(31, h) + seed.charCodeAt(i) | 0; }
+  return () => { h = Math.imul(h ^ (h >>> 16), 0x45d9f3b); h = Math.imul(h ^ (h >>> 13), 0x45d9f3b); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+}
 
-const generateHourData = () =>
-  Array.from({ length: 24 }, (_, i) => ({
-    label: `${String(i).padStart(2, "0")}:00`,
-    impressions: Math.floor(Math.random() * 5000) + 1000,
-    clicks: Math.floor(Math.random() * 400) + 50,
-    spent: Math.floor(Math.random() * 3000) + 500,
+function getCampaignData(campaignId: string, groupBy: GroupBy): { label: string; impressions: number; clicks: number; spent: number }[] {
+  const rng = seedRandom(campaignId + groupBy);
+  const r = (min: number, max: number) => Math.floor(rng() * (max - min)) + min;
+
+  if (groupBy === "dates") {
+    return Array.from({ length: 8 }, (_, i) => ({
+      label: String(i + 1).padStart(2, "0") + ".03.2026",
+      impressions: r(1000, 8000),
+      clicks: r(50, 500),
+      spent: r(500, 4000),
+    }));
+  }
+  if (groupBy === "hours") {
+    return Array.from({ length: 24 }, (_, i) => ({
+      label: `${String(i).padStart(2, "0")}:00`,
+      impressions: r(500, 5000),
+      clicks: r(30, 400),
+      spent: r(200, 3000),
+    }));
+  }
+  if (groupBy === "browsers") {
+    return ["Chrome", "Safari", "Firefox", "Edge", "Opera", "Samsung Internet", "Другие"].map(b => ({
+      label: b, impressions: r(2000, 50000), clicks: r(100, 3500), spent: r(800, 18000),
+    }));
+  }
+  if (groupBy === "siteid") {
+    return ["site_landing_1", "site_banner_top", "site_video_pre", "site_native_feed", "site_push_main", "site_pop_exit"].map(s => ({
+      label: s, impressions: r(5000, 25000), clicks: r(300, 1500), spent: r(1500, 8000),
+    }));
+  }
+  return ["Mobile (Android)", "Mobile (iOS)", "Desktop (Windows)", "Desktop (macOS)", "Tablet", "Smart TV"].map(d => ({
+    label: d, impressions: r(1000, 40000), clicks: r(50, 2500), spent: r(400, 14000),
   }));
+}
 
-const generateBrowserData = () => [
-  { label: "Chrome", impressions: 52000, clicks: 3400, spent: 18200 },
-  { label: "Safari", impressions: 28000, clicks: 1800, spent: 9800 },
-  { label: "Firefox", impressions: 15000, clicks: 980, spent: 5200 },
-  { label: "Edge", impressions: 12000, clicks: 750, spent: 4100 },
-  { label: "Opera", impressions: 8500, clicks: 520, spent: 2900 },
-  { label: "Samsung Internet", impressions: 5200, clicks: 310, spent: 1800 },
-  { label: "Другие", impressions: 3100, clicks: 174, spent: 1230 },
-];
-
-const generateSiteIdData = () => [
-  { label: "site_landing_1", impressions: 18000, clicks: 1200, spent: 6300 },
-  { label: "site_banner_top", impressions: 14500, clicks: 950, spent: 5100 },
-  { label: "site_video_pre", impressions: 22000, clicks: 1400, spent: 7700 },
-  { label: "site_native_feed", impressions: 11200, clicks: 680, spent: 3900 },
-  { label: "site_push_main", impressions: 9800, clicks: 620, spent: 3400 },
-  { label: "site_pop_exit", impressions: 15800, clicks: 890, spent: 5500 },
-];
-
-const generateDeviceData = () => [
-  { label: "Mobile (Android)", impressions: 38000, clicks: 2500, spent: 13300 },
-  { label: "Mobile (iOS)", impressions: 29000, clicks: 1900, spent: 10200 },
-  { label: "Desktop (Windows)", impressions: 25000, clicks: 1700, spent: 8800 },
-  { label: "Desktop (macOS)", impressions: 14000, clicks: 920, spent: 4900 },
-  { label: "Tablet", impressions: 8500, clicks: 520, spent: 2900 },
-  { label: "Smart TV", impressions: 2300, clicks: 94, spent: 810 },
-];
-
-const dataGenerators: Record<GroupBy, () => { label: string; impressions: number; clicks: number; spent: number }[]> = {
-  dates: generateDateData, hours: generateHourData, browsers: generateBrowserData, siteid: generateSiteIdData, devices: generateDeviceData,
-};
+// Merge data from multiple campaigns by summing values per label
+function mergeData(datasets: { label: string; impressions: number; clicks: number; spent: number }[][]) {
+  const map = new Map<string, { label: string; impressions: number; clicks: number; spent: number }>();
+  for (const ds of datasets) {
+    for (const row of ds) {
+      const existing = map.get(row.label);
+      if (existing) {
+        existing.impressions += row.impressions;
+        existing.clicks += row.clicks;
+        existing.spent += row.spent;
+      } else {
+        map.set(row.label, { ...row });
+      }
+    }
+  }
+  return Array.from(map.values());
+}
 
 const groupLabels: Record<GroupBy, string> = {
   dates: "По датам", hours: "По часам", browsers: "По браузерам", siteid: "По SiteID", devices: "По устройствам",
 };
-
-const metrics = [
-  { label: "Показы", value: "124,892", change: "+12.5%", up: true, icon: Eye },
-  { label: "Клики", value: "8,234", change: "+8.2%", up: true, icon: MousePointer },
-  { label: "CTR", value: "6.59%", change: "+2.1%", up: true, icon: Target },
-  { label: "Расход", value: "$48,230", change: "-3.4%", up: false, icon: TrendingUp },
-];
 
 export default function DashboardStatistics() {
   const { campaigns } = useCampaigns();
@@ -85,35 +87,65 @@ export default function DashboardStatistics() {
   const [sortKey, setSortKey] = useState<SortKey>("label");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [clickCount, setClickCount] = useState(0); // track clicks for range logic
-  const [data, setData] = useState<{ label: string; impressions: number; clicks: number; spent: number }[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
   const [needsRefresh, setNeedsRefresh] = useState(true);
 
-  // Auto-load data when grouping changes (no refresh button needed)
-  useEffect(() => {
-    const newData = dataGenerators[groupBy]();
-    setData(newData);
-    setIsLoaded(true);
-    if (groupBy === "dates") {
-      setSortKey("label");
-      setSortDir("desc");
-    } else if (groupBy === "hours") {
-      setSortKey("label");
-      setSortDir("asc");
-    } else {
-      setSortKey("impressions");
-      setSortDir("desc");
+  // Get active campaign ids for data generation
+  const activeCampaigns = useMemo(() =>
+    campaigns.filter(c => c.status === "active" || c.status === "completed" || c.status === "paused"),
+    [campaigns]
+  );
+
+  // Compute filtered data based on selected campaigns and date range
+  const data = useMemo(() => {
+    const ids = selectedCampaignIds.has("all")
+      ? activeCampaigns.map(c => c.id)
+      : Array.from(selectedCampaignIds);
+
+    // If no campaigns, use a default seed
+    const campaignIds = ids.length > 0 ? ids : ["_default"];
+    const datasets = campaignIds.map(id => getCampaignData(id, groupBy));
+    let merged = mergeData(datasets);
+
+    // Filter by date range when groupBy is "dates" and range is set
+    if (groupBy === "dates" && dateRange?.from) {
+      const from = startOfDay(dateRange.from);
+      const to = dateRange.to ? startOfDay(dateRange.to) : from;
+      merged = merged.filter(row => {
+        const d = parse(row.label, "dd.MM.yyyy", new Date());
+        return isWithinInterval(d, { start: from, end: to });
+      });
     }
+
+    return merged;
+  }, [selectedCampaignIds, activeCampaigns, groupBy, dateRange]);
+
+  // Compute metric cards from current data
+  const metricCards = useMemo(() => {
+    const totalImpressions = data.reduce((s, r) => s + r.impressions, 0);
+    const totalClicks = data.reduce((s, r) => s + r.clicks, 0);
+    const totalSpent = data.reduce((s, r) => s + r.spent, 0);
+    const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
+
+    return [
+      { label: "Показы", value: totalImpressions.toLocaleString(), change: "+12.5%", up: true, icon: Eye },
+      { label: "Клики", value: totalClicks.toLocaleString(), change: "+8.2%", up: true, icon: MousePointer },
+      { label: "CTR", value: `${ctr}%`, change: "+2.1%", up: true, icon: Target },
+      { label: "Расход", value: `$${totalSpent.toLocaleString()}`, change: "-3.4%", up: false, icon: TrendingUp },
+    ];
+  }, [data]);
+
+  // Reset sort when groupBy changes
+  useEffect(() => {
+    if (groupBy === "dates") { setSortKey("label"); setSortDir("desc"); }
+    else if (groupBy === "hours") { setSortKey("label"); setSortDir("asc"); }
+    else { setSortKey("impressions"); setSortDir("desc"); }
   }, [groupBy]);
 
   const handleRefresh = useCallback(() => {
-    const newData = dataGenerators[groupBy]();
-    setData(newData);
-    setIsLoaded(true);
     setNeedsRefresh(false);
     toast.success("Статистика обновлена");
-  }, [groupBy]);
+  }, []);
 
   const handleCampaignChange = (id: string) => {
     setSelectedCampaignIds(prev => {
@@ -131,15 +163,11 @@ export default function DashboardStatistics() {
   };
 
   const handleDateChange = (range: DateRange | undefined) => {
-    // Custom logic: 1st click = start, 2nd click = end, 3rd click = reset & new start
     if (!range) return;
-    
     if (clickCount === 0) {
-      // First click — set as start only, clear any previous
       setDateRange({ from: range.from, to: undefined });
       setClickCount(1);
     } else if (clickCount === 1) {
-      // Second click — set end
       if (range.from && range.to) {
         setDateRange(range);
       } else if (range.from) {
@@ -148,28 +176,24 @@ export default function DashboardStatistics() {
       setClickCount(2);
       setNeedsRefresh(true);
     } else {
-      // Third+ click — reset, new start
       setDateRange({ from: range.from || range.to, to: undefined });
       setClickCount(1);
     }
   };
 
-  // Chart data always sorted asc by label (never changes with table sort)
   const chartData = useMemo(() => {
-    if (!isLoaded || groupBy !== "dates") return [];
+    if (groupBy !== "dates") return [];
     return [...data].sort((a, b) => a.label.localeCompare(b.label));
-  }, [data, isLoaded, groupBy]);
+  }, [data, groupBy]);
 
-  // Table data sorted by user selection
   const sortedData = useMemo(() => {
-    if (!isLoaded) return [];
     return [...data].sort((a, b) => {
       if (sortKey === "label") {
         return sortDir === "asc" ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label);
       }
       return sortDir === "desc" ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey];
     });
-  }, [data, sortKey, sortDir, isLoaded]);
+  }, [data, sortKey, sortDir]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === "desc" ? "asc" : "desc");
@@ -191,7 +215,7 @@ export default function DashboardStatistics() {
 
   const campaignOptions = [
     { id: "all", name: "Все кампании" },
-    ...campaigns.filter(c => c.status === "active" || c.status === "completed" || c.status === "paused"),
+    ...activeCampaigns,
   ];
 
   return (
@@ -263,7 +287,7 @@ export default function DashboardStatistics() {
 
       {/* Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((m) => (
+        {metricCards.map((m) => (
           <Card key={m.label} className="bg-card border-border">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-2">
@@ -280,8 +304,8 @@ export default function DashboardStatistics() {
         ))}
       </div>
 
-      {/* Chart — always sorted asc for dates */}
-      {isLoaded && groupBy === "dates" && chartData.length > 0 && (
+      {/* Chart */}
+      {groupBy === "dates" && chartData.length > 0 && (
         <Card className="bg-card border-border">
           <CardHeader><CardTitle className="text-lg">Динамика показов</CardTitle></CardHeader>
           <CardContent>
@@ -323,10 +347,9 @@ export default function DashboardStatistics() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {!isLoaded ? (
+          {data.length === 0 ? (
             <div className="py-16 text-center text-muted-foreground">
-              <RefreshCw className="h-8 w-8 mx-auto mb-3 opacity-30" />
-              <p>Загрузка данных...</p>
+              <p>Нет данных для выбранных фильтров</p>
             </div>
           ) : (
             <div className="overflow-x-auto overflow-y-hidden">

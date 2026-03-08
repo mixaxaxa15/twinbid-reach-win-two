@@ -1,5 +1,6 @@
 import { Gift, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthDialog } from "./AuthDialog";
 
 export function StartConditions() {
   return (
@@ -44,9 +45,14 @@ export function StartConditions() {
                     <p className="text-muted-foreground mb-6">
                       бюджета на первое пополнение — зарегистрируйтесь и получите уже сегодня дополнительные средства на тесты.
                     </p>
-                    <Button className="w-full gradient-primary text-primary-foreground hover:opacity-90 glow-primary">
-                      Получить бонус
-                    </Button>
+                    <AuthDialog
+                      defaultTab="register"
+                      trigger={
+                        <Button className="w-full gradient-primary text-primary-foreground hover:opacity-90 glow-primary">
+                          Получить бонус
+                        </Button>
+                      }
+                    />
                   </div>
                   
                   {/* Decorative Glow */}

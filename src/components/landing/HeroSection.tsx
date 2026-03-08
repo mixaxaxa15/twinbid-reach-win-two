@@ -44,13 +44,18 @@ export function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 animate-fade-in">
-            <Button 
-              size="lg" 
-              className="gradient-primary text-primary-foreground hover:opacity-90 glow-primary text-lg px-8 py-6 h-auto"
-            >
-              Зарегистрироваться
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
+            <AuthDialog
+              defaultTab="register"
+              trigger={
+                <Button 
+                  size="lg" 
+                  className="gradient-primary text-primary-foreground hover:opacity-90 glow-primary text-lg px-8 py-6 h-auto"
+                >
+                  Зарегистрироваться
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              }
+            />
             <Button 
               size="lg" 
               variant="outline" 
