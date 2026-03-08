@@ -94,6 +94,17 @@ export default function DashboardBalance() {
     }
   };
 
+  const handleCancelPayment = () => {
+    setShowTxDialog(false);
+    setPendingPayment(null);
+    setTxHash("");
+    if (pendingNotificationId) {
+      removeNotification(pendingNotificationId);
+      setPendingNotificationId(null);
+    }
+    toast.info("Оплата отменена");
+  };
+
   const handleCloseTxDialog = (open: boolean) => {
     if (!open && pendingPayment && !txHash.trim()) {
       setShowTxDialog(false);
