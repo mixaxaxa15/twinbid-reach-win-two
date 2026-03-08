@@ -85,6 +85,7 @@ export default function DashboardStatistics() {
   const [sortKey, setSortKey] = useState<SortKey>("label");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [clickCount, setClickCount] = useState(0); // track clicks for range logic
   const [data, setData] = useState<{ label: string; impressions: number; clicks: number; spent: number }[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [needsRefresh, setNeedsRefresh] = useState(true);
@@ -130,8 +131,27 @@ export default function DashboardStatistics() {
   };
 
   const handleDateChange = (range: DateRange | undefined) => {
-    setDateRange(range);
-    setNeedsRefresh(true);
+    // Custom logic: 1st click = start, 2nd click = end, 3rd click = reset & new start
+    if (!range) return;
+    
+    if (clickCount === 0) {
+      // First click — set as start only, clear any previous
+      setDateRange({ from: range.from, to: undefined });
+      setClickCount(1);
+    } else if (clickCount === 1) {
+      // Second click — set end
+      if (range.from && range.to) {
+        setDateRange(range);
+      } else if (range.from) {
+        setDateRange({ from: dateRange?.from, to: range.from });
+      }
+      setClickCount(2);
+      setNeedsRefresh(true);
+    } else {
+      // Third+ click — reset, new start
+      setDateRange({ from: range.from || range.to, to: undefined });
+      setClickCount(1);
+    }
   };
 
   // Chart data always sorted asc by label (never changes with table sort)
@@ -182,9 +202,9 @@ export default function DashboardStatistics() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-2">
-          <label className="text-xs text-muted-foreground font-medium">Кампании</label>
+      <div className="flex flex-wrap items-end gap-6">
+        <div className="space-y-3">
+          <label className="text-sm text-muted-foreground font-medium">Кампании</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
@@ -209,8 +229,8 @@ export default function DashboardStatistics() {
           </Popover>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-xs text-muted-foreground font-medium">Период</label>
+        <div className="space-y-3">
+          <label className="text-sm text-muted-foreground font-medium">Период</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
@@ -309,7 +329,7 @@ export default function DashboardStatistics() {
               <p>Загрузка данных...</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overflow-y-hidden">
               <table className="w-full table-fixed">
                 <thead>
                   <tr className="border-b border-border">
