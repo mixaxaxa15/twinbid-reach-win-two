@@ -84,20 +84,16 @@ export default function DashboardStatistics() {
   const [groupBy, setGroupBy] = useState<GroupBy>("dates");
   const [sortKey, setSortKey] = useState<SortKey>("label");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: new Date(),
-  });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [data, setData] = useState<{ label: string; impressions: number; clicks: number; spent: number }[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [needsRefresh, setNeedsRefresh] = useState(true);
 
-  // Auto-load data when grouping changes
+  // Auto-load data when grouping changes (no refresh button needed)
   useEffect(() => {
     const newData = dataGenerators[groupBy]();
     setData(newData);
     setIsLoaded(true);
-    // Reset sort for dates
     if (groupBy === "dates") {
       setSortKey("label");
       setSortDir("desc");
@@ -118,7 +114,6 @@ export default function DashboardStatistics() {
     toast.success("Статистика обновлена");
   }, [groupBy]);
 
-  // Mark refresh needed when campaign/period changes
   const handleCampaignChange = (id: string) => {
     setSelectedCampaignIds(prev => {
       const next = new Set(prev);
@@ -139,7 +134,7 @@ export default function DashboardStatistics() {
     setNeedsRefresh(true);
   };
 
-  // Chart data always sorted asc by label (for dates)
+  // Chart data always sorted asc by label (never changes with table sort)
   const chartData = useMemo(() => {
     if (!isLoaded || groupBy !== "dates") return [];
     return [...data].sort((a, b) => a.label.localeCompare(b.label));
@@ -162,7 +157,7 @@ export default function DashboardStatistics() {
   };
 
   const SortIcon = ({ col }: { col: SortKey }) => (
-    <ArrowUpDown className={cn("h-3 w-3 ml-1 inline", sortKey === col ? "text-primary" : "text-muted-foreground")} />
+    <ArrowUpDown className={cn("h-3 w-3 ml-1 inline shrink-0", sortKey === col ? "text-primary" : "text-muted-foreground")} />
   );
 
   const totals = useMemo(() => ({
@@ -187,8 +182,8 @@ export default function DashboardStatistics() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="space-y-1">
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="space-y-2">
           <label className="text-xs text-muted-foreground font-medium">Кампании</label>
           <Popover>
             <PopoverTrigger asChild>
@@ -214,7 +209,7 @@ export default function DashboardStatistics() {
           </Popover>
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-2">
           <label className="text-xs text-muted-foreground font-medium">Период</label>
           <Popover>
             <PopoverTrigger asChild>
@@ -253,11 +248,11 @@ export default function DashboardStatistics() {
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground">{m.label}</p>
-                <m.icon className="h-4 w-4 text-muted-foreground" />
+                <m.icon className="h-4 w-4 text-muted-foreground shrink-0" />
               </div>
               <p className="text-2xl font-bold">{m.value}</p>
               <div className="flex items-center gap-1 mt-1">
-                {m.up ? <ArrowUpRight className="h-3 w-3 text-green-500" /> : <ArrowDownRight className="h-3 w-3 text-accent" />}
+                {m.up ? <ArrowUpRight className="h-3 w-3 text-green-500 shrink-0" /> : <ArrowDownRight className="h-3 w-3 text-accent shrink-0" />}
                 <span className={`text-xs ${m.up ? "text-green-500" : "text-accent"}`}>{m.change}</span>
               </div>
             </CardContent>
@@ -298,7 +293,10 @@ export default function DashboardStatistics() {
             {(Object.keys(groupLabels) as GroupBy[]).map((g) => (
               <Button key={g} variant={groupBy === g ? "default" : "outline"} size="sm"
                 onClick={() => setGroupBy(g)}
-                className={groupBy === g ? "bg-primary text-primary-foreground" : "border-border"}>
+                className={cn(
+                  "min-w-[100px]",
+                  groupBy === g ? "bg-primary text-primary-foreground" : "border-border"
+                )}>
                 {groupLabels[g]}
               </Button>
             ))}
@@ -312,21 +310,21 @@ export default function DashboardStatistics() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full table-fixed">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className={cn("text-left py-3 px-4 text-sm font-medium text-muted-foreground", canSortByLabel && "cursor-pointer select-none")}
+                    <th className={cn("text-left py-3 px-4 text-sm font-medium text-muted-foreground w-[200px]", canSortByLabel && "cursor-pointer select-none")}
                       onClick={() => canSortByLabel && toggleSort("label")}>
                       {labelHeader} {canSortByLabel && <SortIcon col="label" />}
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none" onClick={() => toggleSort("impressions")}>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("impressions")}>
                       Показы <SortIcon col="impressions" />
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none" onClick={() => toggleSort("clicks")}>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[120px]" onClick={() => toggleSort("clicks")}>
                       Клики <SortIcon col="clicks" />
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">CTR</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none" onClick={() => toggleSort("spent")}>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground w-[100px]">CTR</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("spent")}>
                       Расход <SortIcon col="spent" />
                     </th>
                   </tr>
@@ -334,7 +332,7 @@ export default function DashboardStatistics() {
                 <tbody>
                   {sortedData.map((row) => (
                     <tr key={row.label} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                      <td className="py-3 px-4 font-medium">{row.label}</td>
+                      <td className="py-3 px-4 font-medium truncate">{row.label}</td>
                       <td className="py-3 px-4 text-right">{row.impressions.toLocaleString()}</td>
                       <td className="py-3 px-4 text-right">{row.clicks.toLocaleString()}</td>
                       <td className="py-3 px-4 text-right">{((row.clicks / row.impressions) * 100).toFixed(2)}%</td>

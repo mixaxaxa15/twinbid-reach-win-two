@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -34,31 +33,12 @@ export default function DashboardCampaigns() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const filtered = campaigns.filter((c) => {
     const s = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.id.includes(searchQuery);
     const st = statusFilter === "all" || c.status === statusFilter;
     return s && st;
   });
-
-  const allSelected = filtered.length > 0 && filtered.every(c => selectedIds.has(c.id));
-
-  const toggleSelectAll = () => {
-    if (allSelected) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filtered.map(c => c.id)));
-    }
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
 
   const toggleStatus = (id: string) => {
     const c = campaigns.find(x => x.id === id);
@@ -129,9 +109,6 @@ export default function DashboardCampaigns() {
               <table className="w-full">
                 <thead className="sticky top-0 bg-card z-10">
                   <tr className="border-b border-border">
-                    <th className="py-3 px-4 text-left">
-                      <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} />
-                    </th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">ID</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Название</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Статус</th>
@@ -146,9 +123,6 @@ export default function DashboardCampaigns() {
                 <tbody>
                   {filtered.map((campaign) => (
                     <tr key={campaign.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                      <td className="py-4 px-4">
-                        <Checkbox checked={selectedIds.has(campaign.id)} onCheckedChange={() => toggleSelect(campaign.id)} />
-                      </td>
                       <td className="py-4 px-4 text-muted-foreground font-mono text-sm">{campaign.id}</td>
                       <td className="py-4 px-4 font-medium">{campaign.name}</td>
                       <td className="py-4 px-4"><Badge variant="outline" className={cn("font-normal", statusConfig[campaign.status]?.className)}>{statusConfig[campaign.status]?.label}</Badge></td>
@@ -163,6 +137,7 @@ export default function DashboardCampaigns() {
                           <DropdownMenuContent align="end" className="bg-card border-border">
                             <DropdownMenuItem className="gap-2" onClick={() => setViewCampaign(campaign)}><Eye className="h-4 w-4" /> Просмотр</DropdownMenuItem>
                             <DropdownMenuItem className="gap-2" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}><Pencil className="h-4 w-4" /> Редактировать</DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2" onClick={() => duplicateCampaign(campaign)}><Copy className="h-4 w-4" /> Копировать</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {campaign.status === "active" ? (
                               <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Pause className="h-4 w-4" /> Приостановить</DropdownMenuItem>
@@ -175,7 +150,7 @@ export default function DashboardCampaigns() {
                       </td>
                     </tr>
                   ))}
-                  {filtered.length === 0 && <tr><td colSpan={10} className="py-12 text-center text-muted-foreground">Кампании не найдены</td></tr>}
+                  {filtered.length === 0 && <tr><td colSpan={9} className="py-12 text-center text-muted-foreground">Кампании не найдены</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -225,8 +200,4 @@ export default function DashboardCampaigns() {
       </Dialog>
     </>
   );
-}
-
-function useCampaignsHook() {
-  return useCampaigns();
 }

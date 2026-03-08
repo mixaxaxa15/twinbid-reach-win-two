@@ -41,6 +41,11 @@ function getAvailableModels(formatKey: string): PricingModel[] {
   return ["cpm"];
 }
 
+/** Parse numeric value allowing both dot and comma as decimal separator */
+function parseNumericValue(val: string): number {
+  return parseFloat(val.replace(",", ".")) || 0;
+}
+
 interface BudgetSectionProps {
   formatKey: string;
   totalBudget: string;
@@ -68,7 +73,7 @@ export function BudgetSection({
 }: BudgetSectionProps) {
   const availableModels = getAvailableModels(formatKey);
   const limits = getPriceLimits(trafficQuality, pricingModel);
-  const priceNum = parseFloat(priceValue) || 0;
+  const priceNum = parseNumericValue(priceValue);
   const isBelowMin = priceValue !== "" && priceNum < limits.min;
   const isBelowRec = priceValue !== "" && priceNum >= limits.min && priceNum < limits.rec;
 
@@ -191,4 +196,9 @@ export function BudgetSection({
       </div>
     </div>
   );
+}
+
+/** Export for use in validation */
+export function parseNumeric(val: string): number {
+  return parseFloat(val.replace(",", ".")) || 0;
 }

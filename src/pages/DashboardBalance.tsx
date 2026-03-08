@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Wallet, Plus, ArrowDownLeft, ArrowUpRight, Receipt, Copy, ExternalLink, X } from "lucide-react";
+import { Wallet, Plus, ArrowDownLeft, ArrowUpRight, Receipt, Copy, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 const amounts = [100, 250, 500, 1000, 5000];
 
@@ -26,6 +27,8 @@ const transactions = [
   { id: "7", type: "topup", amount: 100, date: "08.02.2026", method: "USDT (TRC-20)", status: "pending" },
 ];
 
+const BALANCE = 4523; // Mock balance
+
 export default function DashboardBalance() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(250);
   const [customAmount, setCustomAmount] = useState("");
@@ -33,6 +36,24 @@ export default function DashboardBalance() {
   const [showTxDialog, setShowTxDialog] = useState(false);
   const [txHash, setTxHash] = useState("");
   const [pendingPayment, setPendingPayment] = useState<{ amount: number; method: string } | null>(null);
+  const [pendingNotificationId, setPendingNotificationId] = useState<string | null>(null);
+  const { addNotification, removeNotification } = useNotifications();
+
+  // Low balance notification
+  useEffect(() => {
+    if (BALANCE < 10) {
+      addNotification({
+        title: "Низкий баланс",
+        description: `Ваш баланс составляет $${BALANCE}. Рекомендуем пополнить счёт.`,
+        type: "warning",
+        persistent: true,
+        action: {
+          label: "Пополнить",
+          onClick: () => window.location.hash = "",
+        },
+      });
+    }
+  }, []);
 
   const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount;
 
@@ -41,6 +62,11 @@ export default function DashboardBalance() {
     setPendingPayment({ amount: finalAmount, method: selectedMethod });
     setTxHash("");
     setShowTxDialog(true);
+    // Remove any existing pending payment notification
+    if (pendingNotificationId) {
+      removeNotification(pendingNotificationId);
+      setPendingNotificationId(null);
+    }
   };
 
   const handleSubmitTx = () => {
@@ -56,20 +82,31 @@ export default function DashboardBalance() {
     setShowTxDialog(false);
     setPendingPayment(null);
     setTxHash("");
+    // Remove pending notification if hash was submitted
+    if (pendingNotificationId) {
+      removeNotification(pendingNotificationId);
+      setPendingNotificationId(null);
+    }
   };
 
   const handleCloseTxDialog = (open: boolean) => {
     if (!open && pendingPayment && !txHash.trim()) {
-      // User closed without submitting hash
       setShowTxDialog(false);
-      toast("Оплата не завершена", {
-        description: "Вы не отправили хэш транзакции",
-        duration: Infinity,
+      // Add notification to bell
+      const nId = addNotification({
+        title: "Оплата не завершена",
+        description: `Вы не отправили хэш транзакции на $${pendingPayment.amount}`,
+        type: "warning",
+        persistent: true,
         action: {
-          label: "Завершить",
-          onClick: () => setShowTxDialog(true),
+          label: "Завершить оплату",
+          onClick: () => {
+            setShowTxDialog(true);
+          },
         },
       });
+      setPendingNotificationId(nId);
+      toast("Оплата не завершена. Проверьте уведомления.", { duration: 5000 });
     } else {
       setShowTxDialog(open);
     }
@@ -90,7 +127,6 @@ export default function DashboardBalance() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Balance Info */}
         <Card className="bg-card border-border">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -100,7 +136,7 @@ export default function DashboardBalance() {
               <div>
                 <p className="text-sm text-muted-foreground">Текущий баланс</p>
                 <p className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  $4,523
+                  ${BALANCE.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -121,7 +157,6 @@ export default function DashboardBalance() {
           </CardContent>
         </Card>
 
-        {/* Top Up Form */}
         <Card className="lg:col-span-2 bg-card border-border">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">

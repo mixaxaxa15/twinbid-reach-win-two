@@ -67,6 +67,12 @@ export default function EditCampaign() {
     }
   }, [campaign]);
 
+  const creativeFields = campaign ? (formatCreativeFields[campaign.formatKey] || []) : [];
+
+  const hasCreativeChanged = useMemo(() => {
+    return creativeFields.some(f => (creative[f] || "") !== (initialCreative[f] || ""));
+  }, [creative, initialCreative, creativeFields]);
+
   if (!campaign) {
     return (
       <div className="text-center py-12">
@@ -76,18 +82,14 @@ export default function EditCampaign() {
     );
   }
 
-  const creativeFields = formatCreativeFields[campaign.formatKey] || [];
-
-  const hasCreativeChanged = useMemo(() => {
-    return creativeFields.some(f => (creative[f] || "") !== (initialCreative[f] || ""));
-  }, [creative, initialCreative, creativeFields]);
-
   const updateList = (key: string, updates: Partial<TargetingState>) => {
     setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
   };
 
+  const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
+
   const handleSave = () => {
-    const tb = parseFloat(totalBudget);
+    const tb = parseNum(totalBudget);
     if (!totalBudget || isNaN(tb) || tb < 100) {
       toast.error("Общий бюджет должен быть не менее $100");
       return;
@@ -95,7 +97,7 @@ export default function EditCampaign() {
     const cpmLimits: Record<TrafficQuality, number> = { common: 0.3, high: 0.7, ultra: 0.9 };
     const minCpm = cpmLimits[trafficQuality];
     const min = pricingModel === "cpc" ? +(minCpm * 1.7 / 1000).toFixed(5) : minCpm;
-    const pv = parseFloat(priceValue);
+    const pv = parseNum(priceValue);
     if (!priceValue || isNaN(pv) || pv < min) {
       toast.error(`Минимальная ставка $${min}`);
       return;
@@ -111,7 +113,7 @@ export default function EditCampaign() {
         Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])
       ),
       budget: tb,
-      dailyBudget: dailyBudget ? parseFloat(dailyBudget) : null,
+      dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       priceValue: pv,
       pricingModel,
       trafficQuality,
