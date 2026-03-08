@@ -67,10 +67,10 @@ export function AuthDialog({ trigger, defaultTab = "login" }: AuthDialogProps) {
           <TabsContent value="register" className="space-y-4 mt-4">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="company">Название компании</Label>
+                <Label htmlFor="name">Имя (опционально)</Label>
                 <Input
-                  id="company"
-                  placeholder="ООО «Компания»"
+                  id="name"
+                  placeholder="Ваше имя"
                   className="bg-background border-border"
                 />
               </div>

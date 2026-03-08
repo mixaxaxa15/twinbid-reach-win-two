@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { CampaignProvider } from "./contexts/CampaignContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
@@ -22,19 +23,21 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />}>
-            <Route index element={<DashboardOverview />} />
-            <Route path="campaigns" element={<DashboardCampaigns />} />
-            <Route path="campaigns/create" element={<CreateCampaign />} />
-            <Route path="campaigns/:id/edit" element={<EditCampaign />} />
-            <Route path="statistics" element={<DashboardStatistics />} />
-            <Route path="balance" element={<DashboardBalance />} />
-            <Route path="settings" element={<DashboardSettings />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <CampaignProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />}>
+              <Route index element={<DashboardOverview />} />
+              <Route path="campaigns" element={<DashboardCampaigns />} />
+              <Route path="campaigns/create" element={<CreateCampaign />} />
+              <Route path="campaigns/:id/edit" element={<EditCampaign />} />
+              <Route path="statistics" element={<DashboardStatistics />} />
+              <Route path="balance" element={<DashboardBalance />} />
+              <Route path="settings" element={<DashboardSettings />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </CampaignProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

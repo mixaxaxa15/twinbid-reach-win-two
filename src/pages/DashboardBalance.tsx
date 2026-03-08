@@ -4,58 +4,89 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, Plus, ArrowDownLeft, ArrowUpRight, Receipt, Copy } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Wallet, Plus, ArrowDownLeft, ArrowUpRight, Receipt, Copy, ExternalLink, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const amounts = [100, 250, 500, 1000, 5000];
 
-const cryptoMethods = [
-  { id: "usdt_trc20", label: "USDT (TRC-20)", desc: "Tether on Tron" },
-  { id: "usdt_erc20", label: "USDT (ERC-20)", desc: "Tether on Ethereum" },
-  { id: "btc", label: "Bitcoin", desc: "BTC" },
-  { id: "eth", label: "Ethereum", desc: "ETH" },
+const usdtMethods = [
+  { id: "usdt_trc20", label: "USDT (TRC-20)", desc: "Tether on Tron", address: "TXkRh4pKz7w9Yb2mN5vQx8Gp3jL6fD0eW" },
+  { id: "usdt_erc20", label: "USDT (ERC-20)", desc: "Tether on Ethereum", address: "0x3F7a9c2B1d5E8f4A6C0b9D1e2F3a4B5c6D7e8F9a" },
 ];
-
-const walletAddresses: Record<string, string> = {
-  usdt_trc20: "TXkR...w8Gp",
-  usdt_erc20: "0x3F...a91B",
-  btc: "bc1q...v7mk",
-  eth: "0x3F...a91B",
-};
 
 const transactions = [
   { id: "1", type: "topup", amount: 500, date: "14.02.2026", method: "USDT (TRC-20)", status: "completed" },
   { id: "2", type: "spend", amount: -32, date: "14.02.2026", campaign: "Летняя распродажа", status: "completed" },
   { id: "3", type: "spend", amount: -18, date: "13.02.2026", campaign: "Новая коллекция", status: "completed" },
-  { id: "4", type: "topup", amount: 250, date: "12.02.2026", method: "Bitcoin", status: "completed" },
+  { id: "4", type: "topup", amount: 250, date: "12.02.2026", method: "USDT (TRC-20)", status: "completed" },
   { id: "5", type: "spend", amount: -45, date: "12.02.2026", campaign: "Бренд-кампания", status: "completed" },
-  { id: "6", type: "topup", amount: 1000, date: "10.02.2026", method: "USDT (TRC-20)", status: "completed" },
-  { id: "7", type: "topup", amount: 100, date: "08.02.2026", method: "Ethereum", status: "pending" },
+  { id: "6", type: "topup", amount: 1000, date: "10.02.2026", method: "USDT (ERC-20)", status: "completed" },
+  { id: "7", type: "topup", amount: 100, date: "08.02.2026", method: "USDT (TRC-20)", status: "pending" },
 ];
 
 export default function DashboardBalance() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(250);
   const [customAmount, setCustomAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState("usdt_trc20");
+  const [showTxDialog, setShowTxDialog] = useState(false);
+  const [txHash, setTxHash] = useState("");
+  const [pendingPayment, setPendingPayment] = useState<{ amount: number; method: string } | null>(null);
 
   const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount;
 
   const handleTopUp = () => {
     if (!finalAmount || finalAmount < 100) return;
-    toast.success(`Заявка на пополнение $${finalAmount.toLocaleString()} создана. Переведите средства на указанный адрес.`);
+    setPendingPayment({ amount: finalAmount, method: selectedMethod });
+    setTxHash("");
+    setShowTxDialog(true);
   };
 
-  const copyAddress = () => {
-    navigator.clipboard.writeText(walletAddresses[selectedMethod] || "");
+  const handleSubmitTx = () => {
+    if (!txHash.trim()) {
+      toast.error("Введите хэш транзакции");
+      return;
+    }
+    toast.success("Платёж отправлен на проверку. Средства появятся на балансе в ближайшее время.", { duration: 8000 });
+    toast.info(
+      "По вопросам оплаты обращайтесь: @GregTwinbid в Telegram или twinbid@twinbidex.com",
+      { duration: 15000 }
+    );
+    setShowTxDialog(false);
+    setPendingPayment(null);
+    setTxHash("");
+  };
+
+  const handleCloseTxDialog = (open: boolean) => {
+    if (!open && pendingPayment && !txHash.trim()) {
+      // User closed without submitting hash
+      setShowTxDialog(false);
+      toast("Оплата не завершена", {
+        description: "Вы не отправили хэш транзакции",
+        duration: Infinity,
+        action: {
+          label: "Завершить",
+          onClick: () => setShowTxDialog(true),
+        },
+      });
+    } else {
+      setShowTxDialog(open);
+    }
+  };
+
+  const copyAddress = (address: string) => {
+    navigator.clipboard.writeText(address);
     toast.success("Адрес скопирован");
   };
+
+  const currentMethod = usdtMethods.find(m => m.id === selectedMethod);
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Баланс и платежи</h2>
-        <p className="text-muted-foreground text-sm">Пополнение только криптовалютой</p>
+        <p className="text-muted-foreground text-sm">Пополнение USDT</p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -120,9 +151,9 @@ export default function DashboardBalance() {
             </div>
 
             <div className="space-y-2">
-              <Label>Криптовалюта</Label>
+              <Label>Сеть</Label>
               <div className="grid sm:grid-cols-2 gap-3">
-                {cryptoMethods.map((m) => (
+                {usdtMethods.map((m) => (
                   <button key={m.id} onClick={() => setSelectedMethod(m.id)}
                     className={cn("flex flex-col items-start gap-1 p-4 rounded-lg border transition-colors text-left",
                       selectedMethod === m.id ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/50"
@@ -134,18 +165,6 @@ export default function DashboardBalance() {
               </div>
             </div>
 
-            {/* Wallet address */}
-            <div className="space-y-2">
-              <Label>Адрес для перевода</Label>
-              <div className="flex gap-2 max-w-lg">
-                <Input value={walletAddresses[selectedMethod] || ""} readOnly className="bg-background border-border font-mono text-sm" />
-                <Button variant="outline" onClick={copyAddress} className="border-border gap-2">
-                  <Copy className="h-4 w-4" /> Копировать
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">Переведите точную сумму на этот адрес. Средства зачислятся после подтверждения сети.</p>
-            </div>
-
             <Button onClick={handleTopUp} className="bg-accent hover:bg-accent/90 text-accent-foreground"
               disabled={!finalAmount || finalAmount < 100}>
               Пополнить {finalAmount ? `$${finalAmount.toLocaleString()}` : ""}
@@ -154,6 +173,49 @@ export default function DashboardBalance() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Transaction Hash Dialog */}
+      <Dialog open={showTxDialog} onOpenChange={handleCloseTxDialog}>
+        <DialogContent className="sm:max-w-[500px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>Оплата {pendingPayment ? `$${pendingPayment.amount.toLocaleString()}` : ""}</DialogTitle>
+            <DialogDescription>
+              Переведите точную сумму на указанный адрес и вставьте хэш транзакции
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <Label>Адрес кошелька ({currentMethod?.label})</Label>
+              <div className="flex gap-2">
+                <Input value={currentMethod?.address || ""} readOnly className="bg-background border-border font-mono text-xs" />
+                <Button variant="outline" size="icon" onClick={() => copyAddress(currentMethod?.address || "")} className="border-border shrink-0">
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Переведите точную сумму. Средства зачислятся после подтверждения сети.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Хэш транзакции *</Label>
+              <Input value={txHash} onChange={(e) => setTxHash(e.target.value)}
+                placeholder="0x..." className="bg-background border-border font-mono text-sm" />
+            </div>
+
+            <Button onClick={handleSubmitTx} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              disabled={!txHash.trim()}>
+              Отправить
+            </Button>
+
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+              <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                Вопросы по оплате: <a href="https://t.me/GregTwinbid" target="_blank" rel="noopener" className="text-primary hover:underline">@GregTwinbid</a> или{" "}
+                <a href="mailto:twinbid@twinbidex.com" className="text-primary hover:underline">twinbid@twinbidex.com</a>
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Transaction History */}
       <Card className="bg-card border-border">

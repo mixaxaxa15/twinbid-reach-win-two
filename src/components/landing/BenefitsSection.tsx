@@ -73,7 +73,7 @@ export function BenefitsSection() {
             <BenefitCard key={index} benefit={benefit} index={index} />
           ))}
         </div>
-        <div className="grid md:grid-cols-2 gap-6 mt-6 max-w-[calc(66.666%+0.75rem)] mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 lg:max-w-[calc(66.666%+0.75rem)] mx-auto">
           {benefits.slice(3).map((benefit, index) => (
             <BenefitCard key={index + 3} benefit={benefit} index={index + 3} />
           ))}
