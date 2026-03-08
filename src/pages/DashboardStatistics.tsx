@@ -88,7 +88,6 @@ export default function DashboardStatistics() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [clickCount, setClickCount] = useState(0);
-  const [needsRefresh, setNeedsRefresh] = useState(true);
 
   // Get active campaign ids for data generation
   const activeCampaigns = useMemo(() =>
