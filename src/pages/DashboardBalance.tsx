@@ -59,6 +59,11 @@ export default function DashboardBalance() {
 
   const handleTopUp = () => {
     if (!finalAmount || finalAmount < 100) return;
+    // Block new payment if one is already pending
+    if (pendingPayment) {
+      toast.error("У вас есть незавершённая оплата. Завершите или отмените её.");
+      return;
+    }
     setPendingPayment({ amount: finalAmount, method: selectedMethod });
     setTxHash("");
     setShowTxDialog(true);
@@ -219,6 +224,10 @@ export default function DashboardBalance() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
+            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+              <p className="text-sm font-medium">Сумма пополнения: <span className="text-primary">${pendingPayment?.amount.toLocaleString()}</span></p>
+            </div>
+
             <div className="space-y-2">
               <Label>Адрес кошелька ({currentMethod?.label})</Label>
               <div className="flex gap-2">
@@ -239,6 +248,10 @@ export default function DashboardBalance() {
             <Button onClick={handleSubmitTx} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={!txHash.trim()}>
               Отправить
+            </Button>
+
+            <Button variant="outline" className="w-full border-border" onClick={handleCancelPayment}>
+              Отменить оплату
             </Button>
 
             <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
