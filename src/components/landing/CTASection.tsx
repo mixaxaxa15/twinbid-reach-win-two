@@ -1,5 +1,6 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthDialog } from "./AuthDialog";
 
 export function CTASection() {
   return (
@@ -41,13 +42,18 @@ export function CTASection() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button 
-                  size="lg"
-                  className="bg-background text-primary hover:bg-background/90 text-lg px-8 py-6 h-auto font-semibold shadow-lg"
-                >
-                  Зарегистрироваться
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
+                <AuthDialog
+                  defaultTab="register"
+                  trigger={
+                    <Button 
+                      size="lg"
+                      className="bg-background text-primary hover:bg-background/90 text-lg px-8 py-6 h-auto font-semibold shadow-lg"
+                    >
+                      Зарегистрироваться
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  }
+                />
                 <a 
                   href="https://t.me/GregTwinbid"
                   target="_blank"
