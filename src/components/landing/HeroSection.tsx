@@ -1,5 +1,6 @@
 import { ArrowRight, Globe, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthDialog } from "./AuthDialog";
 
 export function HeroSection() {
   return (
