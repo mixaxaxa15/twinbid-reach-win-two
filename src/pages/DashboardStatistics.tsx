@@ -1,27 +1,20 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, MousePointer, Target, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowUpDown, CalendarIcon, RefreshCw } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { format, addDays } from "date-fns";
+import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 import { toast } from "sonner";
+import { useCampaigns } from "@/contexts/CampaignContext";
 
-type GroupBy = "dates" | "hours" | "browsers" | "subid" | "devices";
+type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices";
 type SortKey = "label" | "impressions" | "clicks" | "spent";
 type SortDir = "asc" | "desc";
-
-const campaigns = [
-  { id: "all", name: "Все кампании" },
-  { id: "1", name: "Летняя распродажа 2024" },
-  { id: "2", name: "Новая коллекция" },
-  { id: "3", name: "Бренд-кампания" },
-  { id: "5", name: "Осенний запуск" },
-];
 
 const generateDateData = () => [
   { label: "01.03.2026", impressions: 4200, clicks: 280, spent: 2100 },
@@ -30,6 +23,8 @@ const generateDateData = () => [
   { label: "04.03.2026", impressions: 6200, clicks: 410, spent: 3100 },
   { label: "05.03.2026", impressions: 5800, clicks: 380, spent: 2900 },
   { label: "06.03.2026", impressions: 7100, clicks: 470, spent: 3550 },
+  { label: "07.03.2026", impressions: 4900, clicks: 320, spent: 2450 },
+  { label: "08.03.2026", impressions: 5500, clicks: 360, spent: 2750 },
 ];
 
 const generateHourData = () =>
@@ -50,13 +45,13 @@ const generateBrowserData = () => [
   { label: "Другие", impressions: 3100, clicks: 174, spent: 1230 },
 ];
 
-const generateSubIdData = () => [
-  { label: "sub_landing_1", impressions: 18000, clicks: 1200, spent: 6300 },
-  { label: "sub_banner_top", impressions: 14500, clicks: 950, spent: 5100 },
-  { label: "sub_video_pre", impressions: 22000, clicks: 1400, spent: 7700 },
-  { label: "sub_native_feed", impressions: 11200, clicks: 680, spent: 3900 },
-  { label: "sub_push_main", impressions: 9800, clicks: 620, spent: 3400 },
-  { label: "sub_pop_exit", impressions: 15800, clicks: 890, spent: 5500 },
+const generateSiteIdData = () => [
+  { label: "site_landing_1", impressions: 18000, clicks: 1200, spent: 6300 },
+  { label: "site_banner_top", impressions: 14500, clicks: 950, spent: 5100 },
+  { label: "site_video_pre", impressions: 22000, clicks: 1400, spent: 7700 },
+  { label: "site_native_feed", impressions: 11200, clicks: 680, spent: 3900 },
+  { label: "site_push_main", impressions: 9800, clicks: 620, spent: 3400 },
+  { label: "site_pop_exit", impressions: 15800, clicks: 890, spent: 5500 },
 ];
 
 const generateDeviceData = () => [
@@ -69,11 +64,11 @@ const generateDeviceData = () => [
 ];
 
 const dataGenerators: Record<GroupBy, () => { label: string; impressions: number; clicks: number; spent: number }[]> = {
-  dates: generateDateData, hours: generateHourData, browsers: generateBrowserData, subid: generateSubIdData, devices: generateDeviceData,
+  dates: generateDateData, hours: generateHourData, browsers: generateBrowserData, siteid: generateSiteIdData, devices: generateDeviceData,
 };
 
 const groupLabels: Record<GroupBy, string> = {
-  dates: "По датам", hours: "По часам", browsers: "По браузерам", subid: "По SubID", devices: "По устройствам",
+  dates: "По датам", hours: "По часам", browsers: "По браузерам", siteid: "По SiteID", devices: "По устройствам",
 };
 
 const metrics = [
@@ -84,24 +79,73 @@ const metrics = [
 ];
 
 export default function DashboardStatistics() {
-  const [campaignId, setCampaignId] = useState("all");
+  const { campaigns } = useCampaigns();
+  const [selectedCampaignIds, setSelectedCampaignIds] = useState<Set<string>>(new Set(["all"]));
   const [groupBy, setGroupBy] = useState<GroupBy>("dates");
-  const [sortKey, setSortKey] = useState<SortKey>("impressions");
+  const [sortKey, setSortKey] = useState<SortKey>("label");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(2026, 2, 1),
-    to: new Date(2026, 2, 6),
+    from: new Date(),
+    to: new Date(),
   });
   const [data, setData] = useState<{ label: string; impressions: number; clicks: number; spent: number }[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [needsRefresh, setNeedsRefresh] = useState(true);
+
+  // Auto-load data when grouping changes
+  useEffect(() => {
+    const newData = dataGenerators[groupBy]();
+    setData(newData);
+    setIsLoaded(true);
+    // Reset sort for dates
+    if (groupBy === "dates") {
+      setSortKey("label");
+      setSortDir("desc");
+    } else if (groupBy === "hours") {
+      setSortKey("label");
+      setSortDir("asc");
+    } else {
+      setSortKey("impressions");
+      setSortDir("desc");
+    }
+  }, [groupBy]);
 
   const handleRefresh = useCallback(() => {
     const newData = dataGenerators[groupBy]();
     setData(newData);
     setIsLoaded(true);
+    setNeedsRefresh(false);
     toast.success("Статистика обновлена");
   }, [groupBy]);
 
+  // Mark refresh needed when campaign/period changes
+  const handleCampaignChange = (id: string) => {
+    setSelectedCampaignIds(prev => {
+      const next = new Set(prev);
+      if (id === "all") {
+        if (next.has("all")) { next.clear(); } else { next.clear(); next.add("all"); }
+      } else {
+        next.delete("all");
+        if (next.has(id)) next.delete(id); else next.add(id);
+        if (next.size === 0) next.add("all");
+      }
+      return next;
+    });
+    setNeedsRefresh(true);
+  };
+
+  const handleDateChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setNeedsRefresh(true);
+  };
+
+  // Chart data always sorted asc by label (for dates)
+  const chartData = useMemo(() => {
+    if (!isLoaded || groupBy !== "dates") return [];
+    return [...data].sort((a, b) => a.label.localeCompare(b.label));
+  }, [data, isLoaded, groupBy]);
+
+  // Table data sorted by user selection
   const sortedData = useMemo(() => {
     if (!isLoaded) return [];
     return [...data].sort((a, b) => {
@@ -127,8 +171,13 @@ export default function DashboardStatistics() {
     spent: sortedData.reduce((s, r) => s + r.spent, 0),
   }), [sortedData]);
 
-  const labelHeader = groupBy === "dates" ? "Дата" : groupBy === "hours" ? "Час" : groupBy === "browsers" ? "Браузер" : groupBy === "subid" ? "SubID" : "Устройство";
+  const labelHeader = groupBy === "dates" ? "Дата" : groupBy === "hours" ? "Час" : groupBy === "browsers" ? "Браузер" : groupBy === "siteid" ? "SiteID" : "Устройство";
   const canSortByLabel = groupBy === "dates" || groupBy === "hours";
+
+  const campaignOptions = [
+    { id: "all", name: "Все кампании" },
+    ...campaigns.filter(c => c.status === "active" || c.status === "completed" || c.status === "paused"),
+  ];
 
   return (
     <div className="space-y-6">
@@ -140,23 +189,39 @@ export default function DashboardStatistics() {
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-3">
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Кампания</Label>
-          <Select value={campaignId} onValueChange={setCampaignId}>
-            <SelectTrigger className="w-[220px] bg-background border-border"><SelectValue /></SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              {campaigns.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <label className="text-xs text-muted-foreground font-medium">Кампании</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
+                {selectedCampaignIds.has("all")
+                  ? "Все кампании"
+                  : `Выбрано: ${selectedCampaignIds.size}`}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-2" align="start">
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                {campaignOptions.map(c => (
+                  <label key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                    <Checkbox
+                      checked={selectedCampaignIds.has(c.id)}
+                      onCheckedChange={() => handleCampaignChange(c.id)}
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Период</Label>
+          <label className="text-xs text-muted-foreground font-medium">Период</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {dateRange?.from ? (
-                  dateRange.to ? (
+                  dateRange.to && dateRange.from.getTime() !== dateRange.to.getTime() ? (
                     <>{format(dateRange.from, "dd.MM.yy")} — {format(dateRange.to, "dd.MM.yy")}</>
                   ) : format(dateRange.from, "dd.MM.yy")
                 ) : "Выберите период"}
@@ -166,7 +231,7 @@ export default function DashboardStatistics() {
               <Calendar
                 mode="range"
                 selected={dateRange}
-                onSelect={setDateRange}
+                onSelect={handleDateChange}
                 numberOfMonths={2}
                 className="p-3 pointer-events-auto"
               />
@@ -174,9 +239,11 @@ export default function DashboardStatistics() {
           </Popover>
         </div>
 
-        <Button onClick={handleRefresh} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
-          <RefreshCw className="h-4 w-4" /> Обновить
-        </Button>
+        {needsRefresh && (
+          <Button onClick={handleRefresh} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+            <RefreshCw className="h-4 w-4" /> Обновить
+          </Button>
+        )}
       </div>
 
       {/* Metric Cards */}
@@ -198,14 +265,14 @@ export default function DashboardStatistics() {
         ))}
       </div>
 
-      {/* Chart — only for dates when loaded */}
-      {isLoaded && groupBy === "dates" && (
+      {/* Chart — always sorted asc for dates */}
+      {isLoaded && groupBy === "dates" && chartData.length > 0 && (
         <Card className="bg-card border-border">
           <CardHeader><CardTitle className="text-lg">Динамика показов</CardTitle></CardHeader>
           <CardContent>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={sortedData}>
+                <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="grad-imp" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -230,7 +297,7 @@ export default function DashboardStatistics() {
           <div className="flex flex-wrap items-center gap-2">
             {(Object.keys(groupLabels) as GroupBy[]).map((g) => (
               <Button key={g} variant={groupBy === g ? "default" : "outline"} size="sm"
-                onClick={() => { setGroupBy(g); setIsLoaded(false); }}
+                onClick={() => setGroupBy(g)}
                 className={groupBy === g ? "bg-primary text-primary-foreground" : "border-border"}>
                 {groupLabels[g]}
               </Button>
@@ -241,7 +308,7 @@ export default function DashboardStatistics() {
           {!isLoaded ? (
             <div className="py-16 text-center text-muted-foreground">
               <RefreshCw className="h-8 w-8 mx-auto mb-3 opacity-30" />
-              <p>Выберите параметры и нажмите «Обновить» для загрузки данных</p>
+              <p>Загрузка данных...</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -278,7 +345,7 @@ export default function DashboardStatistics() {
                     <td className="py-3 px-4">Итого</td>
                     <td className="py-3 px-4 text-right">{totals.impressions.toLocaleString()}</td>
                     <td className="py-3 px-4 text-right">{totals.clicks.toLocaleString()}</td>
-                    <td className="py-3 px-4 text-right">{((totals.clicks / totals.impressions) * 100).toFixed(2)}%</td>
+                    <td className="py-3 px-4 text-right">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
                     <td className="py-3 px-4 text-right">${totals.spent.toLocaleString()}</td>
                   </tr>
                 </tbody>
@@ -289,8 +356,4 @@ export default function DashboardStatistics() {
       </Card>
     </div>
   );
-}
-
-function Label({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <label className={cn("text-sm font-medium", className)}>{children}</label>;
 }

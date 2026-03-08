@@ -171,12 +171,6 @@ export default function DashboardSettings() {
                 </div>
                 <p className="text-xs text-muted-foreground">Используйте этот ключ для интеграции через API</p>
               </div>
-              <Separator />
-              <div className="space-y-2">
-                <Label>Postback URL</Label>
-                <Input placeholder="https://your-tracker.com/postback?click_id={click_id}" className="bg-background border-border max-w-lg" />
-                <p className="text-xs text-muted-foreground">URL для отправки конверсий в вашу трекинг-систему</p>
-              </div>
               <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />Сохранить</Button>
             </CardContent>
           </Card>
