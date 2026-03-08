@@ -73,11 +73,13 @@ export default function CreateCampaign() {
     return Object.keys(e).length === 0;
   };
 
+  const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
+
   const validateStep3 = () => {
     const e: Record<string, string> = {};
-    const tb = parseFloat(totalBudget);
+    const tb = parseNum(totalBudget);
     if (!totalBudget || isNaN(tb) || tb < 100) e.totalBudget = "Минимум $100";
-    const pv = parseFloat(priceValue);
+    const pv = parseNum(priceValue);
     const { min } = getMinPrice();
     if (!priceValue || isNaN(pv) || pv < min) e.priceValue = `Минимальная ставка $${min}`;
     setErrors(e);
@@ -108,14 +110,14 @@ export default function CreateCampaign() {
       status: "moderation",
       format: formatCreativeFields[adFormat]?.label || adFormat,
       formatKey: adFormat,
-      budget: parseFloat(totalBudget),
-      dailyBudget: dailyBudget ? parseFloat(dailyBudget) : null,
+      budget: parseNum(totalBudget),
+      dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       spent: 0,
       impressions: 0,
       clicks: 0,
       ctr: 0,
       pricingModel,
-      priceValue: parseFloat(priceValue),
+      priceValue: parseNum(priceValue),
       trafficQuality,
       startDate,
       endDate,
