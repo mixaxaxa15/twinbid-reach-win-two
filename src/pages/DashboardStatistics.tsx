@@ -142,7 +142,6 @@ export default function DashboardStatistics() {
   }, [groupBy]);
 
   const handleRefresh = useCallback(() => {
-    setNeedsRefresh(false);
     toast.success("Статистика обновлена");
   }, []);
 
@@ -158,7 +157,6 @@ export default function DashboardStatistics() {
       }
       return next;
     });
-    setNeedsRefresh(true);
   };
 
   const handleDateChange = (range: DateRange | undefined) => {
@@ -173,7 +171,6 @@ export default function DashboardStatistics() {
         setDateRange({ from: dateRange?.from, to: range.from });
       }
       setClickCount(2);
-      setNeedsRefresh(true);
     } else {
       setDateRange({ from: range.from || range.to, to: undefined });
       setClickCount(1);
@@ -277,11 +274,9 @@ export default function DashboardStatistics() {
           </Popover>
         </div>
 
-        {needsRefresh && (
-          <Button onClick={handleRefresh} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
-            <RefreshCw className="h-4 w-4" /> Обновить
-          </Button>
-        )}
+        <Button onClick={handleRefresh} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+          <RefreshCw className="h-4 w-4" /> Обновить
+        </Button>
       </div>
 
       {/* Metric Cards */}
