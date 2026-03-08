@@ -67,6 +67,12 @@ export default function EditCampaign() {
     }
   }, [campaign]);
 
+  const creativeFields = campaign ? (formatCreativeFields[campaign.formatKey] || []) : [];
+
+  const hasCreativeChanged = useMemo(() => {
+    return creativeFields.some(f => (creative[f] || "") !== (initialCreative[f] || ""));
+  }, [creative, initialCreative, creativeFields]);
+
   if (!campaign) {
     return (
       <div className="text-center py-12">
@@ -75,12 +81,6 @@ export default function EditCampaign() {
       </div>
     );
   }
-
-  const creativeFields = formatCreativeFields[campaign.formatKey] || [];
-
-  const hasCreativeChanged = useMemo(() => {
-    return creativeFields.some(f => (creative[f] || "") !== (initialCreative[f] || ""));
-  }, [creative, initialCreative, creativeFields]);
 
   const updateList = (key: string, updates: Partial<TargetingState>) => {
     setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
