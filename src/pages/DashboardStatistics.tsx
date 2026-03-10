@@ -110,12 +110,13 @@ export default function DashboardStatistics() {
     const datasets = campaignIds.map(id => getCampaignData(id, groupBy));
     let merged = mergeData(datasets);
 
-    // Filter by date range when groupBy is "dates" and range is set
-    if (groupBy === "dates" && dateRange?.from) {
+    // Filter by date range when groupBy is "dates" or "hours" and range is set
+    if ((groupBy === "dates" || groupBy === "hours") && dateRange?.from) {
       const from = startOfDay(dateRange.from);
       const to = dateRange.to ? startOfDay(dateRange.to) : from;
       merged = merged.filter(row => {
-        const d = parse(row.label, "dd.MM.yyyy", new Date());
+        const dateStr = groupBy === "hours" ? row.label.split(" ")[0] : row.label;
+        const d = parse(dateStr, "dd.MM.yyyy", new Date());
         return isWithinInterval(d, { start: from, end: to });
       });
     }
