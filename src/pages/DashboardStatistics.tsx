@@ -36,12 +36,16 @@ function getCampaignData(campaignId: string, groupBy: GroupBy): { label: string;
     }));
   }
   if (groupBy === "hours") {
-    return Array.from({ length: 24 }, (_, i) => ({
-      label: `${String(i).padStart(2, "0")}:00`,
-      impressions: r(500, 5000),
-      clicks: r(30, 400),
-      spent: r(200, 3000),
-    }));
+    // Generate hourly data for each date (8 days × 24 hours)
+    const days = Array.from({ length: 8 }, (_, i) => String(i + 1).padStart(2, "0") + ".03.2026");
+    return days.flatMap(day => 
+      Array.from({ length: 24 }, (_, h) => ({
+        label: `${day} ${String(h).padStart(2, "0")}:00`,
+        impressions: r(100, 1500),
+        clicks: r(5, 120),
+        spent: r(50, 800),
+      }))
+    );
   }
   if (groupBy === "browsers") {
     return ["Chrome", "Safari", "Firefox", "Edge", "Opera", "Samsung Internet", "Другие"].map(b => ({
