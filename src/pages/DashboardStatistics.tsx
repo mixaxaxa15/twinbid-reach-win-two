@@ -211,7 +211,7 @@ export default function DashboardStatistics() {
     spent: sortedData.reduce((s, r) => s + r.spent, 0),
   }), [sortedData]);
 
-  const labelHeader = groupBy === "dates" ? "Дата" : groupBy === "hours" ? "Час" : groupBy === "browsers" ? "Браузер" : groupBy === "siteid" ? "SiteID" : "Устройство";
+  const labelHeader = groupBy === "dates" ? "Дата" : groupBy === "hours" ? "Дата и час" : groupBy === "browsers" ? "Браузер" : groupBy === "siteid" ? "SiteID" : "Устройство";
   const canSortByLabel = groupBy === "dates" || groupBy === "hours";
 
   const campaignOptions = [
