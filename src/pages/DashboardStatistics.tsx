@@ -36,12 +36,16 @@ function getCampaignData(campaignId: string, groupBy: GroupBy): { label: string;
     }));
   }
   if (groupBy === "hours") {
-    return Array.from({ length: 24 }, (_, i) => ({
-      label: `${String(i).padStart(2, "0")}:00`,
-      impressions: r(500, 5000),
-      clicks: r(30, 400),
-      spent: r(200, 3000),
-    }));
+    // Generate hourly data for each date (8 days × 24 hours)
+    const days = Array.from({ length: 8 }, (_, i) => String(i + 1).padStart(2, "0") + ".03.2026");
+    return days.flatMap(day => 
+      Array.from({ length: 24 }, (_, h) => ({
+        label: `${day} ${String(h).padStart(2, "0")}:00`,
+        impressions: r(100, 1500),
+        clicks: r(5, 120),
+        spent: r(50, 800),
+      }))
+    );
   }
   if (groupBy === "browsers") {
     return ["Chrome", "Safari", "Firefox", "Edge", "Opera", "Samsung Internet", "Другие"].map(b => ({
@@ -106,12 +110,13 @@ export default function DashboardStatistics() {
     const datasets = campaignIds.map(id => getCampaignData(id, groupBy));
     let merged = mergeData(datasets);
 
-    // Filter by date range when groupBy is "dates" and range is set
-    if (groupBy === "dates" && dateRange?.from) {
+    // Filter by date range when groupBy is "dates" or "hours" and range is set
+    if ((groupBy === "dates" || groupBy === "hours") && dateRange?.from) {
       const from = startOfDay(dateRange.from);
       const to = dateRange.to ? startOfDay(dateRange.to) : from;
       merged = merged.filter(row => {
-        const d = parse(row.label, "dd.MM.yyyy", new Date());
+        const dateStr = groupBy === "hours" ? row.label.split(" ")[0] : row.label;
+        const d = parse(dateStr, "dd.MM.yyyy", new Date());
         return isWithinInterval(d, { start: from, end: to });
       });
     }
@@ -206,7 +211,7 @@ export default function DashboardStatistics() {
     spent: sortedData.reduce((s, r) => s + r.spent, 0),
   }), [sortedData]);
 
-  const labelHeader = groupBy === "dates" ? "Дата" : groupBy === "hours" ? "Час" : groupBy === "browsers" ? "Браузер" : groupBy === "siteid" ? "SiteID" : "Устройство";
+  const labelHeader = groupBy === "dates" ? "Дата" : groupBy === "hours" ? "Дата и час" : groupBy === "browsers" ? "Браузер" : groupBy === "siteid" ? "SiteID" : "Устройство";
   const canSortByLabel = groupBy === "dates" || groupBy === "hours";
 
   const campaignOptions = [
