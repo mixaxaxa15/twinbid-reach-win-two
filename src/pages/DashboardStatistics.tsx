@@ -11,12 +11,12 @@ import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { useCampaigns } from "@/contexts/CampaignContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices";
 type SortKey = "label" | "impressions" | "clicks" | "spent";
 type SortDir = "asc" | "desc";
 
-// Deterministic pseudo-random based on seed string
 function seedRandom(seed: string) {
   let h = 0;
   for (let i = 0; i < seed.length; i++) { h = Math.imul(31, h) + seed.charCodeAt(i) | 0; }
@@ -30,25 +30,20 @@ function getCampaignData(campaignId: string, groupBy: GroupBy): { label: string;
   if (groupBy === "dates") {
     return Array.from({ length: 8 }, (_, i) => ({
       label: String(i + 1).padStart(2, "0") + ".03.2026",
-      impressions: r(1000, 8000),
-      clicks: r(50, 500),
-      spent: r(500, 4000),
+      impressions: r(1000, 8000), clicks: r(50, 500), spent: r(500, 4000),
     }));
   }
   if (groupBy === "hours") {
-    // Generate hourly data for each date (8 days × 24 hours)
     const days = Array.from({ length: 8 }, (_, i) => String(i + 1).padStart(2, "0") + ".03.2026");
-    return days.flatMap(day => 
+    return days.flatMap(day =>
       Array.from({ length: 24 }, (_, h) => ({
         label: `${day} ${String(h).padStart(2, "0")}:00`,
-        impressions: r(100, 1500),
-        clicks: r(5, 120),
-        spent: r(50, 800),
+        impressions: r(100, 1500), clicks: r(5, 120), spent: r(50, 800),
       }))
     );
   }
   if (groupBy === "browsers") {
-    return ["Chrome", "Safari", "Firefox", "Edge", "Opera", "Samsung Internet", "Другие"].map(b => ({
+    return ["Chrome", "Safari", "Firefox", "Edge", "Opera", "Samsung Internet", "Other"].map(b => ({
       label: b, impressions: r(2000, 50000), clicks: r(100, 3500), spent: r(800, 18000),
     }));
   }
@@ -62,30 +57,21 @@ function getCampaignData(campaignId: string, groupBy: GroupBy): { label: string;
   }));
 }
 
-// Merge data from multiple campaigns by summing values per label
 function mergeData(datasets: { label: string; impressions: number; clicks: number; spent: number }[][]) {
   const map = new Map<string, { label: string; impressions: number; clicks: number; spent: number }>();
   for (const ds of datasets) {
     for (const row of ds) {
       const existing = map.get(row.label);
-      if (existing) {
-        existing.impressions += row.impressions;
-        existing.clicks += row.clicks;
-        existing.spent += row.spent;
-      } else {
-        map.set(row.label, { ...row });
-      }
+      if (existing) { existing.impressions += row.impressions; existing.clicks += row.clicks; existing.spent += row.spent; }
+      else { map.set(row.label, { ...row }); }
     }
   }
   return Array.from(map.values());
 }
 
-const groupLabels: Record<GroupBy, string> = {
-  dates: "По датам", hours: "По часам", browsers: "По браузерам", siteid: "По SiteID", devices: "По устройствам",
-};
-
 export default function DashboardStatistics() {
   const { campaigns } = useCampaigns();
+  const { t } = useLanguage();
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<Set<string>>(new Set(["all"]));
   const [groupBy, setGroupBy] = useState<GroupBy>("dates");
   const [sortKey, setSortKey] = useState<SortKey>("label");
@@ -93,24 +79,20 @@ export default function DashboardStatistics() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [clickCount, setClickCount] = useState(0);
 
-  // Get active campaign ids for data generation
+  const groupLabels: Record<GroupBy, string> = {
+    dates: t("stats.byDates"), hours: t("stats.byHours"), browsers: t("stats.byBrowsers"), siteid: t("stats.bySiteId"), devices: t("stats.byDevices"),
+  };
+
   const activeCampaigns = useMemo(() =>
     campaigns.filter(c => c.status === "active" || c.status === "completed" || c.status === "paused"),
     [campaigns]
   );
 
-  // Compute filtered data based on selected campaigns and date range
   const data = useMemo(() => {
-    const ids = selectedCampaignIds.has("all")
-      ? activeCampaigns.map(c => c.id)
-      : Array.from(selectedCampaignIds);
-
-    // If no campaigns, use a default seed
+    const ids = selectedCampaignIds.has("all") ? activeCampaigns.map(c => c.id) : Array.from(selectedCampaignIds);
     const campaignIds = ids.length > 0 ? ids : ["_default"];
     const datasets = campaignIds.map(id => getCampaignData(id, groupBy));
     let merged = mergeData(datasets);
-
-    // Filter by date range when groupBy is "dates" or "hours" and range is set
     if ((groupBy === "dates" || groupBy === "hours") && dateRange?.from) {
       const from = startOfDay(dateRange.from);
       const to = dateRange.to ? startOfDay(dateRange.to) : from;
@@ -120,35 +102,29 @@ export default function DashboardStatistics() {
         return isWithinInterval(d, { start: from, end: to });
       });
     }
-
     return merged;
   }, [selectedCampaignIds, activeCampaigns, groupBy, dateRange]);
 
-  // Compute metric cards from current data
   const metricCards = useMemo(() => {
     const totalImpressions = data.reduce((s, r) => s + r.impressions, 0);
     const totalClicks = data.reduce((s, r) => s + r.clicks, 0);
     const totalSpent = data.reduce((s, r) => s + r.spent, 0);
     const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
-
     return [
-      { label: "Показы", value: totalImpressions.toLocaleString(), change: "+12.5%", up: true, icon: Eye },
-      { label: "Клики", value: totalClicks.toLocaleString(), change: "+8.2%", up: true, icon: MousePointer },
-      { label: "CTR", value: `${ctr}%`, change: "+2.1%", up: true, icon: Target },
-      { label: "Расход", value: `$${totalSpent.toLocaleString()}`, change: "-3.4%", up: false, icon: TrendingUp },
+      { label: t("stats.impressions"), value: totalImpressions.toLocaleString(), change: "+12.5%", up: true, icon: Eye },
+      { label: t("stats.clicks"), value: totalClicks.toLocaleString(), change: "+8.2%", up: true, icon: MousePointer },
+      { label: t("stats.ctr"), value: `${ctr}%`, change: "+2.1%", up: true, icon: Target },
+      { label: t("stats.spent"), value: `$${totalSpent.toLocaleString()}`, change: "-3.4%", up: false, icon: TrendingUp },
     ];
-  }, [data]);
+  }, [data, t]);
 
-  // Reset sort when groupBy changes
   useEffect(() => {
     if (groupBy === "dates") { setSortKey("label"); setSortDir("desc"); }
     else if (groupBy === "hours") { setSortKey("label"); setSortDir("asc"); }
     else { setSortKey("impressions"); setSortDir("desc"); }
   }, [groupBy]);
 
-  const handleRefresh = useCallback(() => {
-    toast.success("Статистика обновлена");
-  }, []);
+  const handleRefresh = useCallback(() => { toast.success(t("stats.refreshed")); }, [t]);
 
   const handleCampaignChange = (id: string) => {
     setSelectedCampaignIds(prev => {
@@ -166,20 +142,11 @@ export default function DashboardStatistics() {
 
   const handleDateChange = (range: DateRange | undefined) => {
     if (!range) return;
-    if (clickCount === 0) {
-      setDateRange({ from: range.from, to: undefined });
-      setClickCount(1);
-    } else if (clickCount === 1) {
-      if (range.from && range.to) {
-        setDateRange(range);
-      } else if (range.from) {
-        setDateRange({ from: dateRange?.from, to: range.from });
-      }
+    if (clickCount === 0) { setDateRange({ from: range.from, to: undefined }); setClickCount(1); }
+    else if (clickCount === 1) {
+      if (range.from && range.to) { setDateRange(range); } else if (range.from) { setDateRange({ from: dateRange?.from, to: range.from }); }
       setClickCount(2);
-    } else {
-      setDateRange({ from: range.from || range.to, to: undefined });
-      setClickCount(1);
-    }
+    } else { setDateRange({ from: range.from || range.to, to: undefined }); setClickCount(1); }
   };
 
   const chartData = useMemo(() => {
@@ -189,9 +156,7 @@ export default function DashboardStatistics() {
 
   const sortedData = useMemo(() => {
     return [...data].sort((a, b) => {
-      if (sortKey === "label") {
-        return sortDir === "asc" ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label);
-      }
+      if (sortKey === "label") return sortDir === "asc" ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label);
       return sortDir === "desc" ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey];
     });
   }, [data, sortKey, sortDir]);
@@ -211,41 +176,32 @@ export default function DashboardStatistics() {
     spent: sortedData.reduce((s, r) => s + r.spent, 0),
   }), [sortedData]);
 
-  const labelHeader = groupBy === "dates" ? "Дата" : groupBy === "hours" ? "Дата и час" : groupBy === "browsers" ? "Браузер" : groupBy === "siteid" ? "SiteID" : "Устройство";
+  const labelHeader = groupBy === "dates" ? t("stats.date") : groupBy === "hours" ? t("stats.dateAndHour") : groupBy === "browsers" ? t("stats.browser") : groupBy === "siteid" ? "SiteID" : t("stats.device");
   const canSortByLabel = groupBy === "dates" || groupBy === "hours";
 
-  const campaignOptions = [
-    { id: "all", name: "Все кампании" },
-    ...activeCampaigns,
-  ];
+  const campaignOptions = [{ id: "all", name: t("stats.allCampaigns") }, ...activeCampaigns];
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Статистика</h2>
-        <p className="text-muted-foreground text-sm">Подробная аналитика по вашим кампаниям</p>
+        <h2 className="text-2xl font-bold">{t("stats.title")}</h2>
+        <p className="text-muted-foreground text-sm">{t("stats.subtitle")}</p>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap items-end gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-base text-muted-foreground font-medium mb-1">Кампании</label>
+          <label className="text-base text-muted-foreground font-medium mb-1">{t("stats.campaigns")}</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
-                {selectedCampaignIds.has("all")
-                  ? "Все кампании"
-                  : `Выбрано: ${selectedCampaignIds.size}`}
+                {selectedCampaignIds.has("all") ? t("stats.allCampaigns") : `${t("stats.selected")} ${selectedCampaignIds.size}`}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[280px] p-2" align="start">
               <div className="space-y-1 max-h-64 overflow-y-auto">
                 {campaignOptions.map(c => (
                   <label key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
-                    <Checkbox
-                      checked={selectedCampaignIds.has(c.id)}
-                      onCheckedChange={() => handleCampaignChange(c.id)}
-                    />
+                    <Checkbox checked={selectedCampaignIds.has(c.id)} onCheckedChange={() => handleCampaignChange(c.id)} />
                     {c.name}
                   </label>
                 ))}
@@ -255,7 +211,7 @@ export default function DashboardStatistics() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-base text-muted-foreground font-medium mb-1">Период</label>
+          <label className="text-base text-muted-foreground font-medium mb-1">{t("stats.period")}</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
@@ -264,27 +220,20 @@ export default function DashboardStatistics() {
                   dateRange.to && dateRange.from.getTime() !== dateRange.to.getTime() ? (
                     <>{format(dateRange.from, "dd.MM.yy")} — {format(dateRange.to, "dd.MM.yy")}</>
                   ) : format(dateRange.from, "dd.MM.yy")
-                ) : "Выберите период"}
+                ) : t("stats.selectPeriod")}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="range"
-                selected={dateRange}
-                onSelect={handleDateChange}
-                numberOfMonths={2}
-                className="p-3 pointer-events-auto"
-              />
+              <Calendar mode="range" selected={dateRange} onSelect={handleDateChange} numberOfMonths={2} className="p-3 pointer-events-auto" />
             </PopoverContent>
           </Popover>
         </div>
 
         <Button onClick={handleRefresh} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
-          <RefreshCw className="h-4 w-4" /> Обновить
+          <RefreshCw className="h-4 w-4" /> {t("stats.refresh")}
         </Button>
       </div>
 
-      {/* Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {metricCards.map((m) => (
           <Card key={m.label} className="bg-card border-border">
@@ -303,10 +252,9 @@ export default function DashboardStatistics() {
         ))}
       </div>
 
-      {/* Chart */}
       {groupBy === "dates" && chartData.length > 0 && (
         <Card className="bg-card border-border">
-          <CardHeader><CardTitle className="text-lg">Динамика показов</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">{t("stats.chartTitle")}</CardTitle></CardHeader>
           <CardContent>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -329,17 +277,13 @@ export default function DashboardStatistics() {
         </Card>
       )}
 
-      {/* Table */}
       <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex flex-wrap items-center gap-2">
             {(Object.keys(groupLabels) as GroupBy[]).map((g) => (
               <Button key={g} variant={groupBy === g ? "default" : "outline"} size="sm"
                 onClick={() => setGroupBy(g)}
-                className={cn(
-                  "min-w-[100px]",
-                  groupBy === g ? "bg-primary text-primary-foreground" : "border-border"
-                )}>
+                className={cn("min-w-[100px]", groupBy === g ? "bg-primary text-primary-foreground" : "border-border")}>
                 {groupLabels[g]}
               </Button>
             ))}
@@ -347,9 +291,7 @@ export default function DashboardStatistics() {
         </CardHeader>
         <CardContent className="p-0">
           {data.length === 0 ? (
-            <div className="py-16 text-center text-muted-foreground">
-              <p>Нет данных для выбранных фильтров</p>
-            </div>
+            <div className="py-16 text-center text-muted-foreground"><p>{t("stats.noData")}</p></div>
           ) : (
             <div className="overflow-x-auto overflow-y-hidden">
               <table className="w-full table-fixed">
@@ -360,14 +302,14 @@ export default function DashboardStatistics() {
                       {labelHeader} {canSortByLabel && <SortIcon col="label" />}
                     </th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("impressions")}>
-                      Показы <SortIcon col="impressions" />
+                      {t("stats.impressions")} <SortIcon col="impressions" />
                     </th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[120px]" onClick={() => toggleSort("clicks")}>
-                      Клики <SortIcon col="clicks" />
+                      {t("stats.clicks")} <SortIcon col="clicks" />
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground w-[100px]">CTR</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground w-[100px]">{t("stats.ctr")}</th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("spent")}>
-                      Расход <SortIcon col="spent" />
+                      {t("stats.spent")} <SortIcon col="spent" />
                     </th>
                   </tr>
                 </thead>
@@ -382,7 +324,7 @@ export default function DashboardStatistics() {
                     </tr>
                   ))}
                   <tr className="bg-muted/30 font-semibold">
-                    <td className="py-3 px-4">Итого</td>
+                    <td className="py-3 px-4">{t("stats.total")}</td>
                     <td className="py-3 px-4 text-right">{totals.impressions.toLocaleString()}</td>
                     <td className="py-3 px-4 text-right">{totals.clicks.toLocaleString()}</td>
                     <td className="py-3 px-4 text-right">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
