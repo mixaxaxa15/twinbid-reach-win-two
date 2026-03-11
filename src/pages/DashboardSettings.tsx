@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { User, Bell, Shield, Globe, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function DashboardSettings() {
+  const { t } = useLanguage();
   const [profile, setProfile] = useState({
     email: "user@example.com",
     contactName: "John Doe",
@@ -27,42 +29,42 @@ export default function DashboardSettings() {
     balanceThreshold: "100",
   });
 
-  const handleSave = () => toast.success("Настройки сохранены");
+  const handleSave = () => toast.success(t("settings.saved"));
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Настройки</h2>
-        <p className="text-muted-foreground text-sm">Управление аккаунтом и предпочтениями</p>
+        <h2 className="text-2xl font-bold">{t("settings.title")}</h2>
+        <p className="text-muted-foreground text-sm">{t("settings.subtitle")}</p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="bg-card border border-border">
-          <TabsTrigger value="profile" className="gap-2"><User className="h-4 w-4" /> Профиль</TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2"><Bell className="h-4 w-4" /> Уведомления</TabsTrigger>
-          <TabsTrigger value="security" className="gap-2"><Shield className="h-4 w-4" /> Безопасность</TabsTrigger>
-          <TabsTrigger value="api" className="gap-2"><Globe className="h-4 w-4" /> API</TabsTrigger>
+          <TabsTrigger value="profile" className="gap-2"><User className="h-4 w-4" /> {t("settings.profile")}</TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2"><Bell className="h-4 w-4" /> {t("settings.notifications")}</TabsTrigger>
+          <TabsTrigger value="security" className="gap-2"><Shield className="h-4 w-4" /> {t("settings.security")}</TabsTrigger>
+          <TabsTrigger value="api" className="gap-2"><Globe className="h-4 w-4" /> {t("settings.api")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
           <Card className="bg-card border-border">
-            <CardHeader><CardTitle className="text-lg">Профиль</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">{t("settings.profile")}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Имя</Label>
+                  <Label>{t("settings.name")}</Label>
                   <Input value={profile.contactName} onChange={(e) => setProfile({ ...profile, contactName: e.target.value })} className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Email</Label>
+                  <Label>{t("settings.email")}</Label>
                   <Input value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Telegram (опционально)</Label>
+                  <Label>{t("settings.telegram")}</Label>
                   <Input value={profile.telegram} onChange={(e) => setProfile({ ...profile, telegram: e.target.value })} placeholder="@username" className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Часовой пояс</Label>
+                  <Label>{t("settings.timezone")}</Label>
                   <Select value={profile.timezone} onValueChange={(v) => setProfile({ ...profile, timezone: v })}>
                     <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
                     <SelectContent className="bg-card border-border">
@@ -78,21 +80,21 @@ export default function DashboardSettings() {
                   </Select>
                 </div>
               </div>
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />Сохранить</Button>
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />{t("settings.save")}</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="notifications">
           <Card className="bg-card border-border">
-            <CardHeader><CardTitle className="text-lg">Настройки уведомлений</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">{t("settings.notifications")}</CardTitle></CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-muted-foreground">Email-уведомления</h4>
+                <h4 className="text-sm font-medium text-muted-foreground">{t("settings.emailNotifications")}</h4>
                 {[
-                  { key: "emailCampaign" as const, label: "Изменения статуса кампаний" },
-                  { key: "emailBalance" as const, label: "Низкий баланс" },
-                  { key: "emailReport" as const, label: "Еженедельные отчёты" },
+                  { key: "emailCampaign" as const, label: t("settings.campaignStatus") },
+                  { key: "emailBalance" as const, label: t("settings.lowBalance") },
+                  { key: "emailReport" as const, label: t("settings.weeklyReports") },
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between">
                     <Label>{item.label}</Label>
@@ -102,10 +104,10 @@ export default function DashboardSettings() {
               </div>
               <Separator />
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-muted-foreground">Push-уведомления</h4>
+                <h4 className="text-sm font-medium text-muted-foreground">{t("settings.pushNotifications")}</h4>
                 {[
-                  { key: "pushCampaign" as const, label: "Статусы кампаний" },
-                  { key: "pushBalance" as const, label: "Баланс ниже порога" },
+                  { key: "pushCampaign" as const, label: t("settings.pushCampaignStatus") },
+                  { key: "pushBalance" as const, label: t("settings.pushBalance") },
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between">
                     <Label>{item.label}</Label>
@@ -115,41 +117,41 @@ export default function DashboardSettings() {
               </div>
               <Separator />
               <div className="space-y-2 max-w-xs">
-                <Label>Порог баланса для уведомления</Label>
+                <Label>{t("settings.balanceThreshold")}</Label>
                 <div className="relative">
                   <Input value={notifications.balanceThreshold} onChange={(e) => setNotifications({ ...notifications, balanceThreshold: e.target.value })} className="bg-background border-border pr-8" />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                 </div>
               </div>
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />Сохранить</Button>
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />{t("settings.save")}</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="security">
           <Card className="bg-card border-border">
-            <CardHeader><CardTitle className="text-lg">Безопасность</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">{t("settings.security")}</CardTitle></CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Текущий пароль</Label>
+                  <Label>{t("settings.currentPassword")}</Label>
                   <Input type="password" placeholder="••••••••" className="bg-background border-border max-w-sm" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Новый пароль</Label>
+                  <Label>{t("settings.newPassword")}</Label>
                   <Input type="password" placeholder="••••••••" className="bg-background border-border max-w-sm" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Повторите пароль</Label>
+                  <Label>{t("settings.repeatPassword")}</Label>
                   <Input type="password" placeholder="••••••••" className="bg-background border-border max-w-sm" />
                 </div>
-                <Button onClick={() => toast.success("Пароль обновлён")} className="bg-primary hover:bg-primary/90">Сменить пароль</Button>
+                <Button onClick={() => toast.success(t("settings.passwordUpdated"))} className="bg-primary hover:bg-primary/90">{t("settings.changePassword")}</Button>
               </div>
               <Separator />
               <div className="flex items-center justify-between max-w-sm">
                 <div>
-                  <Label>Двухфакторная аутентификация</Label>
-                  <p className="text-xs text-muted-foreground mt-1">Дополнительная защита аккаунта</p>
+                  <Label>{t("settings.2fa")}</Label>
+                  <p className="text-xs text-muted-foreground mt-1">{t("settings.2faDesc")}</p>
                 </div>
                 <Switch />
               </div>
@@ -159,19 +161,19 @@ export default function DashboardSettings() {
 
         <TabsContent value="api">
           <Card className="bg-card border-border">
-            <CardHeader><CardTitle className="text-lg">API и интеграции</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">{t("settings.api")}</CardTitle></CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label>API-ключ</Label>
+                <Label>{t("settings.apiKey")}</Label>
                 <div className="flex gap-2 max-w-lg">
                   <Input value="tb_live_a1b2c3d4e5f6g7h8i9j0..." readOnly className="bg-background border-border font-mono text-sm" />
-                  <Button variant="outline" onClick={() => { navigator.clipboard.writeText("tb_live_a1b2c3d4e5f6g7h8i9j0"); toast.success("Скопировано"); }}>
-                    Копировать
+                  <Button variant="outline" onClick={() => { navigator.clipboard.writeText("tb_live_a1b2c3d4e5f6g7h8i9j0"); toast.success(t("settings.copied")); }}>
+                    {t("settings.copyBtn")}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Используйте этот ключ для интеграции через API</p>
+                <p className="text-xs text-muted-foreground">{t("settings.apiDesc")}</p>
               </div>
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />Сохранить</Button>
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />{t("settings.save")}</Button>
             </CardContent>
           </Card>
         </TabsContent>

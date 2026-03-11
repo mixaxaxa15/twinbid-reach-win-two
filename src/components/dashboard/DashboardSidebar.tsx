@@ -1,29 +1,26 @@
 import { LayoutDashboard, Megaphone, Wallet, Settings, LogOut, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import twinbidLogo from "@/assets/twinbid-logo.svg";
-
-const menuItems = [
-  { icon: LayoutDashboard, label: "Обзор", path: "/dashboard" },
-  { icon: Megaphone, label: "Кампании", path: "/dashboard/campaigns" },
-  { icon: BarChart3, label: "Статистика", path: "/dashboard/statistics" },
-  { icon: Wallet, label: "Баланс", path: "/dashboard/balance" },
-  { icon: Settings, label: "Настройки", path: "/dashboard/settings" },
-];
 
 export function DashboardSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
+
+  const menuItems = [
+    { icon: LayoutDashboard, label: t("sidebar.overview"), path: "/dashboard" },
+    { icon: Megaphone, label: t("sidebar.campaigns"), path: "/dashboard/campaigns" },
+    { icon: BarChart3, label: t("sidebar.statistics"), path: "/dashboard/statistics" },
+    { icon: Wallet, label: t("sidebar.balance"), path: "/dashboard/balance" },
+    { icon: Settings, label: t("sidebar.settings"), path: "/dashboard/settings" },
+  ];
 
   return (
     <aside className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
-        <img
-          src={twinbidLogo}
-          alt="TwinBid"
-          className="h-9 cursor-pointer"
-          onClick={() => navigate("/")}
-        />
+        <img src={twinbidLogo} alt="TwinBid" className="h-9 cursor-pointer" onClick={() => navigate("/")} />
       </div>
       <nav className="flex-1 p-4 space-y-2">
         {menuItems.map((item) => {
@@ -31,7 +28,7 @@ export function DashboardSidebar() {
             (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
           return (
             <button
-              key={item.label}
+              key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors",
@@ -46,7 +43,7 @@ export function DashboardSidebar() {
       </nav>
       <div className="p-4 border-t border-border">
         <button onClick={() => navigate("/")} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
-          <LogOut className="h-5 w-5" /><span>Выйти</span>
+          <LogOut className="h-5 w-5" /><span>{t("sidebar.logout")}</span>
         </button>
       </div>
     </aside>
