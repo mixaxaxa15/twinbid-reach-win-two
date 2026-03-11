@@ -5,21 +5,7 @@ import { HelpCircle, AlertTriangle, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { PricingModel, TrafficQuality } from "@/contexts/CampaignContext";
-
-const trafficInfo: Record<TrafficQuality, { label: string; desc: string }> = {
-  common: {
-    label: "Common",
-    desc: "Трафик, очищенный от ботов нашей внутренней системой",
-  },
-  high: {
-    label: "High Quality",
-    desc: "Трафик с самыми жёсткими фильтрами на стороне поставщиков + наши жёсткие фильтры",
-  },
-  ultra: {
-    label: "Ultra High Quality",
-    desc: "Самый высококонвертящий сегмент с лучшими результатами у других рекламодателей, отфильтрованный поставщиками, нами и проверенный независимыми чекерами",
-  },
-};
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const cpmLimits: Record<TrafficQuality, { min: number; rec: number }> = {
   common: { min: 0.3, rec: 0.7 },
@@ -41,7 +27,6 @@ function getAvailableModels(formatKey: string): PricingModel[] {
   return ["cpm"];
 }
 
-/** Parse numeric value allowing both dot and comma as decimal separator */
 function parseNumericValue(val: string): number {
   return parseFloat(val.replace(",", ".")) || 0;
 }
@@ -71,44 +56,47 @@ export function BudgetSection({
   trafficQuality, setTrafficQuality, startDate, setStartDate, endDate, setEndDate,
   errors = {},
 }: BudgetSectionProps) {
+  const { t } = useLanguage();
   const availableModels = getAvailableModels(formatKey);
   const limits = getPriceLimits(trafficQuality, pricingModel);
   const priceNum = parseNumericValue(priceValue);
   const isBelowMin = priceValue !== "" && priceNum < limits.min;
   const isBelowRec = priceValue !== "" && priceNum >= limits.min && priceNum < limits.rec;
 
-  // Auto-set pricing model if format only supports one
+  const trafficInfo: Record<TrafficQuality, { label: string; desc: string }> = {
+    common: { label: "Common", desc: t("budget.trafficCommon") },
+    high: { label: "High Quality", desc: t("budget.trafficHigh") },
+    ultra: { label: "Ultra High Quality", desc: t("budget.trafficUltra") },
+  };
+
   if (availableModels.length === 1 && pricingModel !== availableModels[0]) {
     setPricingModel(availableModels[0]);
   }
 
   return (
     <div className="space-y-5">
-      {/* Total Budget */}
       <div className="space-y-2">
-        <Label>Общий бюджет *</Label>
+        <Label>{t("budget.totalBudget")}</Label>
         <div className="relative max-w-xs">
           <Input value={totalBudget} onChange={(e) => setTotalBudget(e.target.value)}
             placeholder="1000" className={cn("bg-background border-border pr-8", errors.totalBudget && "border-destructive")} />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
         </div>
         {errors.totalBudget && <p className="text-xs text-destructive">{errors.totalBudget}</p>}
-        <p className="text-xs text-muted-foreground">Обязательное поле. Минимум $100</p>
+        <p className="text-xs text-muted-foreground">{t("budget.totalBudgetHint")}</p>
       </div>
 
-      {/* Daily Budget */}
       <div className="space-y-2">
-        <Label>Дневной бюджет (опционально)</Label>
+        <Label>{t("budget.dailyBudget")}</Label>
         <div className="relative max-w-xs">
           <Input value={dailyBudget} onChange={(e) => setDailyBudget(e.target.value)}
-            placeholder="Без ограничений" className="bg-background border-border pr-8" />
+            placeholder={t("budget.dailyBudgetPlaceholder")} className="bg-background border-border pr-8" />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
         </div>
       </div>
 
-      {/* Traffic Quality */}
       <div className="space-y-2">
-        <Label>Тип трафика *</Label>
+        <Label>{t("budget.trafficType")}</Label>
         <div className="flex flex-wrap gap-2">
           {(["common", "high", "ultra"] as const).map((q) => (
             <div key={q} className="flex items-center gap-1">
@@ -134,10 +122,9 @@ export function BudgetSection({
         </div>
       </div>
 
-      {/* Pricing Model */}
       {availableModels.length > 1 && (
         <div className="space-y-2">
-          <Label>Модель оплаты *</Label>
+          <Label>{t("budget.pricingModel")}</Label>
           <div className="flex gap-2">
             {availableModels.map((m) => (
               <Button key={m} type="button" variant="outline" size="sm"
@@ -154,9 +141,8 @@ export function BudgetSection({
         </div>
       )}
 
-      {/* Price Value */}
       <div className="space-y-2">
-        <Label>{pricingModel === "cpm" ? "CPM (стоимость за 1000 показов)" : "CPC (стоимость за клик)"} *</Label>
+        <Label>{pricingModel === "cpm" ? t("budget.cpmLabel") : t("budget.cpcLabel")} *</Label>
         <div className="relative max-w-xs">
           <Input value={priceValue} onChange={(e) => setPriceValue(e.target.value)}
             placeholder={String(limits.rec)}
@@ -165,32 +151,31 @@ export function BudgetSection({
         </div>
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">
-            Мин: ${limits.min} · Рекомендованная: ${limits.rec}
+            {t("budget.min")}: ${limits.min} · {t("budget.recommended")}: ${limits.rec}
           </p>
           {isBelowMin && (
             <div className="flex items-center gap-1 text-destructive">
               <AlertTriangle className="h-3 w-3" />
-              <p className="text-xs">Ставка ниже минимальной (${limits.min})</p>
+              <p className="text-xs">{t("budget.belowMin")} (${limits.min})</p>
             </div>
           )}
           {isBelowRec && (
             <div className="flex items-center gap-1 text-yellow-500">
               <Info className="h-3 w-3" />
-              <p className="text-xs">Ставка ниже рекомендованной — может быть мало показов</p>
+              <p className="text-xs">{t("budget.belowRec")}</p>
             </div>
           )}
         </div>
         {errors.priceValue && <p className="text-xs text-destructive">{errors.priceValue}</p>}
       </div>
 
-      {/* Dates */}
       <div className="grid grid-cols-2 gap-4 max-w-md">
         <div className="space-y-2">
-          <Label>Дата начала</Label>
+          <Label>{t("budget.startDate")}</Label>
           <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-background border-border" />
         </div>
         <div className="space-y-2">
-          <Label>Дата окончания</Label>
+          <Label>{t("budget.endDate")}</Label>
           <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-background border-border" />
         </div>
       </div>
@@ -198,7 +183,6 @@ export function BudgetSection({
   );
 }
 
-/** Export for use in validation */
 export function parseNumeric(val: string): number {
   return parseFloat(val.replace(",", ".")) || 0;
 }
