@@ -172,6 +172,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "balance.toast.pendingExists": { ru: "У вас есть незавершённая оплата. Завершите или отмените её.", en: "You have a pending payment. Complete or cancel it." },
   "balance.toast.enterHash": { ru: "Введите хэш транзакции", en: "Enter transaction hash" },
   "balance.toast.paymentSent": { ru: "Платёж отправлен на проверку. Средства появятся на балансе в ближайшее время.", en: "Payment sent for review. Funds will appear on your balance shortly." },
+  "balance.toast.paymentSupport": { ru: "По вопросам оплаты обращайтесь: @GregTwinbid в Telegram", en: "For payment inquiries contact: @GregTwinbid on Telegram" },
   "balance.toast.paymentCanceled": { ru: "Оплата отменена", en: "Payment cancelled" },
   "balance.toast.addressCopied": { ru: "Адрес скопирован", en: "Address copied" },
   "balance.toast.notCompleted": { ru: "Оплата не завершена. Проверьте уведомления.", en: "Payment not completed. Check notifications." },
