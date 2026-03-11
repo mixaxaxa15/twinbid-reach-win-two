@@ -105,7 +105,14 @@ export default function DashboardBalance() {
     };
     persistTransactions([newTx, ...transactions]);
 
-    toast.success(t("balance.toast.paymentSent"), { duration: 8000 });
+    toast.success(t("balance.toast.paymentSent"), {
+      duration: 8000,
+      description: t("balance.toast.paymentSupport"),
+      action: {
+        label: "@GregTwinbid",
+        onClick: () => window.open("https://t.me/GregTwinbid", "_blank"),
+      },
+    });
     setShowTxDialog(false);
     setPendingPayment(null);
     setTxHash("");
