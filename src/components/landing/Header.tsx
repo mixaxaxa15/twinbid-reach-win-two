@@ -2,16 +2,19 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "./AuthDialog";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useLanguage } from "@/contexts/LanguageContext";
 import twinbidLogo from "@/assets/twinbid-logo.svg";
-
-const navLinks = [
-  { label: "Преимущества", href: "#benefits" },
-  { label: "Форматы", href: "#formats" },
-  { label: "Как начать", href: "#steps" },
-];
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { t } = useLanguage();
+
+  const navLinks = [
+    { label: t("nav.benefits"), href: "#benefits" },
+    { label: t("nav.formats"), href: "#formats" },
+    { label: t("nav.howToStart"), href: "#steps" },
+  ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass">
@@ -28,8 +31,9 @@ export function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <AuthDialog trigger={<Button variant="ghost" className="text-muted-foreground hover:text-foreground">Войти</Button>} defaultTab="login" />
-            <AuthDialog trigger={<Button className="gradient-primary text-primary-foreground hover:opacity-90 glow-primary">Регистрация</Button>} defaultTab="register" />
+            <LanguageSelector />
+            <AuthDialog trigger={<Button variant="ghost" className="text-muted-foreground hover:text-foreground">{t("nav.login")}</Button>} defaultTab="login" />
+            <AuthDialog trigger={<Button className="gradient-primary text-primary-foreground hover:opacity-90 glow-primary">{t("nav.register")}</Button>} defaultTab="register" />
           </div>
 
           <button className="md:hidden p-2 text-foreground" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -44,8 +48,9 @@ export function Header() {
                 <a key={link.href} href={link.href} className="text-muted-foreground hover:text-foreground transition-colors py-2" onClick={() => setIsMenuOpen(false)}>{link.label}</a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <AuthDialog trigger={<Button variant="ghost" className="justify-start text-muted-foreground">Войти</Button>} defaultTab="login" />
-                <AuthDialog trigger={<Button className="gradient-primary text-primary-foreground">Регистрация</Button>} defaultTab="register" />
+                <LanguageSelector />
+                <AuthDialog trigger={<Button variant="ghost" className="justify-start text-muted-foreground">{t("nav.login")}</Button>} defaultTab="login" />
+                <AuthDialog trigger={<Button className="gradient-primary text-primary-foreground">{t("nav.register")}</Button>} defaultTab="register" />
               </div>
             </nav>
           </div>

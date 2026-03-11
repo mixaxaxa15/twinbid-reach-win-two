@@ -4,11 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 export function DashboardHeader() {
   const { notifications, removeNotification } = useNotifications();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between">
@@ -16,12 +21,13 @@ export function DashboardHeader() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск кампаний..."
+            placeholder={t("header.search")}
             className="pl-10 bg-background border-border"
           />
         </div>
       </div>
       <div className="flex items-center gap-4">
+        <LanguageSelector />
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
@@ -35,12 +41,12 @@ export function DashboardHeader() {
           </PopoverTrigger>
           <PopoverContent className="w-[340px] p-0" align="end">
             <div className="p-3 border-b border-border">
-              <p className="text-sm font-medium">Уведомления</p>
+              <p className="text-sm font-medium">{t("header.notifications")}</p>
             </div>
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">
-                  Нет уведомлений
+                  {t("header.noNotifications")}
                 </div>
               ) : (
                 notifications.map((n) => (
@@ -70,15 +76,18 @@ export function DashboardHeader() {
             </div>
           </PopoverContent>
         </Popover>
-        <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate("/dashboard/settings")}
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+        >
           <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center">
             <User className="h-5 w-5 text-primary" />
           </div>
-          <div className="hidden sm:block">
-            <p className="text-sm font-medium">ООО «Компания»</p>
-            <p className="text-xs text-muted-foreground">Рекламодатель</p>
+          <div className="hidden sm:block text-left">
+            <p className="text-sm font-medium">user@example.com</p>
+            <p className="text-xs text-muted-foreground">{t("header.advertiser")}</p>
           </div>
-        </div>
+        </button>
       </div>
     </header>
   );
