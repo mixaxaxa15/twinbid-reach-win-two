@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
 import type { TargetingState, ListMode } from "@/contexts/CampaignContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const targetingOptions: Record<string, string[]> = {
   country: ["US","GB","DE","FR","IT","ES","BR","RU","IN","JP","KR","CN","AU","CA","MX","AR","CO","PL","NL","SE","NO","DK","FI","CZ","AT","CH","BE","PT","GR","TR","UA","RO","HU","BG","HR","SK","SI","LT","LV","EE","IE","IL","SA","AE","EG","ZA","NG","KE","TH","VN","PH","ID","MY","SG","TW","HK","NZ","CL","PE"],
@@ -13,38 +14,25 @@ const targetingOptions: Record<string, string[]> = {
   os: ["Android","iOS","Windows","macOS","Linux","ChromeOS","HarmonyOS"],
   osVersion: ["Android 14","Android 13","Android 12","Android 11","Android 10","Android 9","iOS 18","iOS 17","iOS 16","iOS 15","iOS 14","Windows 11","Windows 10","Windows 8.1","macOS 15","macOS 14","macOS 13","macOS 12","Linux"],
   browser: ["Chrome","Safari","Firefox","Edge","Opera","Samsung Internet","UC Browser","Brave","Vivaldi","Yandex Browser"],
-  dayOfWeek: ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"],
+  dayOfWeek: ["day.monday","day.tuesday","day.wednesday","day.thursday","day.friday","day.saturday","day.sunday"],
   hour: Array.from({ length: 24 }, (_, i) => String(i)),
   subid: [],
   sites: [],
 };
 
-export const targetingConfigs = [
-  { key: "country", label: "Страны" },
-  { key: "city", label: "Города" },
-  { key: "deviceType", label: "Тип устройства" },
-  { key: "os", label: "ОС" },
-  { key: "osVersion", label: "Версия ОС" },
-  { key: "browser", label: "Браузер" },
-  { key: "dayOfWeek", label: "День недели" },
-  { key: "hour", label: "Час показа" },
-  { key: "subid", label: "SubID" },
-  { key: "sites", label: "Сайты" },
+const targetingConfigKeys = [
+  "country", "city", "deviceType", "os", "osVersion", "browser", "dayOfWeek", "hour", "subid", "sites",
 ];
+
+export const targetingConfigs = targetingConfigKeys.map(key => ({ key, labelKey: `targeting.${key}` }));
 
 interface TargetingSectionProps {
   lists: Record<string, TargetingState>;
   onUpdate: (key: string, updates: Partial<TargetingState>) => void;
 }
 
-function AutocompleteInput({ 
-  options, 
-  value, 
-  onChange, 
-  onAdd, 
-  existingItems,
-  placeholder,
-  freeText 
+function AutocompleteInput({
+  options, value, onChange, onAdd, existingItems, placeholder, freeText, t,
 }: {
   options: string[];
   value: string;
@@ -53,14 +41,22 @@ function AutocompleteInput({
   existingItems: string[];
   placeholder: string;
   freeText: boolean;
+  t: (key: string) => string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = options.filter(o =>
-    o.toLowerCase().includes(value.toLowerCase()) && !existingItems.includes(o)
-  ).slice(0, 20);
+  // For day of week, show translated labels but filter by translated text
+  const getDisplayLabel = (option: string) => {
+    if (option.startsWith("day.")) return t(option);
+    return option;
+  };
+
+  const filtered = options.filter(o => {
+    const display = getDisplayLabel(o);
+    return display.toLowerCase().includes(value.toLowerCase()) && !existingItems.includes(o);
+  }).slice(0, 20);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -79,11 +75,8 @@ function AutocompleteInput({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (filtered.length > 0) {
-        handleAdd(filtered[0]);
-      } else if (freeText && value.trim()) {
-        handleAdd(value.trim());
-      }
+      if (filtered.length > 0) handleAdd(filtered[0]);
+      else if (freeText && value.trim()) handleAdd(value.trim());
     }
   };
 
@@ -101,22 +94,17 @@ function AutocompleteInput({
       {open && (filtered.length > 0 || (freeText && value.trim())) && (
         <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto bg-card border border-border rounded-md shadow-lg">
           {filtered.map(option => (
-            <button
-              key={option}
-              type="button"
+            <button key={option} type="button"
               className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
-              onMouseDown={(e) => { e.preventDefault(); handleAdd(option); }}
-            >
-              {option}
+              onMouseDown={(e) => { e.preventDefault(); handleAdd(option); }}>
+              {getDisplayLabel(option)}
             </button>
           ))}
           {freeText && value.trim() && !filtered.includes(value.trim()) && !existingItems.includes(value.trim()) && (
-            <button
-              type="button"
+            <button type="button"
               className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors text-muted-foreground"
-              onMouseDown={(e) => { e.preventDefault(); handleAdd(value.trim()); }}
-            >
-              Добавить «{value.trim()}»
+              onMouseDown={(e) => { e.preventDefault(); handleAdd(value.trim()); }}>
+              {t("targeting.addCustom")} «{value.trim()}»
             </button>
           )}
         </div>
@@ -130,9 +118,15 @@ function ListItem({ config, list, onUpdate }: {
   list: TargetingState;
   onUpdate: (updates: Partial<TargetingState>) => void;
 }) {
+  const { t } = useLanguage();
   const [inputValue, setInputValue] = useState("");
   const options = targetingOptions[config.key] || [];
   const isFreeText = config.key === "subid" || config.key === "sites";
+
+  const getDisplayLabel = (item: string) => {
+    if (item.startsWith("day.")) return t(item);
+    return item;
+  };
 
   const addItem = (item: string) => {
     if (item && !list.items.includes(item)) {
@@ -147,7 +141,7 @@ function ListItem({ config, list, onUpdate }: {
   return (
     <div className="space-y-3 p-4 rounded-lg bg-background/50 border border-border/50">
       <div className="flex items-center justify-between">
-        <Label className="font-medium">{config.label}</Label>
+        <Label className="font-medium">{t(config.labelKey)}</Label>
         <div className="flex gap-1.5">
           {(["none", "white", "black"] as const).map((m) => (
             <Button key={m} type="button" size="sm" variant="outline"
@@ -159,7 +153,7 @@ function ListItem({ config, list, onUpdate }: {
                     : "bg-primary text-primary-foreground border-primary"
                   : "border-border"
               }>
-              {m === "none" ? "Выкл" : m === "white" ? "White" : "Black"}
+              {m === "none" ? t("targeting.off") : m === "white" ? "White" : "Black"}
             </Button>
           ))}
         </div>
@@ -173,8 +167,9 @@ function ListItem({ config, list, onUpdate }: {
               onChange={setInputValue}
               onAdd={addItem}
               existingItems={list.items}
-              placeholder={isFreeText ? "Введите значение..." : "Начните вводить..."}
+              placeholder={isFreeText ? t("targeting.freeTextPlaceholder") : t("targeting.autocompletePlaceholder")}
               freeText={isFreeText}
+              t={t}
             />
             <Button type="button" size="icon" variant="outline"
               onClick={() => {
@@ -189,7 +184,7 @@ function ListItem({ config, list, onUpdate }: {
               {list.items.map((item) => (
                 <Badge key={item} variant="outline"
                   className={`gap-1 ${list.mode === "white" ? "border-green-500/30 text-green-400" : "border-red-500/30 text-red-400"}`}>
-                  {item}<X className="h-3 w-3 cursor-pointer" onClick={() => removeItem(item)} />
+                  {getDisplayLabel(item)}<X className="h-3 w-3 cursor-pointer" onClick={() => removeItem(item)} />
                 </Badge>
               ))}
             </div>
@@ -201,9 +196,10 @@ function ListItem({ config, list, onUpdate }: {
 }
 
 export function TargetingSection({ lists, onUpdate }: TargetingSectionProps) {
+  const { t } = useLanguage();
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">Для каждого параметра выберите режим: Whitelist (только эти значения) или Blacklist (исключить эти значения)</p>
+      <p className="text-sm text-muted-foreground">{t("targeting.description")}</p>
       {targetingConfigs.map((config) => (
         <ListItem
           key={config.key}

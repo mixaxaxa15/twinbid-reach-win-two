@@ -2,16 +2,18 @@ import { Wallet, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function BalanceCard() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <Card className="bg-card border-border h-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
           <Wallet className="h-4 w-4" />
-          Баланс
+          {t("balanceCard.title")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -19,14 +21,14 @@ export function BalanceCard() {
           $4,523
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          ≈ 14 дней показов
+          {t("balanceCard.daysLeft")}
         </p>
         <Button
           onClick={() => navigate("/dashboard/balance")}
           className="w-full mt-4 bg-accent hover:bg-accent/90 text-accent-foreground"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Пополнить
+          {t("balanceCard.topUp")}
         </Button>
       </CardContent>
     </Card>

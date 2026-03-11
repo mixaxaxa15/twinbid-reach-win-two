@@ -1,31 +1,16 @@
 import { TrendingUp, Eye, MousePointer, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const stats = [
-  {
-    label: "Показы",
-    value: "124,892",
-    change: "+12.5%",
-    icon: Eye,
-    color: "text-primary",
-  },
-  {
-    label: "Клики",
-    value: "8,234",
-    change: "+8.2%",
-    icon: MousePointer,
-    color: "text-accent",
-  },
-  {
-    label: "CTR",
-    value: "6.59%",
-    change: "+2.1%",
-    icon: Target,
-    color: "text-primary",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function StatsCards() {
+  const { t } = useLanguage();
+
+  const stats = [
+    { label: t("statsCards.impressions"), value: "124,892", change: "+12.5%", icon: Eye, color: "text-primary" },
+    { label: t("statsCards.clicks"), value: "8,234", change: "+8.2%", icon: MousePointer, color: "text-accent" },
+    { label: t("statsCards.ctr"), value: "6.59%", change: "+2.1%", icon: Target, color: "text-primary" },
+  ];
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {stats.map((stat) => (
