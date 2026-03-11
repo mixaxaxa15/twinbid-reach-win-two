@@ -17,22 +17,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCampaigns, type Campaign } from "@/contexts/CampaignContext";
-
-const statusConfig: Record<string, { label: string; className: string }> = {
-  active: { label: "Активна", className: "bg-green-500/10 text-green-500 border-green-500/20" },
-  paused: { label: "На паузе", className: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
-  draft: { label: "Черновик", className: "bg-muted text-muted-foreground border-border" },
-  completed: { label: "Завершена", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-  moderation: { label: "На модерации", className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
-};
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function DashboardCampaigns() {
   const navigate = useNavigate();
   const { campaigns, updateCampaign, deleteCampaign: ctxDelete, addCampaign } = useCampaigns();
+  const { t } = useLanguage();
   const [viewCampaign, setViewCampaign] = useState<Campaign | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const statusConfig: Record<string, { label: string; className: string }> = {
+    active: { label: t("status.active"), className: "bg-green-500/10 text-green-500 border-green-500/20" },
+    paused: { label: t("status.paused"), className: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
+    draft: { label: t("status.draft"), className: "bg-muted text-muted-foreground border-border" },
+    completed: { label: t("status.completed"), className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+    moderation: { label: t("status.moderation"), className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  };
 
   const filtered = campaigns.filter((c) => {
     const s = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.id.includes(searchQuery);
@@ -45,13 +47,13 @@ export default function DashboardCampaigns() {
     if (!c) return;
     const ns = c.status === "active" ? "paused" : "active";
     updateCampaign(id, { status: ns as any });
-    toast.success(ns === "active" ? "Кампания запущена" : "Кампания приостановлена");
+    toast.success(ns === "active" ? t("campaigns.started") : t("campaigns.paused"));
   };
 
   const handleDelete = () => {
     if (deleteId) {
       ctxDelete(deleteId);
-      toast.success("Кампания удалена");
+      toast.success(t("campaigns.deleted"));
       setDeleteId(null);
     }
   };
@@ -59,7 +61,7 @@ export default function DashboardCampaigns() {
   const duplicateCampaign = (c: Campaign) => {
     const { id: _id, ...rest } = c;
     addCampaign({ ...rest, name: `${c.name} (копия)`, status: "draft", spent: 0, impressions: 0, clicks: 0, ctr: 0 });
-    toast.success("Кампания скопирована");
+    toast.success(t("campaigns.copied"));
   };
 
   return (
@@ -67,40 +69,40 @@ export default function DashboardCampaigns() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold">Кампании</h2>
-            <p className="text-muted-foreground text-sm">Управляйте вашими рекламными кампаниями</p>
+            <h2 className="text-2xl font-bold">{t("campaigns.title")}</h2>
+            <p className="text-muted-foreground text-sm">{t("campaigns.subtitle")}</p>
           </div>
           <Button onClick={() => navigate("/dashboard/campaigns/create")} className="bg-primary hover:bg-primary/90">
-            <Plus className="h-4 w-4 mr-2" /> Создать кампанию
+            <Plus className="h-4 w-4 mr-2" /> {t("campaigns.create")}
           </Button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Поиск по названию или ID..." value={searchQuery}
+            <Input placeholder={t("campaigns.searchPlaceholder")} value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-background border-border" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px] bg-background border-border">
-              <Filter className="h-4 w-4 mr-2" /><SelectValue placeholder="Все статусы" />
+              <Filter className="h-4 w-4 mr-2" /><SelectValue placeholder={t("campaigns.allStatuses")} />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
-              <SelectItem value="all">Все статусы</SelectItem>
-              <SelectItem value="active">Активные</SelectItem>
-              <SelectItem value="paused">На паузе</SelectItem>
-              <SelectItem value="draft">Черновики</SelectItem>
-              <SelectItem value="moderation">На модерации</SelectItem>
-              <SelectItem value="completed">Завершённые</SelectItem>
+              <SelectItem value="all">{t("campaigns.allStatuses")}</SelectItem>
+              <SelectItem value="active">{t("campaigns.activeFilter")}</SelectItem>
+              <SelectItem value="paused">{t("campaigns.pausedFilter")}</SelectItem>
+              <SelectItem value="draft">{t("campaigns.draftsFilter")}</SelectItem>
+              <SelectItem value="moderation">{t("campaigns.moderationFilter")}</SelectItem>
+              <SelectItem value="completed">{t("campaigns.completedFilter")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Всего</p><p className="text-2xl font-bold">{campaigns.length}</p></CardContent></Card>
-          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Активных</p><p className="text-2xl font-bold text-green-500">{campaigns.filter(c => c.status === "active").length}</p></CardContent></Card>
-          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Бюджет</p><p className="text-2xl font-bold">${campaigns.reduce((s, c) => s + c.budget, 0).toLocaleString()}</p></CardContent></Card>
-          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Потрачено</p><p className="text-2xl font-bold">${campaigns.reduce((s, c) => s + c.spent, 0).toLocaleString()}</p></CardContent></Card>
+          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t("campaigns.total")}</p><p className="text-2xl font-bold">{campaigns.length}</p></CardContent></Card>
+          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t("campaigns.activeCount")}</p><p className="text-2xl font-bold text-green-500">{campaigns.filter(c => c.status === "active").length}</p></CardContent></Card>
+          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t("campaigns.budget")}</p><p className="text-2xl font-bold">${campaigns.reduce((s, c) => s + c.budget, 0).toLocaleString()}</p></CardContent></Card>
+          <Card className="bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t("overview.spent")}</p><p className="text-2xl font-bold">${campaigns.reduce((s, c) => s + c.spent, 0).toLocaleString()}</p></CardContent></Card>
         </div>
 
         <Card className="bg-card border-border">
@@ -109,13 +111,13 @@ export default function DashboardCampaigns() {
               <table className="w-full">
                 <thead className="sticky top-0 bg-card z-10">
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">ID</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Название</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Статус</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Формат</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Бюджет</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Потрачено</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Показы</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.id")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.name")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.status")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("campaigns.format")}</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("campaigns.budget")}</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.spent")}</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.impressions")}</th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">CTR</th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground"></th>
                   </tr>
@@ -135,22 +137,22 @@ export default function DashboardCampaigns() {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-card border-border">
-                            <DropdownMenuItem className="gap-2" onClick={() => setViewCampaign(campaign)}><Eye className="h-4 w-4" /> Просмотр</DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}><Pencil className="h-4 w-4" /> Редактировать</DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2" onClick={() => duplicateCampaign(campaign)}><Copy className="h-4 w-4" /> Копировать</DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2" onClick={() => setViewCampaign(campaign)}><Eye className="h-4 w-4" /> {t("campaigns.view")}</DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}><Pencil className="h-4 w-4" /> {t("campaigns.edit")}</DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2" onClick={() => duplicateCampaign(campaign)}><Copy className="h-4 w-4" /> {t("campaigns.copy")}</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {campaign.status === "active" ? (
-                              <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Pause className="h-4 w-4" /> Приостановить</DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Pause className="h-4 w-4" /> {t("campaigns.pause")}</DropdownMenuItem>
                             ) : campaign.status !== "completed" && campaign.status !== "moderation" ? (
-                              <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Play className="h-4 w-4" /> Запустить</DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Play className="h-4 w-4" /> {t("campaigns.start")}</DropdownMenuItem>
                             ) : null}
-                            <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDeleteId(campaign.id)}><Trash2 className="h-4 w-4" /> Удалить</DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDeleteId(campaign.id)}><Trash2 className="h-4 w-4" /> {t("campaigns.delete")}</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
                     </tr>
                   ))}
-                  {filtered.length === 0 && <tr><td colSpan={9} className="py-12 text-center text-muted-foreground">Кампании не найдены</td></tr>}
+                  {filtered.length === 0 && <tr><td colSpan={9} className="py-12 text-center text-muted-foreground">{t("campaigns.notFound")}</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -158,39 +160,33 @@ export default function DashboardCampaigns() {
         </Card>
       </div>
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить кампанию?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Это действие нельзя отменить. Кампания будет удалена навсегда.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("campaigns.deleteConfirm")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("campaigns.deleteDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-border">Отмена</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Удалить
-            </AlertDialogAction>
+            <AlertDialogCancel className="border-border">{t("campaigns.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("campaigns.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* View Dialog */}
       <Dialog open={!!viewCampaign} onOpenChange={() => setViewCampaign(null)}>
         <DialogContent className="sm:max-w-[600px] bg-card border-border">
           <DialogHeader><DialogTitle>{viewCampaign?.name}</DialogTitle><DialogDescription>ID: {viewCampaign?.id}</DialogDescription></DialogHeader>
           {viewCampaign && (
             <div className="grid grid-cols-2 gap-4 mt-4">
               {[
-                ["Статус", <Badge variant="outline" className={cn("font-normal", statusConfig[viewCampaign.status]?.className)}>{statusConfig[viewCampaign.status]?.label}</Badge>],
-                ["Формат", viewCampaign.format],
-                ["Бюджет", `$${viewCampaign.budget.toLocaleString()}`],
-                ["Потрачено", `$${viewCampaign.spent.toLocaleString()}`],
-                ["Показы", viewCampaign.impressions.toLocaleString()],
-                ["Клики", viewCampaign.clicks.toLocaleString()],
+                [t("overview.status"), <Badge variant="outline" className={cn("font-normal", statusConfig[viewCampaign.status]?.className)}>{statusConfig[viewCampaign.status]?.label}</Badge>],
+                [t("campaigns.format"), viewCampaign.format],
+                [t("campaigns.budget"), `$${viewCampaign.budget.toLocaleString()}`],
+                [t("overview.spent"), `$${viewCampaign.spent.toLocaleString()}`],
+                [t("overview.impressions"), viewCampaign.impressions.toLocaleString()],
+                [t("stats.clicks"), viewCampaign.clicks.toLocaleString()],
                 ["CTR", `${viewCampaign.ctr}%`],
-                ["Ставка", `$${viewCampaign.priceValue} (${viewCampaign.pricingModel.toUpperCase()})`],
+                [t("stats.spent"), `$${viewCampaign.priceValue} (${viewCampaign.pricingModel.toUpperCase()})`],
               ].map(([label, val], i) => (
                 <div key={i} className="space-y-1"><p className="text-sm text-muted-foreground">{label as string}</p><div className="font-medium">{val}</div></div>
               ))}

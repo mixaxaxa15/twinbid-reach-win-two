@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Wallet, Plus, ArrowDownLeft, ArrowUpRight, Receipt, Copy, ExternalLink } from "lucide-react";
+import { Wallet, Plus, ArrowDownLeft, Receipt, Copy, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const amounts = [100, 250, 500, 1000, 5000];
 
@@ -17,19 +18,25 @@ const usdtMethods = [
   { id: "usdt_erc20", label: "USDT (ERC-20)", desc: "Tether on Ethereum", address: "0x3F7a9c2B1d5E8f4A6C0b9D1e2F3a4B5c6D7e8F9a" },
 ];
 
-const transactions = [
-  { id: "1", type: "topup", amount: 500, date: "14.02.2026", method: "USDT (TRC-20)", status: "completed" },
-  { id: "2", type: "spend", amount: -32, date: "14.02.2026", campaign: "Летняя распродажа", status: "completed" },
-  { id: "3", type: "spend", amount: -18, date: "13.02.2026", campaign: "Новая коллекция", status: "completed" },
-  { id: "4", type: "topup", amount: 250, date: "12.02.2026", method: "USDT (TRC-20)", status: "completed" },
-  { id: "5", type: "spend", amount: -45, date: "12.02.2026", campaign: "Бренд-кампания", status: "completed" },
-  { id: "6", type: "topup", amount: 1000, date: "10.02.2026", method: "USDT (ERC-20)", status: "completed" },
-  { id: "7", type: "topup", amount: 100, date: "08.02.2026", method: "USDT (TRC-20)", status: "pending" },
+interface Transaction {
+  id: string;
+  amount: number;
+  date: string;
+  method: string;
+  status: "completed" | "pending";
+}
+
+const initialTransactions: Transaction[] = [
+  { id: "1", amount: 500, date: "14.02.2026", method: "USDT (TRC-20)", status: "completed" },
+  { id: "4", amount: 250, date: "12.02.2026", method: "USDT (TRC-20)", status: "completed" },
+  { id: "6", amount: 1000, date: "10.02.2026", method: "USDT (ERC-20)", status: "completed" },
+  { id: "7", amount: 100, date: "08.02.2026", method: "USDT (TRC-20)", status: "pending" },
 ];
 
-const BALANCE = 4523; // Mock balance
+const BALANCE = 4523;
 
 export default function DashboardBalance() {
+  const { t } = useLanguage();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(250);
   const [customAmount, setCustomAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState("usdt_trc20");
@@ -38,19 +45,27 @@ export default function DashboardBalance() {
   const [pendingPayment, setPendingPayment] = useState<{ amount: number; method: string } | null>(null);
   const [pendingNotificationId, setPendingNotificationId] = useState<string | null>(null);
   const { addNotification, removeNotification } = useNotifications();
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    try {
+      const stored = localStorage.getItem("twinbid_transactions");
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return initialTransactions;
+  });
 
-  // Low balance notification
+  const persistTransactions = (txs: Transaction[]) => {
+    setTransactions(txs);
+    localStorage.setItem("twinbid_transactions", JSON.stringify(txs));
+  };
+
   useEffect(() => {
     if (BALANCE < 10) {
       addNotification({
-        title: "Низкий баланс",
-        description: `Ваш баланс составляет $${BALANCE}. Рекомендуем пополнить счёт.`,
+        title: t("balance.notif.lowBalance"),
+        description: `${t("balance.notif.lowBalanceDesc")} $${BALANCE}. ${t("balance.notif.recommend")}`,
         type: "warning",
         persistent: true,
-        action: {
-          label: "Пополнить",
-          onClick: () => window.location.hash = "",
-        },
+        action: { label: t("balance.notif.topUp"), onClick: () => window.location.hash = "" },
       });
     }
   }, []);
@@ -59,15 +74,13 @@ export default function DashboardBalance() {
 
   const handleTopUp = () => {
     if (!finalAmount || finalAmount < 100) return;
-    // Block new payment if one is already pending
     if (pendingPayment) {
-      toast.error("У вас есть незавершённая оплата. Завершите или отмените её.");
+      toast.error(t("balance.toast.pendingExists"));
       return;
     }
     setPendingPayment({ amount: finalAmount, method: selectedMethod });
     setTxHash("");
     setShowTxDialog(true);
-    // Remove any existing pending payment notification
     if (pendingNotificationId) {
       removeNotification(pendingNotificationId);
       setPendingNotificationId(null);
@@ -76,18 +89,26 @@ export default function DashboardBalance() {
 
   const handleSubmitTx = () => {
     if (!txHash.trim()) {
-      toast.error("Введите хэш транзакции");
+      toast.error(t("balance.toast.enterHash"));
       return;
     }
-    toast.success("Платёж отправлен на проверку. Средства появятся на балансе в ближайшее время.", { duration: 8000 });
-    toast.info(
-      "По вопросам оплаты обращайтесь: @GregTwinbid в Telegram или twinbid@twinbidex.com",
-      { duration: 15000 }
-    );
+    // Add transaction to history
+    const methodLabel = usdtMethods.find(m => m.id === pendingPayment?.method)?.label || pendingPayment?.method || "";
+    const now = new Date();
+    const dateStr = `${String(now.getDate()).padStart(2, "0")}.${String(now.getMonth() + 1).padStart(2, "0")}.${now.getFullYear()}`;
+    const newTx: Transaction = {
+      id: Date.now().toString(),
+      amount: pendingPayment?.amount || 0,
+      date: dateStr,
+      method: methodLabel,
+      status: "pending",
+    };
+    persistTransactions([newTx, ...transactions]);
+
+    toast.success(t("balance.toast.paymentSent"), { duration: 8000 });
     setShowTxDialog(false);
     setPendingPayment(null);
     setTxHash("");
-    // Remove pending notification if hash was submitted
     if (pendingNotificationId) {
       removeNotification(pendingNotificationId);
       setPendingNotificationId(null);
@@ -102,27 +123,21 @@ export default function DashboardBalance() {
       removeNotification(pendingNotificationId);
       setPendingNotificationId(null);
     }
-    toast.info("Оплата отменена");
+    toast.info(t("balance.toast.paymentCanceled"));
   };
 
   const handleCloseTxDialog = (open: boolean) => {
     if (!open && pendingPayment && !txHash.trim()) {
       setShowTxDialog(false);
-      // Add notification to bell
       const nId = addNotification({
-        title: "Оплата не завершена",
-        description: `Вы не отправили хэш транзакции на $${pendingPayment.amount}`,
+        title: t("balance.notif.notCompleted"),
+        description: `${t("balance.notif.noHash")} $${pendingPayment.amount}`,
         type: "warning",
         persistent: true,
-        action: {
-          label: "Завершить оплату",
-          onClick: () => {
-            setShowTxDialog(true);
-          },
-        },
+        action: { label: t("balance.notif.completePayment"), onClick: () => setShowTxDialog(true) },
       });
       setPendingNotificationId(nId);
-      toast("Оплата не завершена. Проверьте уведомления.", { duration: 5000 });
+      toast(t("balance.toast.notCompleted"), { duration: 5000 });
     } else {
       setShowTxDialog(open);
     }
@@ -130,7 +145,7 @@ export default function DashboardBalance() {
 
   const copyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
-    toast.success("Адрес скопирован");
+    toast.success(t("balance.toast.addressCopied"));
   };
 
   const currentMethod = usdtMethods.find(m => m.id === selectedMethod);
@@ -138,8 +153,8 @@ export default function DashboardBalance() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Баланс и платежи</h2>
-        <p className="text-muted-foreground text-sm">Пополнение USDT</p>
+        <h2 className="text-2xl font-bold">{t("balance.title")}</h2>
+        <p className="text-muted-foreground text-sm">{t("balance.subtitle")}</p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -150,7 +165,7 @@ export default function DashboardBalance() {
                 <Wallet className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Текущий баланс</p>
+                <p className="text-sm text-muted-foreground">{t("balance.current")}</p>
                 <p className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   ${BALANCE.toLocaleString()}
                 </p>
@@ -158,16 +173,16 @@ export default function DashboardBalance() {
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Потрачено сегодня</span>
+                <span className="text-muted-foreground">{t("balance.spentToday")}</span>
                 <span>$32</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Потрачено за неделю</span>
+                <span className="text-muted-foreground">{t("balance.spentWeek")}</span>
                 <span>$184</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Хватит примерно на</span>
-                <span className="text-primary font-medium">~14 дней</span>
+                <span className="text-muted-foreground">{t("balance.estimatedDays")}</span>
+                <span className="text-primary font-medium">~14 {t("balance.days")}</span>
               </div>
             </div>
           </CardContent>
@@ -177,12 +192,12 @@ export default function DashboardBalance() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Пополнить баланс
+              {t("balance.topUp")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-2">
-              <Label>Сумма</Label>
+              <Label>{t("balance.amount")}</Label>
               <div className="flex flex-wrap gap-2">
                 {amounts.map((a) => (
                   <button key={a} onClick={() => { setSelectedAmount(a); setCustomAmount(""); }}
@@ -194,7 +209,7 @@ export default function DashboardBalance() {
                 ))}
               </div>
               <div className="relative max-w-xs">
-                <Input placeholder="Другая сумма" value={customAmount}
+                <Input placeholder={t("balance.otherAmount")} value={customAmount}
                   onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(null); }}
                   className="bg-background border-border pr-8" />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
@@ -202,7 +217,7 @@ export default function DashboardBalance() {
             </div>
 
             <div className="space-y-2">
-              <Label>Сеть</Label>
+              <Label>{t("balance.network")}</Label>
               <div className="grid sm:grid-cols-2 gap-3">
                 {usdtMethods.map((m) => (
                   <button key={m.id} onClick={() => setSelectedMethod(m.id)}
@@ -218,9 +233,9 @@ export default function DashboardBalance() {
 
             <Button onClick={handleTopUp} className="bg-accent hover:bg-accent/90 text-accent-foreground"
               disabled={!finalAmount || finalAmount < 100}>
-              Пополнить {finalAmount ? `$${finalAmount.toLocaleString()}` : ""}
+              {t("balance.topUpBtn")} {finalAmount ? `$${finalAmount.toLocaleString()}` : ""}
             </Button>
-            <p className="text-xs text-muted-foreground">Минимальная сумма — $100. Бонус +25% на первый депозит.</p>
+            <p className="text-xs text-muted-foreground">{t("balance.minAmount")}</p>
           </CardContent>
         </Card>
       </div>
@@ -229,47 +244,46 @@ export default function DashboardBalance() {
       <Dialog open={showTxDialog} onOpenChange={handleCloseTxDialog}>
         <DialogContent className="sm:max-w-[500px] bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Оплата {pendingPayment ? `$${pendingPayment.amount.toLocaleString()}` : ""}</DialogTitle>
-            <DialogDescription>
-              Переведите точную сумму на указанный адрес и вставьте хэш транзакции
-            </DialogDescription>
+            <DialogTitle>{t("balance.paymentTitle")} {pendingPayment ? `$${pendingPayment.amount.toLocaleString()}` : ""}</DialogTitle>
+            <DialogDescription>{t("balance.paymentDesc")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-              <p className="text-sm font-medium">Сумма пополнения: <span className="text-primary">${pendingPayment?.amount.toLocaleString()}</span></p>
+              <p className="text-sm font-medium">{t("balance.topUpAmount")} <span className="text-primary">${pendingPayment?.amount.toLocaleString()}</span></p>
             </div>
 
             <div className="space-y-2">
-              <Label>Адрес кошелька ({currentMethod?.label})</Label>
+              <Label>{t("balance.walletAddress")} ({currentMethod?.label})</Label>
               <div className="flex gap-2">
                 <Input value={currentMethod?.address || ""} readOnly className="bg-background border-border font-mono text-xs" />
                 <Button variant="outline" size="icon" onClick={() => copyAddress(currentMethod?.address || "")} className="border-border shrink-0">
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">Переведите точную сумму. Средства зачислятся после подтверждения сети.</p>
+              <p className="text-xs text-muted-foreground">{t("balance.transferNote")}</p>
             </div>
 
             <div className="space-y-2">
-              <Label>Хэш транзакции *</Label>
+              <Label>{t("balance.txHash")}</Label>
               <Input value={txHash} onChange={(e) => setTxHash(e.target.value)}
                 placeholder="0x..." className="bg-background border-border font-mono text-sm" />
             </div>
 
             <Button onClick={handleSubmitTx} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={!txHash.trim()}>
-              Отправить
+              {t("balance.submit")}
             </Button>
 
             <Button variant="outline" className="w-full border-border" onClick={handleCancelPayment}>
-              Отменить оплату
+              {t("balance.cancelPayment")}
             </Button>
 
             <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
               <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
               <p className="text-xs text-muted-foreground">
-                Вопросы по оплате: <a href="https://t.me/GregTwinbid" target="_blank" rel="noopener" className="text-primary hover:underline">@GregTwinbid</a> или{" "}
-                <a href="mailto:twinbid@twinbidex.com" className="text-primary hover:underline">twinbid@twinbidex.com</a>
+                {t("balance.supportText")}{" "}
+                <a href="https://t.me/GregTwinbid" target="_blank" rel="noopener" className="text-primary hover:underline">@GregTwinbid</a>{" "}
+                {t("balance.inTelegram")}
               </p>
             </div>
           </div>
@@ -280,45 +294,47 @@ export default function DashboardBalance() {
       <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Receipt className="h-5 w-5" /> История операций
+            <Receipt className="h-5 w-5" /> {t("balance.history")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Дата</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Тип</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Описание</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Сумма</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Статус</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((t) => (
-                  <tr key={t.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                    <td className="py-3 px-4 text-sm">{t.date}</td>
-                    <td className="py-3 px-4">
-                      <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", t.type === "topup" ? "bg-green-500/10" : "bg-accent/10")}>
-                        {t.type === "topup" ? <ArrowDownLeft className="h-4 w-4 text-green-500" /> : <ArrowUpRight className="h-4 w-4 text-accent" />}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-sm">
-                      {t.type === "topup" ? `Пополнение · ${t.method}` : `Списание · ${t.campaign}`}
-                    </td>
-                    <td className={cn("py-3 px-4 text-sm text-right font-medium", t.amount > 0 ? "text-green-500" : "text-accent")}>
-                      {t.amount > 0 ? "+" : ""}${Math.abs(t.amount).toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <Badge variant="outline" className={cn("font-normal", t.status === "completed" ? "text-green-500 border-green-500/20" : "text-yellow-500 border-yellow-500/20")}>
-                        {t.status === "completed" ? "Проведено" : "В обработке"}
-                      </Badge>
-                    </td>
+            {transactions.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground">{t("balance.noTransactions")}</div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.date")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.type")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.description")}</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.amountCol")}</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.statusCol")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {transactions.map((tx) => (
+                    <tr key={tx.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                      <td className="py-3 px-4 text-sm">{tx.date}</td>
+                      <td className="py-3 px-4">
+                        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-green-500/10">
+                          <ArrowDownLeft className="h-4 w-4 text-green-500" />
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm">{t("balance.topUpVia")} · {tx.method}</td>
+                      <td className="py-3 px-4 text-sm text-right font-medium text-green-500">
+                        +${tx.amount.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Badge variant="outline" className={cn("font-normal", tx.status === "completed" ? "text-green-500 border-green-500/20" : "text-yellow-500 border-yellow-500/20")}>
+                          {tx.status === "completed" ? t("balance.completed") : t("balance.pending")}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </CardContent>
       </Card>
