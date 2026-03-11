@@ -60,7 +60,7 @@ export default function DashboardCampaigns() {
 
   const duplicateCampaign = (c: Campaign) => {
     const { id: _id, ...rest } = c;
-    addCampaign({ ...rest, name: `${c.name} (копия)`, status: "draft", spent: 0, impressions: 0, clicks: 0, ctr: 0 });
+    addCampaign({ ...rest, name: `${c.name} ${t("campaigns.copyPostfix")}`, status: "draft", spent: 0, impressions: 0, clicks: 0, ctr: 0 });
     toast.success(t("campaigns.copied"));
   };
 
