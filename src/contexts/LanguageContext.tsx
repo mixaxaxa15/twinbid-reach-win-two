@@ -37,7 +37,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "benefits.subtitle": { ru: "Всё, что нужно для эффективной рекламы, в одном месте", en: "Everything you need for effective advertising, in one place" },
   "benefits.1.title": { ru: "Единый кабинет вместо десятков площадок", en: "One dashboard instead of dozens of platforms" },
   "benefits.1.desc": { ru: "Одна интеграция, один баланс, общая статистика и логика управления кампаниями. Вы экономите время команды и быстрее масштабируете то, что приносит результат.", en: "One integration, one balance, shared statistics and campaign management logic. You save team time and scale what works faster." },
-  "benefits.2.title": { ru: "Максимальный инвентарь без потолков по ставкам", en: "Maximum inventory without bid limits" },
+  "benefits.2.title": { ru: "Максимальный инвентарь без потолков по CPM и CPC моделям", en: "Maximum inventory without CPM and CPC model limits" },
   "benefits.2.desc": { ru: "Трафик сотни тысяч сайтов уже доступен на нашей площадке. Остается только зарегистрироваться в пару кликов!", en: "Traffic from hundreds of thousands of sites is already available on our platform. Just sign up in a few clicks!" },
   "benefits.3.title": { ru: "Оплата только за реальный показ", en: "Pay only for real impressions" },
   "benefits.3.desc": { ru: "Мы засчитываем исключительно фактически показанную пользователю рекламу: учитываются только прогруженные страницы, а баннер/креатив должен находиться в зоне видимости пользователя определенное время. Меньше пустых расходов и больше отдачи от рекламы.", en: "We only count ads actually shown to users: only loaded pages count, and the banner/creative must be in the user's viewport for a certain time. Less wasted spend and more ad ROI." },
@@ -426,6 +426,16 @@ const translations: Record<string, Record<Lang, string>> = {
   "notFound.title": { ru: "404", en: "404" },
   "notFound.message": { ru: "Страница не найдена", en: "Page not found" },
   "notFound.back": { ru: "Вернуться на главную", en: "Return to Home" },
+
+  // Stats chart hours
+  "stats.chartTitleHours": { ru: "Динамика показов по часам", en: "Impressions dynamics by hours" },
+
+  // Budget date picker
+  "budget.selectDate": { ru: "Выберите дату", en: "Select date" },
+
+  // Edit campaign errors
+  "edit.errorBudgetMin": { ru: "Бюджет кампании должен быть не менее $100", en: "Campaign budget must be at least $100" },
+  "edit.restartedActive": { ru: "Кампания перезапущена", en: "Campaign restarted" },
 };
 
 interface LanguageContextType {

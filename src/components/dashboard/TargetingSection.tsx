@@ -45,6 +45,7 @@ function AutocompleteInput({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const keepOpenRef = useRef(false);
 
   const getDisplayLabel = (option: string) => {
     if (option.startsWith("day.")) return t(option);
@@ -58,6 +59,7 @@ function AutocompleteInput({
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
+      if (keepOpenRef.current) { keepOpenRef.current = false; return; }
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
@@ -65,10 +67,11 @@ function AutocompleteInput({
   }, []);
 
   const handleAdd = (item: string) => {
+    keepOpenRef.current = true;
     onAdd(item);
     onChange("");
-    // Keep dropdown open for continued selection
-    setTimeout(() => inputRef.current?.focus(), 0);
+    setOpen(true);
+    setTimeout(() => { inputRef.current?.focus(); setOpen(true); }, 10);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -95,14 +98,14 @@ function AutocompleteInput({
           {filtered.map(option => (
             <button key={option} type="button"
               className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
-              onMouseDown={(e) => { e.preventDefault(); handleAdd(option); }}>
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdd(option); }}>
               {getDisplayLabel(option)}
             </button>
           ))}
           {freeText && value.trim() && !filtered.includes(value.trim()) && !existingItems.includes(value.trim()) && (
             <button type="button"
               className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors text-muted-foreground"
-              onMouseDown={(e) => { e.preventDefault(); handleAdd(value.trim()); }}>
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdd(value.trim()); }}>
               {t("targeting.addCustom")} «{value.trim()}»
             </button>
           )}
