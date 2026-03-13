@@ -86,9 +86,8 @@ export default function DashboardStatistics() {
   const { campaigns } = useCampaigns();
   const { t } = useLanguage();
   
-  // Applied state (what's actually shown)
+  // Applied state (what's actually shown) - campaign, period, filters require refresh
   const [appliedCampaignIds, setAppliedCampaignIds] = useState<Set<string>>(new Set());
-  const [appliedGroupBy, setAppliedGroupBy] = useState<GroupBy>("dates");
   const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
   const [appliedFilterCountry, setAppliedFilterCountry] = useState("all");
   const [appliedFilterBrowser, setAppliedFilterBrowser] = useState("all");
@@ -97,13 +96,20 @@ export default function DashboardStatistics() {
 
   // Draft state (what user is selecting before clicking refresh)
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<Set<string>>(new Set());
-  const [groupBy, setGroupBy] = useState<GroupBy>("dates");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [clickCount, setClickCount] = useState(0);
   const [filterCountry, setFilterCountry] = useState("all");
   const [filterBrowser, setFilterBrowser] = useState("all");
   const [filterDevice, setFilterDevice] = useState("all");
   const [filterOS, setFilterOS] = useState("all");
+
+  // Grouping applies immediately (no refresh needed)
+  const [groupBy, setGroupBy] = useState<GroupBy>("dates");
+  const appliedGroupBy = groupBy;
+
+  // Chart metric selector
+  type ChartMetric = "impressions" | "clicks" | "spent";
+  const [chartMetric, setChartMetric] = useState<ChartMetric>("impressions");
 
   const [sortKey, setSortKey] = useState<SortKey>("label");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -160,14 +166,13 @@ export default function DashboardStatistics() {
 
   const handleRefresh = useCallback(() => {
     setAppliedCampaignIds(new Set(selectedCampaignIds));
-    setAppliedGroupBy(groupBy);
     setAppliedDateRange(dateRange);
     setAppliedFilterCountry(filterCountry);
     setAppliedFilterBrowser(filterBrowser);
     setAppliedFilterDevice(filterDevice);
     setAppliedFilterOS(filterOS);
     toast.success(t("stats.refreshed"));
-  }, [selectedCampaignIds, groupBy, dateRange, filterCountry, filterBrowser, filterDevice, filterOS, t]);
+  }, [selectedCampaignIds, dateRange, filterCountry, filterBrowser, filterDevice, filterOS, t]);
 
   const handleCampaignChange = (id: string) => {
     setSelectedCampaignIds(prev => {
@@ -354,45 +359,50 @@ export default function DashboardStatistics() {
           </div>
 
           {/* Chart for dates */}
-          {appliedGroupBy === "dates" && chartData.length > 0 && (
+          {(appliedGroupBy === "dates" || appliedGroupBy === "hours") && chartData.length > 0 && (
             <Card className="bg-card border-border">
-              <CardHeader><CardTitle className="text-lg">{t("stats.chartTitle")}</CardTitle></CardHeader>
-              <CardContent>
-                <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient id="grad-imp" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                      <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }} />
-                      <Area type="monotone" dataKey="impressions" stroke="hsl(var(--primary))" fill="url(#grad-imp)" strokeWidth={2} />
-                    </AreaChart>
-                  </ResponsiveContainer>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">
+                    {appliedGroupBy === "hours" ? t("stats.chartTitleHours") : t("stats.chartTitle")}
+                  </CardTitle>
+                  <div className="flex gap-1">
+                    {(["impressions", "clicks", "spent"] as ChartMetric[]).map(m => (
+                      <Button key={m} variant={chartMetric === m ? "default" : "outline"} size="sm"
+                        onClick={() => setChartMetric(m)}
+                        className={cn("text-xs", chartMetric === m ? "bg-primary text-primary-foreground" : "border-border")}>
+                        {m === "impressions" ? t("stats.impressions") : m === "clicks" ? t("stats.clicks") : t("stats.spent")}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Chart for hours */}
-          {appliedGroupBy === "hours" && chartData.length > 0 && (
-            <Card className="bg-card border-border">
-              <CardHeader><CardTitle className="text-lg">{t("stats.chartTitleHours")}</CardTitle></CardHeader>
+              </CardHeader>
               <CardContent>
                 <div className="h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={10} angle={-45} textAnchor="end" height={60} />
-                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                      <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }} />
-                      <Bar dataKey="impressions" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
-                    </BarChart>
+                    {appliedGroupBy === "hours" ? (
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={10} angle={-45} textAnchor="end" height={60} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                        <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }} />
+                        <Bar dataKey={chartMetric} fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    ) : (
+                      <AreaChart data={chartData}>
+                        <defs>
+                          <linearGradient id="grad-metric" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                        <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }} />
+                        <Area type="monotone" dataKey={chartMetric} stroke="hsl(var(--primary))" fill="url(#grad-metric)" strokeWidth={2} />
+                      </AreaChart>
+                    )}
                   </ResponsiveContainer>
                 </div>
               </CardContent>
