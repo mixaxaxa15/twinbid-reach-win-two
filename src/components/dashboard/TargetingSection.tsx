@@ -6,22 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
 import type { TargetingState, ListMode } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const targetingOptions: Record<string, string[]> = {
   country: ["US","GB","DE","FR","IT","ES","BR","RU","IN","JP","KR","CN","AU","CA","MX","AR","CO","PL","NL","SE","NO","DK","FI","CZ","AT","CH","BE","PT","GR","TR","UA","RO","HU","BG","HR","SK","SI","LT","LV","EE","IE","IL","SA","AE","EG","ZA","NG","KE","TH","VN","PH","ID","MY","SG","TW","HK","NZ","CL","PE"],
-  city: ["New York","London","Berlin","Paris","Tokyo","Moscow","Mumbai","São Paulo","Istanbul","Dubai","Singapore","Hong Kong","Sydney","Toronto","Los Angeles","Chicago","Madrid","Rome","Amsterdam","Stockholm","Vienna","Prague","Warsaw","Budapest","Bucharest","Bangkok","Seoul","Shanghai","Beijing","Jakarta","Manila","Ho Chi Minh City","Kuala Lumpur","Mexico City","Buenos Aires","Lima","Bogotá","Lagos","Cairo","Johannesburg","Miami","San Francisco","Seattle","Denver","Dallas","Houston","Atlanta","Boston","Philadelphia","Detroit"],
   deviceType: ["Mobile","Desktop","Tablet","Smart TV","Console"],
   os: ["Android","iOS","Windows","macOS","Linux","ChromeOS","HarmonyOS"],
-  osVersion: ["Android 14","Android 13","Android 12","Android 11","Android 10","Android 9","iOS 18","iOS 17","iOS 16","iOS 15","iOS 14","Windows 11","Windows 10","Windows 8.1","macOS 15","macOS 14","macOS 13","macOS 12","Linux"],
   browser: ["Chrome","Safari","Firefox","Edge","Opera","Samsung Internet","UC Browser","Brave","Vivaldi","Yandex Browser"],
   dayOfWeek: ["day.monday","day.tuesday","day.wednesday","day.thursday","day.friday","day.saturday","day.sunday"],
   hour: Array.from({ length: 24 }, (_, i) => String(i)),
-  subid: [],
   sites: [],
 };
 
 const targetingConfigKeys = [
-  "country", "city", "deviceType", "os", "osVersion", "browser", "dayOfWeek", "hour", "subid", "sites",
+  "country", "deviceType", "os", "browser", "dayOfWeek", "hour", "sites",
 ];
 
 export const targetingConfigs = targetingConfigKeys.map(key => ({ key, labelKey: `targeting.${key}` }));
@@ -47,7 +46,6 @@ function AutocompleteInput({
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // For day of week, show translated labels but filter by translated text
   const getDisplayLabel = (option: string) => {
     if (option.startsWith("day.")) return t(option);
     return option;
@@ -69,7 +67,8 @@ function AutocompleteInput({
   const handleAdd = (item: string) => {
     onAdd(item);
     onChange("");
-    inputRef.current?.focus();
+    // Keep dropdown open for continued selection
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -113,6 +112,133 @@ function AutocompleteInput({
   );
 }
 
+// Hour picker grid component
+function HourPicker({ items, onUpdate, t }: { items: string[]; onUpdate: (items: string[]) => void; t: (key: string) => string }) {
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [selectMode, setSelectMode] = useState(true); // true = selecting, false = deselecting
+
+  const toggleHour = (h: string) => {
+    if (items.includes(h)) {
+      onUpdate(items.filter(i => i !== h));
+    } else {
+      onUpdate([...items, h]);
+    }
+  };
+
+  const handleMouseDown = (h: string) => {
+    setIsMouseDown(true);
+    const newMode = !items.includes(h);
+    setSelectMode(newMode);
+    if (newMode) {
+      if (!items.includes(h)) onUpdate([...items, h]);
+    } else {
+      onUpdate(items.filter(i => i !== h));
+    }
+  };
+
+  const handleMouseEnter = (h: string) => {
+    if (!isMouseDown) return;
+    if (selectMode) {
+      if (!items.includes(h)) onUpdate([...items, h]);
+    } else {
+      onUpdate(items.filter(i => i !== h));
+    }
+  };
+
+  useEffect(() => {
+    const up = () => setIsMouseDown(false);
+    window.addEventListener("mouseup", up);
+    return () => window.removeEventListener("mouseup", up);
+  }, []);
+
+  // Format selected hours as ranges
+  const formatRanges = () => {
+    if (items.length === 0) return "";
+    const sorted = items.map(Number).sort((a, b) => a - b);
+    const ranges: string[] = [];
+    let start = sorted[0];
+    let end = sorted[0];
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i] === end + 1) { end = sorted[i]; }
+      else {
+        ranges.push(start === end ? `${start}:00` : `${start}:00-${end}:00`);
+        start = sorted[i]; end = sorted[i];
+      }
+    }
+    ranges.push(start === end ? `${start}:00` : `${start}:00-${end}:00`);
+    return ranges.join(", ");
+  };
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">{t("targeting.selectHours")}</p>
+      <div className="grid grid-cols-12 gap-1 select-none">
+        {Array.from({ length: 24 }, (_, i) => String(i)).map(h => (
+          <button
+            key={h}
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); handleMouseDown(h); }}
+            onMouseEnter={() => handleMouseEnter(h)}
+            className={cn(
+              "py-1.5 rounded text-xs font-medium transition-colors cursor-pointer",
+              items.includes(h)
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted"
+            )}
+          >
+            {h}
+          </button>
+        ))}
+      </div>
+      {items.length > 0 && (
+        <p className="text-xs text-muted-foreground">{t("targeting.hourRange")} {formatRanges()}</p>
+      )}
+    </div>
+  );
+}
+
+// Sites input with validation
+function SitesInput({ items, onAdd, t }: { items: string[]; onAdd: (items: string[]) => void; t: (key: string) => string }) {
+  const [value, setValue] = useState("");
+
+  const handleAdd = () => {
+    const raw = value.trim();
+    if (!raw) return;
+
+    // Validate format: no spaces, no quotes
+    if (/\s/.test(raw) || raw.includes('"') || raw.includes("'")) {
+      toast.error(t("targeting.sitesFormatError"));
+      return;
+    }
+
+    // Split by comma
+    const sites = raw.split(",").filter(s => s.trim()).map(s => s.trim());
+    const valid = sites.filter(s => !items.includes(s));
+    if (valid.length > 0) {
+      onAdd(valid);
+    }
+    setValue("");
+  };
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">{t("targeting.sitesHint")}</p>
+      <div className="flex gap-2">
+        <Input
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          placeholder="site1.com,site2.com"
+          className="bg-background border-border flex-1"
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
+        />
+        <Button type="button" size="icon" variant="outline" onClick={handleAdd} className="border-border shrink-0">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function ListItem({ config, list, onUpdate }: {
   config: typeof targetingConfigs[0];
   list: TargetingState;
@@ -121,7 +247,9 @@ function ListItem({ config, list, onUpdate }: {
   const { t } = useLanguage();
   const [inputValue, setInputValue] = useState("");
   const options = targetingOptions[config.key] || [];
-  const isFreeText = config.key === "subid" || config.key === "sites";
+  const isFreeText = config.key === "sites";
+  const isHour = config.key === "hour";
+  const isSites = config.key === "sites";
 
   const getDisplayLabel = (item: string) => {
     if (item.startsWith("day.")) return t(item);
@@ -160,26 +288,36 @@ function ListItem({ config, list, onUpdate }: {
       </div>
       {list.mode !== "none" && (
         <div className="space-y-2">
-          <div className="flex gap-2">
-            <AutocompleteInput
-              options={options}
-              value={inputValue}
-              onChange={setInputValue}
-              onAdd={addItem}
-              existingItems={list.items}
-              placeholder={isFreeText ? t("targeting.freeTextPlaceholder") : t("targeting.autocompletePlaceholder")}
-              freeText={isFreeText}
+          {isHour ? (
+            <HourPicker items={list.items} onUpdate={(items) => onUpdate({ items })} t={t} />
+          ) : isSites ? (
+            <SitesInput
+              items={list.items}
+              onAdd={(newItems) => onUpdate({ items: [...list.items, ...newItems] })}
               t={t}
             />
-            <Button type="button" size="icon" variant="outline"
-              onClick={() => {
-                if (inputValue.trim()) { addItem(inputValue.trim()); setInputValue(""); }
-              }}
-              className="border-border shrink-0">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          {list.items.length > 0 && (
+          ) : (
+            <div className="flex gap-2">
+              <AutocompleteInput
+                options={options}
+                value={inputValue}
+                onChange={setInputValue}
+                onAdd={addItem}
+                existingItems={list.items}
+                placeholder={t("targeting.autocompletePlaceholder")}
+                freeText={false}
+                t={t}
+              />
+              <Button type="button" size="icon" variant="outline"
+                onClick={() => {
+                  if (inputValue.trim()) { addItem(inputValue.trim()); setInputValue(""); }
+                }}
+                className="border-border shrink-0">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          {list.items.length > 0 && !isHour && (
             <div className="flex flex-wrap gap-1.5">
               {list.items.map((item) => (
                 <Badge key={item} variant="outline"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type ListMode } from "@/contexts/CampaignContext";
 import { TargetingSection, targetingConfigs } from "@/components/dashboard/TargetingSection";
@@ -14,17 +14,15 @@ import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const formatCreativeFields: Record<string, { label: string; fields: string[] }> = {
-  banner: { label: "Баннер", fields: ["link", "imageUrl", "adText"] },
+  banner: { label: "Баннер", fields: ["link", "imageFile", "adText"] },
   popunder: { label: "Popunder", fields: ["link"] },
-  native: { label: "Native", fields: ["link", "imageUrl", "adText", "title"] },
-  push: { label: "In-page Push", fields: ["link", "imageUrl", "adText", "title"] },
-  video: { label: "Видео (VAST)", fields: ["link", "vastUrl"] },
-  ctv: { label: "CTV/OTT", fields: ["link", "vastUrl"] },
+  native: { label: "Native", fields: ["link", "imageFile", "adText", "title"] },
+  push: { label: "In-page Push", fields: ["link", "imageFile", "adText", "title"] },
 };
 
 const fieldLabels: Record<string, { label: string; placeholder: string }> = {
   link: { label: "URL *", placeholder: "https://example.com/landing" },
-  imageUrl: { label: "Image URL", placeholder: "https://example.com/banner.jpg" },
+  imageFile: { label: "", placeholder: "" },
   adText: { label: "Ad text", placeholder: "Your ad text..." },
   title: { label: "Title", placeholder: "Headline" },
   vastUrl: { label: "VAST Tag URL *", placeholder: "https://example.com/vast.xml" },
@@ -51,6 +49,9 @@ export default function CreateCampaign() {
   const [trafficQuality, setTrafficQuality] = useState<TrafficQuality>("common");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [imageFileName, setImageFileName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const savedAsDraft = useRef(false);
 
   const updateList = (key: string, updates: Partial<TargetingState>) => {
     setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
@@ -58,12 +59,21 @@ export default function CreateCampaign() {
 
   const currentFormatFields = adFormat ? formatCreativeFields[adFormat]?.fields || [] : [];
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setCreativeFields(prev => ({ ...prev, imageUrl: url }));
+      setImageFileName(file.name);
+      toast.success(t("create.imageUploaded"));
+    }
+  };
+
   const validateStep1 = () => {
     const e: Record<string, string> = {};
     if (!name.trim()) e.name = t("create.required");
     if (!adFormat) e.adFormat = t("create.selectFormatError");
     if (adFormat && currentFormatFields.includes("link") && !creativeFields.link?.trim()) e.link = t("create.required");
-    if (adFormat && currentFormatFields.includes("vastUrl") && !creativeFields.vastUrl?.trim()) e.vastUrl = t("create.required");
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -77,6 +87,14 @@ export default function CreateCampaign() {
     const pv = parseNum(priceValue);
     const { min } = getMinPrice();
     if (!priceValue || isNaN(pv) || pv < min) e.priceValue = `Min $${min}`;
+    // End date validation
+    if (endDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      if (end < today) e.endDate = t("create.endDateError");
+    }
+    if (!startDate || !endDate) e.dates = t("create.endDateRequired");
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -104,14 +122,47 @@ export default function CreateCampaign() {
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
       description,
     });
+    savedAsDraft.current = true; // mark as saved
     toast.success(t("create.created"));
     navigate("/dashboard/campaigns");
   };
 
+  // Save as draft on exit if not completed
+  const saveDraft = () => {
+    if (savedAsDraft.current) return;
+    if (!name.trim() && !adFormat) return; // nothing to save
+    savedAsDraft.current = true;
+    addCampaign({
+      name: name.trim() || "Draft", status: "draft",
+      format: formatCreativeFields[adFormat]?.label || adFormat || "",
+      formatKey: adFormat || "", budget: totalBudget ? parseNum(totalBudget) : 0,
+      dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
+      spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: priceValue ? parseNum(priceValue) : 0,
+      trafficQuality, startDate, endDate, creative: creativeFields,
+      targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
+      description,
+    });
+  };
+
+  const handleBack = () => {
+    saveDraft();
+    navigate("/dashboard/campaigns");
+  };
+
+  // Save draft on unmount (browser back, etc)
+  useEffect(() => {
+    return () => {
+      if (!savedAsDraft.current && (name.trim() || adFormat)) {
+        // We can't call addCampaign in cleanup reliably, so we skip
+        // The explicit back button handles it
+      }
+    };
+  }, []);
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/campaigns")}><ArrowLeft className="h-5 w-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={handleBack}><ArrowLeft className="h-5 w-5" /></Button>
         <div>
           <h2 className="text-2xl font-bold">{t("create.title")}</h2>
           <p className="text-muted-foreground text-sm">{t("create.step")} {step} {t("create.of")} 3</p>
@@ -160,7 +211,25 @@ export default function CreateCampaign() {
                 <div className="space-y-4 p-4 rounded-lg border border-border bg-background/30">
                   <p className="text-sm font-medium text-muted-foreground">{t("create.creativeFor")} «{formatCreativeFields[adFormat]?.label}»</p>
                   {currentFormatFields.map((field) => {
+                    if (field === "imageFile") {
+                      return (
+                        <div key={field} className="space-y-2">
+                          <Label>{t("create.uploadImage")}</Label>
+                          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                          <div className="flex items-center gap-3">
+                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="border-border gap-2">
+                              <Upload className="h-4 w-4" /> {t("create.uploadImage")}
+                            </Button>
+                            {imageFileName && <span className="text-sm text-muted-foreground">{imageFileName}</span>}
+                          </div>
+                          {creativeFields.imageUrl && (
+                            <img src={creativeFields.imageUrl} alt="Preview" className="mt-2 max-h-32 rounded border border-border" />
+                          )}
+                        </div>
+                      );
+                    }
                     const cfg = fieldLabels[field];
+                    if (!cfg || !cfg.label) return null;
                     return (
                       <div key={field} className="space-y-2">
                         <Label>{cfg.label}</Label>

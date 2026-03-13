@@ -92,7 +92,6 @@ export default function DashboardBalance() {
       toast.error(t("balance.toast.enterHash"));
       return;
     }
-    // Add transaction to history
     const methodLabel = usdtMethods.find(m => m.id === pendingPayment?.method)?.label || pendingPayment?.method || "";
     const now = new Date();
     const dateStr = `${String(now.getDate()).padStart(2, "0")}.${String(now.getMonth() + 1).padStart(2, "0")}.${now.getFullYear()}`;
@@ -113,6 +112,19 @@ export default function DashboardBalance() {
         onClick: () => window.open("https://t.me/GregTwinbid", "_blank"),
       },
     });
+
+    // Add notification about successful payment submission
+    addNotification({
+      title: t("balance.notif.paymentSuccess"),
+      description: t("balance.notif.paymentSuccessDesc").replace("${amount}", `$${pendingPayment?.amount.toLocaleString()}`),
+      type: "info",
+      persistent: false,
+      action: {
+        label: "@GregTwinbid",
+        onClick: () => window.open("https://t.me/GregTwinbid", "_blank"),
+      },
+    });
+
     setShowTxDialog(false);
     setPendingPayment(null);
     setTxHash("");
@@ -313,7 +325,6 @@ export default function DashboardBalance() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.date")}</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.type")}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.description")}</th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.amountCol")}</th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.statusCol")}</th>
@@ -323,11 +334,6 @@ export default function DashboardBalance() {
                   {transactions.map((tx) => (
                     <tr key={tx.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                       <td className="py-3 px-4 text-sm">{tx.date}</td>
-                      <td className="py-3 px-4">
-                        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-green-500/10">
-                          <ArrowDownLeft className="h-4 w-4 text-green-500" />
-                        </div>
-                      </td>
                       <td className="py-3 px-4 text-sm">{t("balance.topUpVia")} · {tx.method}</td>
                       <td className="py-3 px-4 text-sm text-right font-medium text-green-500">
                         +${tx.amount.toLocaleString()}
