@@ -1,12 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality } from "@/contexts/CampaignContext";
 import { TargetingSection } from "@/components/dashboard/TargetingSection";
@@ -14,13 +14,14 @@ import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const formatCreativeFields: Record<string, string[]> = {
-  banner: ["link", "imageUrl", "adText"], popunder: ["link"],
-  native: ["link", "imageUrl", "adText", "title"], push: ["link", "imageUrl", "adText", "title"],
+  banner: ["link", "imageFile", "adText"], popunder: ["link"],
+  native: ["link", "imageFile", "adText", "title"], push: ["link", "imageFile", "adText", "title"],
   video: ["link", "vastUrl"], ctv: ["link", "vastUrl"],
 };
 
 const fieldLabels: Record<string, { label: string; placeholder: string }> = {
-  link: { label: "URL", placeholder: "https://..." }, imageUrl: { label: "Image URL", placeholder: "https://..." },
+  link: { label: "URL", placeholder: "https://..." },
+  imageFile: { label: "", placeholder: "" },
   adText: { label: "Ad text", placeholder: "Text..." }, title: { label: "Title", placeholder: "Title..." },
   vastUrl: { label: "VAST Tag URL", placeholder: "https://..." },
 };
@@ -28,6 +29,8 @@ const fieldLabels: Record<string, { label: string; placeholder: string }> = {
 export default function EditCampaign() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "general";
   const { getCampaign, updateCampaign } = useCampaigns();
   const { t } = useLanguage();
   const campaign = getCampaign(id || "");
@@ -44,6 +47,8 @@ export default function EditCampaign() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [initialCreative, setInitialCreative] = useState<Record<string, string>>({});
+  const [imageFileName, setImageFileName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (campaign) {
@@ -57,7 +62,10 @@ export default function EditCampaign() {
   }, [campaign]);
 
   const creativeFields = campaign ? (formatCreativeFields[campaign.formatKey] || []) : [];
-  const hasCreativeChanged = useMemo(() => creativeFields.some(f => (creative[f] || "") !== (initialCreative[f] || "")), [creative, initialCreative, creativeFields]);
+  const hasCreativeChanged = useMemo(() => creativeFields.some(f => {
+    if (f === "imageFile") return (creative.imageUrl || "") !== (initialCreative.imageUrl || "");
+    return (creative[f] || "") !== (initialCreative[f] || "");
+  }), [creative, initialCreative, creativeFields]);
 
   if (!campaign) {
     return (
@@ -74,6 +82,16 @@ export default function EditCampaign() {
 
   const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setCreative(prev => ({ ...prev, imageUrl: url }));
+      setImageFileName(file.name);
+      toast.success(t("create.imageUploaded"));
+    }
+  };
+
   const handleSave = () => {
     const tb = parseNum(totalBudget);
     if (!totalBudget || isNaN(tb) || tb < 100) { toast.error("Min $100"); return; }
@@ -82,6 +100,16 @@ export default function EditCampaign() {
     const min = pricingModel === "cpc" ? +(minCpm * 1.7 / 1000).toFixed(5) : minCpm;
     const pv = parseNum(priceValue);
     if (!priceValue || isNaN(pv) || pv < min) { toast.error(`Min $${min}`); return; }
+
+    // End date validation
+    if (endDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      if (end < today) { toast.error(t("create.endDateError")); return; }
+    }
+    if (!startDate || !endDate) { toast.error(t("create.endDateRequired")); return; }
+
     const newStatus = hasCreativeChanged ? "moderation" as const : campaign.status;
     updateCampaign(campaign.id, {
       name: name.trim(), description, creative,
@@ -110,7 +138,7 @@ export default function EditCampaign() {
         </div>
       )}
 
-      <Tabs defaultValue="general">
+      <Tabs defaultValue={defaultTab}>
         <TabsList className="bg-card border border-border">
           <TabsTrigger value="general">{t("edit.general")}</TabsTrigger>
           <TabsTrigger value="targeting">{t("edit.targeting")}</TabsTrigger>
@@ -130,8 +158,25 @@ export default function EditCampaign() {
                 <p className="text-xs text-muted-foreground">{t("edit.formatLocked")}</p>
               </div>
               {creativeFields.map((field) => {
+                if (field === "imageFile") {
+                  return (
+                    <div key={field} className="space-y-2">
+                      <Label>{t("create.uploadImage")}</Label>
+                      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                      <div className="flex items-center gap-3">
+                        <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="border-border gap-2">
+                          <Upload className="h-4 w-4" /> {t("create.uploadImage")}
+                        </Button>
+                        {imageFileName && <span className="text-sm text-muted-foreground">{imageFileName}</span>}
+                      </div>
+                      {creative.imageUrl && (
+                        <img src={creative.imageUrl} alt="Preview" className="mt-2 max-h-32 rounded border border-border" />
+                      )}
+                    </div>
+                  );
+                }
                 const cfg = fieldLabels[field];
-                if (!cfg) return null;
+                if (!cfg || !cfg.label) return null;
                 return (
                   <div key={field} className="space-y-2">
                     <Label>{cfg.label}</Label>

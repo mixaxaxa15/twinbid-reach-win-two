@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Shield, Globe, Save } from "lucide-react";
+import { User, Bell, Shield, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -23,9 +23,6 @@ export default function DashboardSettings() {
   const [notifications, setNotifications] = useState({
     emailCampaign: true,
     emailBalance: true,
-    emailReport: false,
-    pushCampaign: true,
-    pushBalance: true,
     balanceThreshold: "100",
   });
 
@@ -43,7 +40,6 @@ export default function DashboardSettings() {
           <TabsTrigger value="profile" className="gap-2"><User className="h-4 w-4" /> {t("settings.profile")}</TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2"><Bell className="h-4 w-4" /> {t("settings.notifications")}</TabsTrigger>
           <TabsTrigger value="security" className="gap-2"><Shield className="h-4 w-4" /> {t("settings.security")}</TabsTrigger>
-          <TabsTrigger value="api" className="gap-2"><Globe className="h-4 w-4" /> {t("settings.api")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -94,20 +90,6 @@ export default function DashboardSettings() {
                 {[
                   { key: "emailCampaign" as const, label: t("settings.campaignStatus") },
                   { key: "emailBalance" as const, label: t("settings.lowBalance") },
-                  { key: "emailReport" as const, label: t("settings.weeklyReports") },
-                ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between">
-                    <Label>{item.label}</Label>
-                    <Switch checked={notifications[item.key]} onCheckedChange={(c) => setNotifications({ ...notifications, [item.key]: c })} />
-                  </div>
-                ))}
-              </div>
-              <Separator />
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium text-muted-foreground">{t("settings.pushNotifications")}</h4>
-                {[
-                  { key: "pushCampaign" as const, label: t("settings.pushCampaignStatus") },
-                  { key: "pushBalance" as const, label: t("settings.pushBalance") },
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between">
                     <Label>{item.label}</Label>
@@ -147,33 +129,6 @@ export default function DashboardSettings() {
                 </div>
                 <Button onClick={() => toast.success(t("settings.passwordUpdated"))} className="bg-primary hover:bg-primary/90">{t("settings.changePassword")}</Button>
               </div>
-              <Separator />
-              <div className="flex items-center justify-between max-w-sm">
-                <div>
-                  <Label>{t("settings.2fa")}</Label>
-                  <p className="text-xs text-muted-foreground mt-1">{t("settings.2faDesc")}</p>
-                </div>
-                <Switch />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="api">
-          <Card className="bg-card border-border">
-            <CardHeader><CardTitle className="text-lg">{t("settings.api")}</CardTitle></CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label>{t("settings.apiKey")}</Label>
-                <div className="flex gap-2 max-w-lg">
-                  <Input value="tb_live_a1b2c3d4e5f6g7h8i9j0..." readOnly className="bg-background border-border font-mono text-sm" />
-                  <Button variant="outline" onClick={() => { navigator.clipboard.writeText("tb_live_a1b2c3d4e5f6g7h8i9j0"); toast.success(t("settings.copied")); }}>
-                    {t("settings.copyBtn")}
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">{t("settings.apiDesc")}</p>
-              </div>
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90"><Save className="h-4 w-4 mr-2" />{t("settings.save")}</Button>
             </CardContent>
           </Card>
         </TabsContent>

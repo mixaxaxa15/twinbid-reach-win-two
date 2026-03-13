@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { HelpCircle, AlertTriangle, Info } from "lucide-react";
+import { HelpCircle, AlertTriangle, Info, CalendarIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { PricingModel, TrafficQuality } from "@/contexts/CampaignContext";
@@ -62,6 +62,13 @@ export function BudgetSection({
   const priceNum = parseNumericValue(priceValue);
   const isBelowMin = priceValue !== "" && priceNum < limits.min;
   const isBelowRec = priceValue !== "" && priceNum >= limits.min && priceNum < limits.rec;
+
+  // End date validation
+  const endDateInvalid = endDate ? (() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(endDate) < today;
+  })() : false;
 
   const trafficInfo: Record<TrafficQuality, { label: string; desc: string }> = {
     common: { label: "Common", desc: t("budget.trafficCommon") },
@@ -169,15 +176,25 @@ export function BudgetSection({
         {errors.priceValue && <p className="text-xs text-destructive">{errors.priceValue}</p>}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 max-w-md">
+      <div className="grid grid-cols-2 gap-4 max-w-sm">
         <div className="space-y-2">
           <Label>{t("budget.startDate")}</Label>
-          <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-background border-border" />
+          <div className="relative">
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-background border-border pr-8" />
+            <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
         </div>
         <div className="space-y-2">
           <Label>{t("budget.endDate")}</Label>
-          <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-background border-border" />
+          <div className="relative">
+            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+              className={cn("bg-background border-border pr-8", endDateInvalid && "border-destructive")} />
+            <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
+          {endDateInvalid && <p className="text-xs text-destructive">{t("budget.endDateError")}</p>}
         </div>
+        {errors.dates && <p className="text-xs text-destructive col-span-2">{errors.dates}</p>}
+        {errors.endDate && <p className="text-xs text-destructive col-span-2">{errors.endDate}</p>}
       </div>
     </div>
   );

@@ -37,7 +37,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "benefits.subtitle": { ru: "Всё, что нужно для эффективной рекламы, в одном месте", en: "Everything you need for effective advertising, in one place" },
   "benefits.1.title": { ru: "Единый кабинет вместо десятков площадок", en: "One dashboard instead of dozens of platforms" },
   "benefits.1.desc": { ru: "Одна интеграция, один баланс, общая статистика и логика управления кампаниями. Вы экономите время команды и быстрее масштабируете то, что приносит результат.", en: "One integration, one balance, shared statistics and campaign management logic. You save team time and scale what works faster." },
-  "benefits.2.title": { ru: "Максимальный инвентарь без потолков по CPM-модели", en: "Maximum inventory without CPM model limits" },
+  "benefits.2.title": { ru: "Максимальный инвентарь без потолков по ставкам", en: "Maximum inventory without bid limits" },
   "benefits.2.desc": { ru: "Трафик сотни тысяч сайтов уже доступен на нашей площадке. Остается только зарегистрироваться в пару кликов!", en: "Traffic from hundreds of thousands of sites is already available on our platform. Just sign up in a few clicks!" },
   "benefits.3.title": { ru: "Оплата только за реальный показ", en: "Pay only for real impressions" },
   "benefits.3.desc": { ru: "Мы засчитываем исключительно фактически показанную пользователю рекламу: учитываются только прогруженные страницы, а баннер/креатив должен находиться в зоне видимости пользователя определенное время. Меньше пустых расходов и больше отдачи от рекламы.", en: "We only count ads actually shown to users: only loaded pages count, and the banner/creative must be in the user's viewport for a certain time. Less wasted spend and more ad ROI." },
@@ -159,12 +159,11 @@ const translations: Record<string, Record<Lang, string>> = {
   "balance.inTelegram": { ru: "в Telegram", en: "on Telegram" },
   "balance.history": { ru: "История операций", en: "Transaction history" },
   "balance.date": { ru: "Дата", en: "Date" },
-  "balance.type": { ru: "Тип", en: "Type" },
   "balance.description": { ru: "Описание", en: "Description" },
   "balance.amountCol": { ru: "Сумма", en: "Amount" },
   "balance.statusCol": { ru: "Статус", en: "Status" },
   "balance.topUpVia": { ru: "Пополнение", en: "Top-up" },
-  "balance.completed": { ru: "Проведено", en: "Completed" },
+  "balance.completed": { ru: "Выполнено", en: "Completed" },
   "balance.pending": { ru: "В обработке", en: "Processing" },
   "balance.noTransactions": { ru: "Нет операций", en: "No transactions" },
 
@@ -183,6 +182,8 @@ const translations: Record<string, Record<Lang, string>> = {
   "balance.notif.lowBalanceDesc": { ru: "Ваш баланс составляет", en: "Your balance is" },
   "balance.notif.recommend": { ru: "Рекомендуем пополнить счёт.", en: "We recommend topping up." },
   "balance.notif.topUp": { ru: "Пополнить", en: "Top up" },
+  "balance.notif.paymentSuccess": { ru: "Платёж отправлен", en: "Payment submitted" },
+  "balance.notif.paymentSuccessDesc": { ru: "Платёж на сумму ${amount} отправлен на проверку. По вопросам: @GregTwinbid в Telegram", en: "Payment of ${amount} sent for review. For inquiries: @GregTwinbid on Telegram" },
 
   // Statistics
   "stats.title": { ru: "Статистика", en: "Statistics" },
@@ -204,12 +205,24 @@ const translations: Record<string, Record<Lang, string>> = {
   "stats.byBrowsers": { ru: "По браузерам", en: "By browsers" },
   "stats.bySiteId": { ru: "По SiteID", en: "By SiteID" },
   "stats.byDevices": { ru: "По устройствам", en: "By devices" },
+  "stats.byOS": { ru: "По ОС", en: "By OS" },
+  "stats.byCountry": { ru: "По странам", en: "By countries" },
   "stats.date": { ru: "Дата", en: "Date" },
   "stats.dateAndHour": { ru: "Дата и час", en: "Date and hour" },
   "stats.browser": { ru: "Браузер", en: "Browser" },
   "stats.device": { ru: "Устройство", en: "Device" },
+  "stats.os": { ru: "ОС", en: "OS" },
+  "stats.country": { ru: "Страна", en: "Country" },
   "stats.total": { ru: "Итого", en: "Total" },
   "stats.noData": { ru: "Нет данных для выбранных фильтров", en: "No data for selected filters" },
+  "stats.selectCampaignAndPeriod": { ru: "Выберите кампанию и период для просмотра статистики", en: "Select a campaign and period to view statistics" },
+  "stats.filters": { ru: "Фильтры", en: "Filters" },
+  "stats.filterCountry": { ru: "Страна", en: "Country" },
+  "stats.filterBrowser": { ru: "Браузер", en: "Browser" },
+  "stats.filterDevice": { ru: "Устройство", en: "Device" },
+  "stats.filterOS": { ru: "ОС", en: "OS" },
+  "stats.allValues": { ru: "Все", en: "All" },
+  "stats.clearFilters": { ru: "Сбросить фильтры", en: "Clear filters" },
 
   // Campaigns page
   "campaigns.title": { ru: "Кампании", en: "Campaigns" },
@@ -241,6 +254,11 @@ const translations: Record<string, Record<Lang, string>> = {
   "campaigns.paused": { ru: "Кампания приостановлена", en: "Campaign paused" },
   "campaigns.deleted": { ru: "Кампания удалена", en: "Campaign deleted" },
   "campaigns.copied": { ru: "Кампания скопирована", en: "Campaign copied" },
+  "campaigns.restart": { ru: "Перезапустить", en: "Restart" },
+  "campaigns.restarted": { ru: "Обновите даты и сохраните для перезапуска", en: "Update dates and save to restart" },
+  "campaigns.cancelModeration": { ru: "Отменить модерацию", en: "Cancel moderation" },
+  "campaigns.moderationCanceled": { ru: "Модерация отменена", en: "Moderation cancelled" },
+  "campaigns.draftIncomplete": { ru: "Завершите настройку кампании перед запуском", en: "Complete campaign setup before launching" },
 
   // Settings
   "settings.title": { ru: "Настройки", en: "Settings" },
@@ -248,7 +266,6 @@ const translations: Record<string, Record<Lang, string>> = {
   "settings.profile": { ru: "Профиль", en: "Profile" },
   "settings.notifications": { ru: "Уведомления", en: "Notifications" },
   "settings.security": { ru: "Безопасность", en: "Security" },
-  "settings.api": { ru: "API", en: "API" },
   "settings.name": { ru: "Имя", en: "Name" },
   "settings.email": { ru: "Email", en: "Email" },
   "settings.telegram": { ru: "Telegram (опционально)", en: "Telegram (optional)" },
@@ -258,22 +275,12 @@ const translations: Record<string, Record<Lang, string>> = {
   "settings.emailNotifications": { ru: "Email-уведомления", en: "Email notifications" },
   "settings.campaignStatus": { ru: "Изменения статуса кампаний", en: "Campaign status changes" },
   "settings.lowBalance": { ru: "Низкий баланс", en: "Low balance" },
-  "settings.weeklyReports": { ru: "Еженедельные отчёты", en: "Weekly reports" },
-  "settings.pushNotifications": { ru: "Push-уведомления", en: "Push notifications" },
-  "settings.pushCampaignStatus": { ru: "Статусы кампаний", en: "Campaign statuses" },
-  "settings.pushBalance": { ru: "Баланс ниже порога", en: "Balance below threshold" },
   "settings.balanceThreshold": { ru: "Порог баланса для уведомления", en: "Balance threshold for notification" },
   "settings.currentPassword": { ru: "Текущий пароль", en: "Current password" },
   "settings.newPassword": { ru: "Новый пароль", en: "New password" },
   "settings.repeatPassword": { ru: "Повторите пароль", en: "Repeat password" },
   "settings.changePassword": { ru: "Сменить пароль", en: "Change password" },
   "settings.passwordUpdated": { ru: "Пароль обновлён", en: "Password updated" },
-  "settings.2fa": { ru: "Двухфакторная аутентификация", en: "Two-factor authentication" },
-  "settings.2faDesc": { ru: "Дополнительная защита аккаунта", en: "Additional account protection" },
-  "settings.apiKey": { ru: "API-ключ", en: "API key" },
-  "settings.copyBtn": { ru: "Копировать", en: "Copy" },
-  "settings.copied": { ru: "Скопировано", en: "Copied" },
-  "settings.apiDesc": { ru: "Используйте этот ключ для интеграции через API", en: "Use this key for API integration" },
 
   // Create Campaign
   "create.title": { ru: "Создание кампании", en: "Create campaign" },
@@ -295,6 +302,10 @@ const translations: Record<string, Record<Lang, string>> = {
   "create.next": { ru: "Далее", en: "Next" },
   "create.createBtn": { ru: "Создать кампанию", en: "Create campaign" },
   "create.created": { ru: "Кампания создана и отправлена на модерацию!", en: "Campaign created and sent for moderation!" },
+  "create.uploadImage": { ru: "Загрузить изображение", en: "Upload image" },
+  "create.imageUploaded": { ru: "Изображение загружено", en: "Image uploaded" },
+  "create.endDateError": { ru: "Дата окончания не может быть раньше сегодняшнего дня", en: "End date cannot be earlier than today" },
+  "create.endDateRequired": { ru: "Укажите корректные даты для завершения создания", en: "Specify valid dates to complete creation" },
 
   // Edit Campaign
   "edit.title": { ru: "Редактирование кампании", en: "Edit campaign" },
@@ -314,19 +325,21 @@ const translations: Record<string, Record<Lang, string>> = {
   // Targeting Section
   "targeting.description": { ru: "Для каждого параметра выберите режим: Whitelist (только эти значения) или Blacklist (исключить эти значения)", en: "For each parameter choose a mode: Whitelist (only these values) or Blacklist (exclude these values)" },
   "targeting.country": { ru: "Страны", en: "Countries" },
-  "targeting.city": { ru: "Города", en: "Cities" },
   "targeting.deviceType": { ru: "Тип устройства", en: "Device type" },
   "targeting.os": { ru: "ОС", en: "OS" },
-  "targeting.osVersion": { ru: "Версия ОС", en: "OS version" },
   "targeting.browser": { ru: "Браузер", en: "Browser" },
   "targeting.dayOfWeek": { ru: "День недели", en: "Day of week" },
   "targeting.hour": { ru: "Час показа", en: "Display hour" },
-  "targeting.subid": { ru: "SubID", en: "SubID" },
   "targeting.sites": { ru: "Сайты", en: "Sites" },
   "targeting.off": { ru: "Выкл", en: "Off" },
   "targeting.freeTextPlaceholder": { ru: "Введите значение...", en: "Enter value..." },
   "targeting.autocompletePlaceholder": { ru: "Начните вводить...", en: "Start typing..." },
   "targeting.addCustom": { ru: "Добавить", en: "Add" },
+  "targeting.sitesHint": { ru: "Добавляйте сайты по одному или через запятую без кавычек и пробелов (например: site1.com,site2.com)", en: "Add sites one by one or separated by commas without quotes or spaces (e.g.: site1.com,site2.com)" },
+  "targeting.sitesFormatError": { ru: "Неверный формат. Используйте формат: site1.com,site2.com (без пробелов и кавычек)", en: "Invalid format. Use format: site1.com,site2.com (no spaces or quotes)" },
+  "targeting.selectHours": { ru: "Выберите часы показа", en: "Select display hours" },
+  "targeting.hourRange": { ru: "Выбрано часов:", en: "Hours selected:" },
+
   // Days of week
   "day.monday": { ru: "Понедельник", en: "Monday" },
   "day.tuesday": { ru: "Вторник", en: "Tuesday" },
@@ -354,6 +367,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "budget.belowRec": { ru: "Ставка ниже рекомендованной — может быть мало показов", en: "Bid is below recommended — may result in few impressions" },
   "budget.startDate": { ru: "Дата начала", en: "Start date" },
   "budget.endDate": { ru: "Дата окончания", en: "End date" },
+  "budget.endDateError": { ru: "Дата окончания не может быть раньше сегодняшнего дня", en: "End date cannot be earlier than today" },
 
   // Legacy components
   "legacy.campaigns": { ru: "Рекламные кампании", en: "Ad campaigns" },
@@ -437,7 +451,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = useCallback((key: string): string => {
-    return translations[key]?.[lang] || key;
+    const entry = translations[key];
+    if (!entry) return key;
+    return entry[lang] || entry.ru || key;
   }, [lang]);
 
   return (

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, MoreHorizontal, Play, Pause, Pencil, Trash2, Eye, Search, Filter, Copy } from "lucide-react";
+import { Plus, MoreHorizontal, Play, Pause, Pencil, Trash2, Eye, Search, Filter, Copy, RotateCcw, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,15 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCampaigns, type Campaign } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+function isDraftComplete(c: Campaign): boolean {
+  if (!c.name.trim()) return false;
+  if (!c.formatKey) return false;
+  if (!c.creative.link?.trim()) return false;
+  if (c.budget < 100) return false;
+  if (!c.priceValue) return false;
+  return true;
+}
 
 export default function DashboardCampaigns() {
   const navigate = useNavigate();
@@ -45,6 +54,10 @@ export default function DashboardCampaigns() {
   const toggleStatus = (id: string) => {
     const c = campaigns.find(x => x.id === id);
     if (!c) return;
+    if (c.status === "draft" && !isDraftComplete(c)) {
+      toast.error(t("campaigns.draftIncomplete"));
+      return;
+    }
     const ns = c.status === "active" ? "paused" : "active";
     updateCampaign(id, { status: ns as any });
     toast.success(ns === "active" ? t("campaigns.started") : t("campaigns.paused"));
@@ -62,6 +75,16 @@ export default function DashboardCampaigns() {
     const { id: _id, ...rest } = c;
     addCampaign({ ...rest, name: `${c.name} ${t("campaigns.copyPostfix")}`, status: "draft", spent: 0, impressions: 0, clicks: 0, ctr: 0 });
     toast.success(t("campaigns.copied"));
+  };
+
+  const handleCancelModeration = (id: string) => {
+    updateCampaign(id, { status: "draft" });
+    toast.success(t("campaigns.moderationCanceled"));
+  };
+
+  const handleRestart = (c: Campaign) => {
+    navigate(`/dashboard/campaigns/${c.id}/edit?tab=budget`);
+    toast.info(t("campaigns.restarted"));
   };
 
   return (
@@ -138,15 +161,44 @@ export default function DashboardCampaigns() {
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-card border-border">
                             <DropdownMenuItem className="gap-2" onClick={() => setViewCampaign(campaign)}><Eye className="h-4 w-4" /> {t("campaigns.view")}</DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}><Pencil className="h-4 w-4" /> {t("campaigns.edit")}</DropdownMenuItem>
+
+                            {/* No edit/delete for moderation */}
+                            {campaign.status !== "moderation" && (
+                              <DropdownMenuItem className="gap-2" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}><Pencil className="h-4 w-4" /> {t("campaigns.edit")}</DropdownMenuItem>
+                            )}
+
                             <DropdownMenuItem className="gap-2" onClick={() => duplicateCampaign(campaign)}><Copy className="h-4 w-4" /> {t("campaigns.copy")}</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            {campaign.status === "active" ? (
+
+                            {/* Active -> pause */}
+                            {campaign.status === "active" && (
                               <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Pause className="h-4 w-4" /> {t("campaigns.pause")}</DropdownMenuItem>
-                            ) : campaign.status !== "completed" && campaign.status !== "moderation" ? (
+                            )}
+
+                            {/* Paused -> start */}
+                            {campaign.status === "paused" && (
                               <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Play className="h-4 w-4" /> {t("campaigns.start")}</DropdownMenuItem>
-                            ) : null}
-                            <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDeleteId(campaign.id)}><Trash2 className="h-4 w-4" /> {t("campaigns.delete")}</DropdownMenuItem>
+                            )}
+
+                            {/* Draft: only start if complete */}
+                            {campaign.status === "draft" && isDraftComplete(campaign) && (
+                              <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Play className="h-4 w-4" /> {t("campaigns.start")}</DropdownMenuItem>
+                            )}
+
+                            {/* Completed: restart */}
+                            {campaign.status === "completed" && (
+                              <DropdownMenuItem className="gap-2" onClick={() => handleRestart(campaign)}><RotateCcw className="h-4 w-4" /> {t("campaigns.restart")}</DropdownMenuItem>
+                            )}
+
+                            {/* Moderation: cancel moderation */}
+                            {campaign.status === "moderation" && (
+                              <DropdownMenuItem className="gap-2" onClick={() => handleCancelModeration(campaign.id)}><XCircle className="h-4 w-4" /> {t("campaigns.cancelModeration")}</DropdownMenuItem>
+                            )}
+
+                            {/* No delete for moderation */}
+                            {campaign.status !== "moderation" && (
+                              <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDeleteId(campaign.id)}><Trash2 className="h-4 w-4" /> {t("campaigns.delete")}</DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
