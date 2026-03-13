@@ -3,7 +3,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { HelpCircle, AlertTriangle, Info, CalendarIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import type { PricingModel, TrafficQuality } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -80,13 +83,18 @@ export function BudgetSection({
     setPricingModel(availableModels[0]);
   }
 
+  const startDateObj = startDate ? new Date(startDate + "T00:00:00") : undefined;
+  const endDateObj = endDate ? new Date(endDate + "T00:00:00") : undefined;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   return (
     <div className="space-y-5">
       <div className="space-y-2">
         <Label>{t("budget.totalBudget")}</Label>
         <div className="relative max-w-xs">
           <Input value={totalBudget} onChange={(e) => setTotalBudget(e.target.value)}
-            placeholder="1000" className={cn("bg-background border-border pr-8", errors.totalBudget && "border-destructive")} />
+            placeholder="1000" className={cn("bg-background border-border pr-8", (errors.totalBudget) && "border-destructive")} />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
         </div>
         {errors.totalBudget && <p className="text-xs text-destructive">{errors.totalBudget}</p>}
@@ -153,7 +161,7 @@ export function BudgetSection({
         <div className="relative max-w-xs">
           <Input value={priceValue} onChange={(e) => setPriceValue(e.target.value)}
             placeholder={String(limits.rec)}
-            className={cn("bg-background border-border pr-8", isBelowMin && "border-destructive", errors.priceValue && "border-destructive")} />
+            className={cn("bg-background border-border pr-8", (isBelowMin || errors.priceValue) && "border-destructive")} />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
         </div>
         <div className="space-y-1">
@@ -178,23 +186,55 @@ export function BudgetSection({
 
       <div className="grid grid-cols-2 gap-4 max-w-sm">
         <div className="space-y-2">
-          <Label>{t("budget.startDate")}</Label>
-          <div className="relative">
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-background border-border pr-8" />
-            <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          </div>
+          <Label>{t("budget.startDate")} *</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn(
+                "w-full justify-start text-left font-normal gap-2",
+                !startDate && "text-muted-foreground",
+                errors.startDate && "border-destructive"
+              )}>
+                <CalendarIcon className="h-4 w-4" />
+                {startDateObj ? format(startDateObj, "dd.MM.yyyy") : t("budget.selectDate")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={startDateObj}
+                onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))}
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          {errors.startDate && <p className="text-xs text-destructive">{errors.startDate}</p>}
         </div>
         <div className="space-y-2">
-          <Label>{t("budget.endDate")}</Label>
-          <div className="relative">
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-              className={cn("bg-background border-border pr-8", endDateInvalid && "border-destructive")} />
-            <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          </div>
-          {endDateInvalid && <p className="text-xs text-destructive">{t("budget.endDateError")}</p>}
+          <Label>{t("budget.endDate")} *</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn(
+                "w-full justify-start text-left font-normal gap-2",
+                !endDate && "text-muted-foreground",
+                (endDateInvalid || errors.endDate) && "border-destructive"
+              )}>
+                <CalendarIcon className="h-4 w-4" />
+                {endDateObj ? format(endDateObj, "dd.MM.yyyy") : t("budget.selectDate")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={endDateObj}
+                onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))}
+                disabled={(date) => date < today}
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          {(endDateInvalid || errors.endDate) && <p className="text-xs text-destructive">{errors.endDate || t("budget.endDateError")}</p>}
         </div>
         {errors.dates && <p className="text-xs text-destructive col-span-2">{errors.dates}</p>}
-        {errors.endDate && <p className="text-xs text-destructive col-span-2">{errors.endDate}</p>}
       </div>
     </div>
   );

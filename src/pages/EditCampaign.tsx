@@ -20,7 +20,7 @@ const formatCreativeFields: Record<string, string[]> = {
 };
 
 const fieldLabels: Record<string, { label: string; placeholder: string }> = {
-  link: { label: "URL", placeholder: "https://..." },
+  link: { label: "URL *", placeholder: "https://..." },
   imageFile: { label: "", placeholder: "" },
   adText: { label: "Ad text", placeholder: "Text..." }, title: { label: "Title", placeholder: "Title..." },
   vastUrl: { label: "VAST Tag URL", placeholder: "https://..." },
@@ -48,6 +48,7 @@ export default function EditCampaign() {
   const [endDate, setEndDate] = useState("");
   const [initialCreative, setInitialCreative] = useState<Record<string, string>>({});
   const [imageFileName, setImageFileName] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -66,6 +67,9 @@ export default function EditCampaign() {
     if (f === "imageFile") return (creative.imageUrl || "") !== (initialCreative.imageUrl || "");
     return (creative[f] || "") !== (initialCreative[f] || "");
   }), [creative, initialCreative, creativeFields]);
+
+  // Determine if this is a restart (completed campaign)
+  const isRestart = campaign?.status === "completed";
 
   if (!campaign) {
     return (
@@ -93,31 +97,51 @@ export default function EditCampaign() {
   };
 
   const handleSave = () => {
+    const e: Record<string, string> = {};
     const tb = parseNum(totalBudget);
-    if (!totalBudget || isNaN(tb) || tb < 100) { toast.error("Min $100"); return; }
+    if (!totalBudget || isNaN(tb) || tb < 100) e.totalBudget = t("edit.errorBudgetMin");
+    
     const cpmLimits: Record<TrafficQuality, number> = { common: 0.3, high: 0.7, ultra: 0.9 };
     const minCpm = cpmLimits[trafficQuality];
     const min = pricingModel === "cpc" ? +(minCpm * 1.7 / 1000).toFixed(5) : minCpm;
     const pv = parseNum(priceValue);
-    if (!priceValue || isNaN(pv) || pv < min) { toast.error(`Min $${min}`); return; }
+    if (!priceValue || isNaN(pv) || pv < min) e.priceValue = `${t("budget.belowMin")} ($${min})`;
 
-    // End date validation
+    if (!startDate) e.startDate = t("create.required");
+    if (!endDate) e.endDate = t("create.required");
     if (endDate) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const end = new Date(endDate);
-      if (end < today) { toast.error(t("create.endDateError")); return; }
+      if (end < today) e.endDate = t("create.endDateError");
     }
-    if (!startDate || !endDate) { toast.error(t("create.endDateRequired")); return; }
+    if (!name.trim()) e.name = t("create.required");
+    if (creativeFields.includes("link") && !creative.link?.trim()) e.link = t("create.required");
 
-    const newStatus = hasCreativeChanged ? "moderation" as const : campaign.status;
+    setErrors(e);
+    if (Object.keys(e).length > 0) return;
+
+    // Determine new status
+    let newStatus = campaign.status;
+    if (isRestart) {
+      // Restart: if content changed -> moderation, else -> active
+      newStatus = hasCreativeChanged ? "moderation" : "active";
+    } else if (hasCreativeChanged) {
+      newStatus = "moderation";
+    }
+
     updateCampaign(campaign.id, {
       name: name.trim(), description, creative,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
       budget: tb, dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       priceValue: pv, pricingModel, trafficQuality, startDate, endDate, status: newStatus,
     });
-    toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.saved"));
+    
+    if (isRestart) {
+      toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.restartedActive"));
+    } else {
+      toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.saved"));
+    }
     navigate("/dashboard/campaigns");
   };
 
@@ -149,8 +173,10 @@ export default function EditCampaign() {
           <Card className="bg-card border-border">
             <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
-                <Label>{t("edit.name")}</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-background border-border" />
+                <Label>{t("edit.name")} *</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)}
+                  className={`bg-background border-border ${errors.name ? "border-destructive" : ""}`} />
+                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
               </div>
               <div className="space-y-2">
                 <Label>{t("edit.formatLabel")}</Label>
@@ -182,11 +208,12 @@ export default function EditCampaign() {
                     <Label>{cfg.label}</Label>
                     {field === "adText" ? (
                       <Textarea value={creative[field] || ""} onChange={(e) => setCreative(prev => ({ ...prev, [field]: e.target.value }))}
-                        placeholder={cfg.placeholder} className="bg-background border-border resize-none" rows={3} />
+                        placeholder={cfg.placeholder} className={`bg-background border-border resize-none ${errors[field] ? "border-destructive" : ""}`} rows={3} />
                     ) : (
                       <Input value={creative[field] || ""} onChange={(e) => setCreative(prev => ({ ...prev, [field]: e.target.value }))}
-                        placeholder={cfg.placeholder} className="bg-background border-border" />
+                        placeholder={cfg.placeholder} className={`bg-background border-border ${errors[field] ? "border-destructive" : ""}`} />
                     )}
+                    {errors[field] && <p className="text-xs text-destructive">{errors[field]}</p>}
                   </div>
                 );
               })}
@@ -217,6 +244,7 @@ export default function EditCampaign() {
                 trafficQuality={trafficQuality} setTrafficQuality={setTrafficQuality}
                 startDate={startDate} setStartDate={setStartDate}
                 endDate={endDate} setEndDate={setEndDate}
+                errors={errors}
               />
             </CardContent>
           </Card>
