@@ -426,6 +426,16 @@ const translations: Record<string, Record<Lang, string>> = {
   "notFound.title": { ru: "404", en: "404" },
   "notFound.message": { ru: "Страница не найдена", en: "Page not found" },
   "notFound.back": { ru: "Вернуться на главную", en: "Return to Home" },
+
+  // Stats chart hours
+  "stats.chartTitleHours": { ru: "Динамика показов по часам", en: "Impressions dynamics by hours" },
+
+  // Budget date picker
+  "budget.selectDate": { ru: "Выберите дату", en: "Select date" },
+
+  // Edit campaign errors
+  "edit.errorBudgetMin": { ru: "Бюджет кампании должен быть не менее $100", en: "Campaign budget must be at least $100" },
+  "edit.restartedActive": { ru: "Кампания перезапущена", en: "Campaign restarted" },
 };
 
 interface LanguageContextType {
