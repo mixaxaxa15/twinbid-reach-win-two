@@ -86,9 +86,8 @@ export default function DashboardStatistics() {
   const { campaigns } = useCampaigns();
   const { t } = useLanguage();
   
-  // Applied state (what's actually shown)
+  // Applied state (what's actually shown) - campaign, period, filters require refresh
   const [appliedCampaignIds, setAppliedCampaignIds] = useState<Set<string>>(new Set());
-  const [appliedGroupBy, setAppliedGroupBy] = useState<GroupBy>("dates");
   const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
   const [appliedFilterCountry, setAppliedFilterCountry] = useState("all");
   const [appliedFilterBrowser, setAppliedFilterBrowser] = useState("all");
