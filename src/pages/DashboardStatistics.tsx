@@ -97,13 +97,20 @@ export default function DashboardStatistics() {
 
   // Draft state (what user is selecting before clicking refresh)
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<Set<string>>(new Set());
-  const [groupBy, setGroupBy] = useState<GroupBy>("dates");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [clickCount, setClickCount] = useState(0);
   const [filterCountry, setFilterCountry] = useState("all");
   const [filterBrowser, setFilterBrowser] = useState("all");
   const [filterDevice, setFilterDevice] = useState("all");
   const [filterOS, setFilterOS] = useState("all");
+
+  // Grouping applies immediately (no refresh needed)
+  const [groupBy, setGroupBy] = useState<GroupBy>("dates");
+  const appliedGroupBy = groupBy;
+
+  // Chart metric selector
+  type ChartMetric = "impressions" | "clicks" | "spent";
+  const [chartMetric, setChartMetric] = useState<ChartMetric>("impressions");
 
   const [sortKey, setSortKey] = useState<SortKey>("label");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
