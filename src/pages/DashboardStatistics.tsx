@@ -166,14 +166,13 @@ export default function DashboardStatistics() {
 
   const handleRefresh = useCallback(() => {
     setAppliedCampaignIds(new Set(selectedCampaignIds));
-    setAppliedGroupBy(groupBy);
     setAppliedDateRange(dateRange);
     setAppliedFilterCountry(filterCountry);
     setAppliedFilterBrowser(filterBrowser);
     setAppliedFilterDevice(filterDevice);
     setAppliedFilterOS(filterOS);
     toast.success(t("stats.refreshed"));
-  }, [selectedCampaignIds, groupBy, dateRange, filterCountry, filterBrowser, filterDevice, filterOS, t]);
+  }, [selectedCampaignIds, dateRange, filterCountry, filterBrowser, filterDevice, filterOS, t]);
 
   const handleCampaignChange = (id: string) => {
     setSelectedCampaignIds(prev => {
