@@ -24,7 +24,7 @@ export function Header() {
             <img src={twinbidLogo} alt="TwinBid" className="h-10" />
           </a>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-8 ml-auto mr-auto">
             {navLinks.map((link) => (
               <a key={link.href} href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">{link.label}</a>
             ))}
