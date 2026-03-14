@@ -51,6 +51,8 @@ interface BudgetSectionProps {
   setStartDate: (v: string) => void;
   endDate: string;
   setEndDate: (v: string) => void;
+  evenSpend: boolean;
+  setEvenSpend: (v: boolean) => void;
   errors?: Record<string, string>;
 }
 
