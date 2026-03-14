@@ -7,7 +7,7 @@ export function StatsCards() {
 
   const stats = [
     { label: t("statsCards.impressions"), value: "124,892", change: "+12.5%", icon: Eye, color: "text-primary" },
-    { label: t("statsCards.clicks"), value: "8,234", change: "+8.2%", icon: MousePointer, color: "text-accent" },
+    { label: t("statsCards.clicks"), value: "8,234", change: "+8.2%", icon: MousePointer, color: "text-primary" },
     { label: t("statsCards.ctr"), value: "6.59%", change: "+2.1%", icon: Target, color: "text-primary" },
   ];
 
