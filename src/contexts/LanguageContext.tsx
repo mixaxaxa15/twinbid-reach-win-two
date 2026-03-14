@@ -227,8 +227,8 @@ const translations: Record<string, Record<Lang, string>> = {
   "stats.clearFilters": { ru: "Сбросить фильтры", en: "Clear filters" },
   "stats.today": { ru: "Сегодня", en: "Today" },
   "stats.yesterday": { ru: "Вчера", en: "Yesterday" },
-  "stats.week": { ru: "Неделя", en: "Week" },
-  "stats.month": { ru: "Месяц", en: "Month" },
+   "stats.week": { ru: "7 дней", en: "7 days" },
+   "stats.month": { ru: "30 дней", en: "30 days" },
   "stats.chartTitleHours": { ru: "Динамика по часам", en: "Hourly dynamics" },
 
   // Campaigns page
