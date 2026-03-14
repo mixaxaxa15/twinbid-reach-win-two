@@ -7,6 +7,7 @@ export interface Notification {
   type: "info" | "warning" | "error";
   action?: { label: string; onClick: () => void };
   persistent?: boolean; // won't auto-dismiss
+  onDismiss?: () => void; // called when user clicks X to dismiss
 }
 
 interface NotificationContextType {
