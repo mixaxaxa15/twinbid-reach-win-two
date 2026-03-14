@@ -132,11 +132,11 @@ export default function DashboardCampaigns() {
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.name")}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.status")}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("campaigns.format")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("campaigns.budget")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.spent")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.impressions")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">CTR</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground"></th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("campaigns.budget")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.spent")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.impressions")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">CTR</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -146,10 +146,10 @@ export default function DashboardCampaigns() {
                       <td className="py-4 px-4 font-medium">{campaign.name}</td>
                       <td className="py-4 px-4"><Badge variant="outline" className={cn("font-normal", statusConfig[campaign.status]?.className)}>{statusConfig[campaign.status]?.label}</Badge></td>
                       <td className="py-4 px-4 text-muted-foreground">{campaign.format}</td>
-                      <td className="py-4 px-4 text-right">${campaign.budget.toLocaleString()}</td>
-                      <td className="py-4 px-4 text-right">${campaign.spent.toLocaleString()}</td>
-                      <td className="py-4 px-4 text-right">{campaign.impressions.toLocaleString()}</td>
-                      <td className="py-4 px-4 text-right">{campaign.ctr}%</td>
+                      <td className="py-4 px-4">${campaign.budget.toLocaleString()}</td>
+                      <td className="py-4 px-4">${campaign.spent.toLocaleString()}</td>
+                      <td className="py-4 px-4">{campaign.impressions.toLocaleString()}</td>
+                      <td className="py-4 px-4">{campaign.ctr}%</td>
                       <td className="py-4 px-4 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>

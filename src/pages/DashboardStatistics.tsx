@@ -455,14 +455,14 @@ export default function DashboardStatistics() {
                           onClick={() => canSortByLabel && toggleSort("label")}>
                           {labelHeader} {canSortByLabel && <SortIcon col="label" />}
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("impressions")}>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("impressions")}>
                           {t("stats.impressions")} <SortIcon col="impressions" />
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[120px]" onClick={() => toggleSort("clicks")}>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[120px]" onClick={() => toggleSort("clicks")}>
                           {t("stats.clicks")} <SortIcon col="clicks" />
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground w-[100px]">{t("stats.ctr")}</th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("spent")}>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground w-[100px]">{t("stats.ctr")}</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("spent")}>
                           {t("stats.spent")} <SortIcon col="spent" />
                         </th>
                       </tr>
@@ -471,18 +471,18 @@ export default function DashboardStatistics() {
                       {sortedData.map((row) => (
                         <tr key={row.label} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                           <td className="py-3 px-4 font-medium truncate">{row.label}</td>
-                          <td className="py-3 px-4 text-right">{row.impressions.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-right">{row.clicks.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-right">{((row.clicks / row.impressions) * 100).toFixed(2)}%</td>
-                          <td className="py-3 px-4 text-right">${row.spent.toLocaleString()}</td>
+                          <td className="py-3 px-4">{row.impressions.toLocaleString()}</td>
+                          <td className="py-3 px-4">{row.clicks.toLocaleString()}</td>
+                          <td className="py-3 px-4">{((row.clicks / row.impressions) * 100).toFixed(2)}%</td>
+                          <td className="py-3 px-4">${row.spent.toLocaleString()}</td>
                         </tr>
                       ))}
                       <tr className="bg-muted/30 font-semibold">
                         <td className="py-3 px-4">{t("stats.total")}</td>
-                        <td className="py-3 px-4 text-right">{totals.impressions.toLocaleString()}</td>
-                        <td className="py-3 px-4 text-right">{totals.clicks.toLocaleString()}</td>
-                        <td className="py-3 px-4 text-right">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
-                        <td className="py-3 px-4 text-right">${totals.spent.toLocaleString()}</td>
+                        <td className="py-3 px-4">{totals.impressions.toLocaleString()}</td>
+                        <td className="py-3 px-4">{totals.clicks.toLocaleString()}</td>
+                        <td className="py-3 px-4">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
+                        <td className="py-3 px-4">${totals.spent.toLocaleString()}</td>
                       </tr>
                     </tbody>
                   </table>
