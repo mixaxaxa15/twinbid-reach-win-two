@@ -28,7 +28,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "start.minDeposit": { ru: "Минимальный депозит", en: "Minimum deposit" },
   "start.startSmall": { ru: "Начните с небольшого бюджета и масштабируйтесь", en: "Start with a small budget and scale up" },
   "start.bonusBadge": { ru: "Бонус новым пользователям", en: "Bonus for new users" },
-  "start.bonusDesc": { ru: "бюджета на первое пополнение — зарегистрируйтесь и получите уже сегодня дополнительные средства на тесты.", en: "budget on first deposit — sign up and get extra funds for testing today." },
+  "start.bonusDesc": { ru: "к бюджету на первое пополнение — зарегистрируйтесь и получите дополнительные средства на запуск первой кампании", en: "to your budget on first deposit — sign up and get extra funds to launch your first campaign" },
   "start.getBonus": { ru: "Получить бонус", en: "Get bonus" },
 
   // Benefits
