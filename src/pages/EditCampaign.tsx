@@ -136,7 +136,7 @@ export default function EditCampaign() {
       name: name.trim(), description, creative,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
       budget: tb, dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
-      priceValue: pv, pricingModel, trafficQuality, startDate, endDate, status: newStatus,
+      priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
     });
     
     if (isRestart) {
