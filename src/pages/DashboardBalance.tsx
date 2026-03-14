@@ -326,8 +326,8 @@ export default function DashboardBalance() {
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.date")}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.description")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.amountCol")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.statusCol")}</th>
+                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.amountCol")}</th>
+                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.statusCol")}</th>
                   </tr>
                 </thead>
                 <tbody>
