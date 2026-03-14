@@ -146,10 +146,10 @@ export default function DashboardCampaigns() {
                       <td className="py-4 px-4 font-medium">{campaign.name}</td>
                       <td className="py-4 px-4"><Badge variant="outline" className={cn("font-normal", statusConfig[campaign.status]?.className)}>{statusConfig[campaign.status]?.label}</Badge></td>
                       <td className="py-4 px-4 text-muted-foreground">{campaign.format}</td>
-                      <td className="py-4 px-4 text-right">${campaign.budget.toLocaleString()}</td>
-                      <td className="py-4 px-4 text-right">${campaign.spent.toLocaleString()}</td>
-                      <td className="py-4 px-4 text-right">{campaign.impressions.toLocaleString()}</td>
-                      <td className="py-4 px-4 text-right">{campaign.ctr}%</td>
+                      <td className="py-4 px-4">${campaign.budget.toLocaleString()}</td>
+                      <td className="py-4 px-4">${campaign.spent.toLocaleString()}</td>
+                      <td className="py-4 px-4">{campaign.impressions.toLocaleString()}</td>
+                      <td className="py-4 px-4">{campaign.ctr}%</td>
                       <td className="py-4 px-4 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>

@@ -479,10 +479,10 @@ export default function DashboardStatistics() {
                       ))}
                       <tr className="bg-muted/30 font-semibold">
                         <td className="py-3 px-4">{t("stats.total")}</td>
-                        <td className="py-3 px-4 text-right">{totals.impressions.toLocaleString()}</td>
-                        <td className="py-3 px-4 text-right">{totals.clicks.toLocaleString()}</td>
-                        <td className="py-3 px-4 text-right">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
-                        <td className="py-3 px-4 text-right">${totals.spent.toLocaleString()}</td>
+                        <td className="py-3 px-4">{totals.impressions.toLocaleString()}</td>
+                        <td className="py-3 px-4">{totals.clicks.toLocaleString()}</td>
+                        <td className="py-3 px-4">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
+                        <td className="py-3 px-4">${totals.spent.toLocaleString()}</td>
                       </tr>
                     </tbody>
                   </table>

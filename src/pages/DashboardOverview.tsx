@@ -48,8 +48,8 @@ export default function DashboardOverview() {
                         {statusConfig[c.status]?.label}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4 text-right">{c.impressions.toLocaleString()}</td>
-                    <td className="py-3 px-4 text-right">${c.spent.toLocaleString()}</td>
+                    <td className="py-3 px-4">{c.impressions.toLocaleString()}</td>
+                    <td className="py-3 px-4">${c.spent.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
