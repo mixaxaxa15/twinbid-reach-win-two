@@ -223,6 +223,11 @@ const translations: Record<string, Record<Lang, string>> = {
   "stats.filterOS": { ru: "ОС", en: "OS" },
   "stats.allValues": { ru: "Все", en: "All" },
   "stats.clearFilters": { ru: "Сбросить фильтры", en: "Clear filters" },
+  "stats.today": { ru: "Сегодня", en: "Today" },
+  "stats.yesterday": { ru: "Вчера", en: "Yesterday" },
+  "stats.week": { ru: "Неделя", en: "Week" },
+  "stats.month": { ru: "Месяц", en: "Month" },
+  "stats.chartTitleHours": { ru: "Динамика по часам", en: "Hourly dynamics" },
 
   // Campaigns page
   "campaigns.title": { ru: "Кампании", en: "Campaigns" },
