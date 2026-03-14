@@ -34,8 +34,8 @@ export default function DashboardOverview() {
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.id")}</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.name")}</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.status")}</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.impressions")}</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.spent")}</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.impressions")}</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.spent")}</th>
                 </tr>
               </thead>
               <tbody>
