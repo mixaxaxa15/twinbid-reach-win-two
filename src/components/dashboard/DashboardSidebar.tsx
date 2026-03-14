@@ -20,7 +20,7 @@ export function DashboardSidebar() {
   return (
     <aside className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
-        <img src={twinbidLogo} alt="TwinBid" className="h-9 cursor-pointer" onClick={() => navigate("/")} />
+        <img src={twinbidLogo} alt="TwinBid" className="h-9 cursor-pointer" onClick={() => navigate("/dashboard")} />
       </div>
       <nav className="flex-1 p-4 space-y-2">
         {menuItems.map((item) => {

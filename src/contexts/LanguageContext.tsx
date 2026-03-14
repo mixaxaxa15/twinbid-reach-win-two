@@ -109,7 +109,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "header.advertiser": { ru: "Рекламодатель", en: "Advertiser" },
 
   // Dashboard Overview
-  "overview.recentCampaigns": { ru: "Последние кампании", en: "Recent campaigns" },
+  "overview.recentCampaigns": { ru: "Кампании", en: "Campaigns" },
   "overview.id": { ru: "ID", en: "ID" },
   "overview.name": { ru: "Название", en: "Name" },
   "overview.status": { ru: "Статус", en: "Status" },
