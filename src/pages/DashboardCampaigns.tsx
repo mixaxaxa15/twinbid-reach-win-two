@@ -132,11 +132,11 @@ export default function DashboardCampaigns() {
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.name")}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.status")}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("campaigns.format")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("campaigns.budget")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.spent")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.impressions")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">CTR</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground"></th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("campaigns.budget")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.spent")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.impressions")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">CTR</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground"></th>
                   </tr>
                 </thead>
                 <tbody>
