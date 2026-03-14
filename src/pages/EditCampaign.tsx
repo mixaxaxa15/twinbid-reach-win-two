@@ -46,6 +46,7 @@ export default function EditCampaign() {
   const [trafficQuality, setTrafficQuality] = useState<TrafficQuality>("common");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [evenSpend, setEvenSpend] = useState(false);
   const [initialCreative, setInitialCreative] = useState<Record<string, string>>({});
   const [imageFileName, setImageFileName] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
