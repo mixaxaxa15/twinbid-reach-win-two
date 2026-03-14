@@ -49,6 +49,7 @@ export default function CreateCampaign() {
   const [trafficQuality, setTrafficQuality] = useState<TrafficQuality>("common");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [evenSpend, setEvenSpend] = useState(false);
   const [imageFileName, setImageFileName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const savedAsDraft = useRef(false);
