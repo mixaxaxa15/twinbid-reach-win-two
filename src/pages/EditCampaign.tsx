@@ -246,6 +246,7 @@ export default function EditCampaign() {
                 trafficQuality={trafficQuality} setTrafficQuality={setTrafficQuality}
                 startDate={startDate} setStartDate={setStartDate}
                 endDate={endDate} setEndDate={setEndDate}
+                evenSpend={evenSpend} setEvenSpend={setEvenSpend}
                 errors={errors}
               />
             </CardContent>

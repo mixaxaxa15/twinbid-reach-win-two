@@ -142,7 +142,7 @@ export default function CreateCampaign() {
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: priceValue ? parseNum(priceValue) : 0,
       trafficQuality, startDate, endDate, creative: creativeFields,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
-      description,
+      description, evenSpend,
     });
   };
 

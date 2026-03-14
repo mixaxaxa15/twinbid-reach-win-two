@@ -379,6 +379,8 @@ const translations: Record<string, Record<Lang, string>> = {
   "budget.startDate": { ru: "Дата начала", en: "Start date" },
   "budget.endDate": { ru: "Дата окончания", en: "End date" },
   "budget.endDateError": { ru: "Дата окончания не может быть раньше сегодняшнего дня", en: "End date cannot be earlier than today" },
+  "budget.evenSpend": { ru: "Равномерное откручивание", en: "Even budget distribution" },
+  "budget.evenSpendTooltip": { ru: "Бюджет кампании будет равномерно распределён на весь период работы кампании, чтобы избежать преждевременного расходования средств.", en: "The campaign budget will be evenly distributed across the entire campaign period to avoid premature spending." },
 
   // Legacy components
   "legacy.campaigns": { ru: "Рекламные кампании", en: "Ad campaigns" },

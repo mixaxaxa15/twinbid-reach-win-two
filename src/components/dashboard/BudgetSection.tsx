@@ -240,6 +240,19 @@ export function BudgetSection({
         </div>
         {errors.dates && <p className="text-xs text-destructive col-span-2">{errors.dates}</p>}
       </div>
+
+      <div className="flex items-center gap-3">
+        <Switch checked={evenSpend} onCheckedChange={setEvenSpend} />
+        <Label className="cursor-pointer" onClick={() => setEvenSpend(!evenSpend)}>{t("budget.evenSpend")}</Label>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            <p className="text-sm">{t("budget.evenSpendTooltip")}</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
     </div>
   );
 }
