@@ -60,6 +60,7 @@ export function BudgetSection({
   formatKey, totalBudget, setTotalBudget, dailyBudget, setDailyBudget,
   priceValue, setPriceValue, pricingModel, setPricingModel,
   trafficQuality, setTrafficQuality, startDate, setStartDate, endDate, setEndDate,
+  evenSpend, setEvenSpend,
   errors = {},
 }: BudgetSectionProps) {
   const { t } = useLanguage();
