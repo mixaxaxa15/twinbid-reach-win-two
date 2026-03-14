@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CampaignProvider } from "./contexts/CampaignContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { StatisticsProvider } from "./contexts/StatisticsContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
