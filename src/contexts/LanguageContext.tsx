@@ -193,6 +193,8 @@ const translations: Record<string, Record<Lang, string>> = {
   "stats.selected": { ru: "Выбрано:", en: "Selected:" },
   "stats.period": { ru: "Период", en: "Period" },
   "stats.selectPeriod": { ru: "Выберите период", en: "Select period" },
+  "stats.selectCampaign": { ru: "Выберите кампанию", en: "Select campaign" },
+  "stats.selectAll": { ru: "Все кампании", en: "All campaigns" },
   "stats.refresh": { ru: "Обновить", en: "Refresh" },
   "stats.refreshed": { ru: "Статистика обновлена", en: "Statistics refreshed" },
   "stats.impressions": { ru: "Показы", en: "Impressions" },
