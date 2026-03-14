@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, MoreHorizontal, Play, Pause, Pencil, Trash2, Eye, Search, Filter, Copy, RotateCcw, XCircle } from "lucide-react";
+import { Plus, MoreHorizontal, Play, Pause, Pencil, Trash2, Eye, Filter, Copy, RotateCcw, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
