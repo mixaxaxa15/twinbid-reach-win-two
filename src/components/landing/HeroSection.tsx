@@ -19,7 +19,9 @@ export function HeroSection() {
         style={{
           backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
                            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px'
+          backgroundSize: '60px 60px',
+          maskImage: 'linear-gradient(to bottom, black 40%, transparent 80%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 80%)',
         }}
       />
 
