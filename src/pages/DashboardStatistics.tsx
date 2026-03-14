@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,6 +14,7 @@ import type { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { useCampaigns } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useStatistics } from "@/contexts/StatisticsContext";
 
 type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "country";
 type SortKey = "label" | "impressions" | "clicks" | "spent";
@@ -86,33 +87,27 @@ export default function DashboardStatistics() {
   const { campaigns } = useCampaigns();
   const { t } = useLanguage();
   
-  // Applied state (what's actually shown) - campaign, period, filters require refresh
-  const [appliedCampaignIds, setAppliedCampaignIds] = useState<Set<string>>(new Set());
-  const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
-  const [appliedFilterCountry, setAppliedFilterCountry] = useState("all");
-  const [appliedFilterBrowser, setAppliedFilterBrowser] = useState("all");
-  const [appliedFilterDevice, setAppliedFilterDevice] = useState("all");
-  const [appliedFilterOS, setAppliedFilterOS] = useState("all");
+  const {
+    selectedCampaignIds, setSelectedCampaignIds,
+    dateRange, setDateRange,
+    clickCount, setClickCount,
+    filterCountry, setFilterCountry,
+    filterBrowser, setFilterBrowser,
+    filterDevice, setFilterDevice,
+    filterOS, setFilterOS,
+    groupBy, setGroupBy,
+    chartMetric, setChartMetric,
+    sortKey, setSortKey,
+    sortDir, setSortDir,
+    appliedCampaignIds, setAppliedCampaignIds,
+    appliedDateRange, setAppliedDateRange,
+    appliedFilterCountry, setAppliedFilterCountry,
+    appliedFilterBrowser, setAppliedFilterBrowser,
+    appliedFilterDevice, setAppliedFilterDevice,
+    appliedFilterOS, setAppliedFilterOS,
+  } = useStatistics();
 
-  // Draft state (what user is selecting before clicking refresh)
-  const [selectedCampaignIds, setSelectedCampaignIds] = useState<Set<string>>(new Set());
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [clickCount, setClickCount] = useState(0);
-  const [filterCountry, setFilterCountry] = useState("all");
-  const [filterBrowser, setFilterBrowser] = useState("all");
-  const [filterDevice, setFilterDevice] = useState("all");
-  const [filterOS, setFilterOS] = useState("all");
-
-  // Grouping applies immediately (no refresh needed)
-  const [groupBy, setGroupBy] = useState<GroupBy>("dates");
   const appliedGroupBy = groupBy;
-
-  // Chart metric selector
-  type ChartMetric = "impressions" | "clicks" | "spent";
-  const [chartMetric, setChartMetric] = useState<ChartMetric>("impressions");
-
-  const [sortKey, setSortKey] = useState<SortKey>("label");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const hasActiveFilters = appliedFilterCountry !== "all" || appliedFilterBrowser !== "all" || appliedFilterDevice !== "all" || appliedFilterOS !== "all";
 
@@ -370,12 +365,16 @@ export default function DashboardStatistics() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {metricCards.map((m) => (
               <Card key={m.label} className="bg-card border-border">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm text-muted-foreground">{m.label}</p>
-                    <m.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{m.label}</p>
+                      <p className="text-2xl font-bold mt-1">{m.value}</p>
+                    </div>
+                    <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center text-primary">
+                      <m.icon className="h-6 w-6" />
+                    </div>
                   </div>
-                  <p className="text-2xl font-bold">{m.value}</p>
                 </CardContent>
               </Card>
             ))}
@@ -390,7 +389,7 @@ export default function DashboardStatistics() {
                     {appliedGroupBy === "hours" ? t("stats.chartTitleHours") : t("stats.chartTitle")}
                   </CardTitle>
                   <div className="flex gap-1">
-                    {(["impressions", "clicks", "spent"] as ChartMetric[]).map(m => (
+                    {(["impressions", "clicks", "spent"] as const).map(m => (
                       <Button key={m} variant={chartMetric === m ? "default" : "outline"} size="sm"
                         onClick={() => setChartMetric(m)}
                         className={cn("text-xs", chartMetric === m ? "bg-primary text-primary-foreground" : "border-border")}>

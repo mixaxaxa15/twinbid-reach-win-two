@@ -326,8 +326,8 @@ export default function DashboardBalance() {
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.date")}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.description")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.amountCol")}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.statusCol")}</th>
+                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.amountCol")}</th>
+                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.statusCol")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -335,10 +335,10 @@ export default function DashboardBalance() {
                     <tr key={tx.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                       <td className="py-3 px-4 text-sm">{tx.date}</td>
                       <td className="py-3 px-4 text-sm">{t("balance.topUpVia")} · {tx.method}</td>
-                      <td className="py-3 px-4 text-sm text-right font-medium text-green-500">
+                      <td className="py-3 px-4 text-sm text-left font-medium text-green-500">
                         +${tx.amount.toLocaleString()}
                       </td>
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-3 px-4 text-left">
                         <Badge variant="outline" className={cn("font-normal", tx.status === "completed" ? "text-green-500 border-green-500/20" : "text-yellow-500 border-yellow-500/20")}>
                           {tx.status === "completed" ? t("balance.completed") : t("balance.pending")}
                         </Badge>
