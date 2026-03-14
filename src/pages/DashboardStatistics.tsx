@@ -455,14 +455,14 @@ export default function DashboardStatistics() {
                           onClick={() => canSortByLabel && toggleSort("label")}>
                           {labelHeader} {canSortByLabel && <SortIcon col="label" />}
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("impressions")}>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("impressions")}>
                           {t("stats.impressions")} <SortIcon col="impressions" />
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[120px]" onClick={() => toggleSort("clicks")}>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[120px]" onClick={() => toggleSort("clicks")}>
                           {t("stats.clicks")} <SortIcon col="clicks" />
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground w-[100px]">{t("stats.ctr")}</th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("spent")}>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground w-[100px]">{t("stats.ctr")}</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("spent")}>
                           {t("stats.spent")} <SortIcon col="spent" />
                         </th>
                       </tr>
