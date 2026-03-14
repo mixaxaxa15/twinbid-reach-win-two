@@ -4,21 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-const recentCampaigns = [
-  { id: "10001", name: "Летняя распродажа 2024", status: "active", impressions: 45230, spent: 2340 },
-  { id: "10002", name: "Новая коллекция", status: "active", impressions: 89120, spent: 6780 },
-  { id: "10003", name: "Бренд-кампания", status: "paused", impressions: 28900, spent: 1520 },
-  { id: "10006", name: "Ретаргетинг Q1", status: "moderation", impressions: 0, spent: 0 },
-];
+import { useCampaigns } from "@/contexts/CampaignContext";
 
 export default function DashboardOverview() {
   const { t } = useLanguage();
+  const { campaigns } = useCampaigns();
 
   const statusConfig: Record<string, { label: string; className: string }> = {
     active: { label: t("status.active"), className: "bg-green-500/10 text-green-500 border-green-500/20" },
     paused: { label: t("status.paused"), className: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
     moderation: { label: t("status.moderation"), className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+    draft: { label: t("status.draft"), className: "bg-muted text-muted-foreground border-border" },
+    completed: { label: t("status.completed"), className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
   };
 
   return (
@@ -42,7 +39,7 @@ export default function DashboardOverview() {
                 </tr>
               </thead>
               <tbody>
-                {recentCampaigns.map((c) => (
+                {campaigns.map((c) => (
                   <tr key={c.id} className="border-b border-border/50">
                     <td className="py-3 px-4 text-muted-foreground font-mono text-sm">{c.id}</td>
                     <td className="py-3 px-4 font-medium">{c.name}</td>
