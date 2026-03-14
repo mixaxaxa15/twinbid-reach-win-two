@@ -239,11 +239,21 @@ export default function DashboardStatistics() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
-                {selectedCampaignIds.size === 0 ? t("stats.selectPeriod") : `${t("stats.selected")} ${selectedCampaignIds.size}`}
+                {selectedCampaignIds.size === 0 ? t("stats.selectCampaign") : selectedCampaignIds.size === activeCampaigns.length ? t("stats.selectAll") : `${t("stats.selected")} ${selectedCampaignIds.size}`}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[280px] p-2" align="start">
               <div className="space-y-1 max-h-64 overflow-y-auto">
+                <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm font-medium border-b border-border pb-2 mb-1">
+                  <Checkbox checked={selectedCampaignIds.size === activeCampaigns.length} onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedCampaignIds(new Set(activeCampaigns.map(c => c.id)));
+                    } else {
+                      setSelectedCampaignIds(new Set());
+                    }
+                  }} />
+                  {t("stats.selectAll")}
+                </label>
                 {activeCampaigns.map(c => (
                   <label key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
                     <Checkbox checked={selectedCampaignIds.has(c.id)} onCheckedChange={() => handleCampaignChange(c.id)} />
