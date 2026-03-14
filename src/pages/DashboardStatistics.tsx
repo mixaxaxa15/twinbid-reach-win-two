@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Eye, MousePointer, Target, TrendingUp, ArrowUpDown, CalendarIcon, RefreshCw, Filter } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { format, parse, isWithinInterval, startOfDay } from "date-fns";
+import { format, parse, isWithinInterval, startOfDay, subDays, startOfWeek, startOfMonth } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -257,21 +257,34 @@ export default function DashboardStatistics() {
 
         <div className="flex flex-col gap-2">
           <Label className="text-sm text-muted-foreground font-medium">{t("stats.period")}</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange.to && dateRange.from.getTime() !== dateRange.to.getTime() ? (
-                    <>{format(dateRange.from, "dd.MM.yy")} — {format(dateRange.to, "dd.MM.yy")}</>
-                  ) : format(dateRange.from, "dd.MM.yy")
-                ) : t("stats.selectPeriod")}
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[220px] justify-start bg-background border-border text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to && dateRange.from.getTime() !== dateRange.to.getTime() ? (
+                      <>{format(dateRange.from, "dd.MM.yy")} — {format(dateRange.to, "dd.MM.yy")}</>
+                    ) : format(dateRange.from, "dd.MM.yy")
+                  ) : t("stats.selectPeriod")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="range" selected={dateRange} onSelect={handleDateChange} numberOfMonths={2} className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+            {[
+              { label: t("stats.today"), getRange: () => { const d = new Date(); return { from: d, to: d }; } },
+              { label: t("stats.yesterday"), getRange: () => { const d = subDays(new Date(), 1); return { from: d, to: d }; } },
+              { label: t("stats.week"), getRange: () => ({ from: startOfWeek(new Date(), { weekStartsOn: 1 }), to: new Date() }) },
+              { label: t("stats.month"), getRange: () => ({ from: startOfMonth(new Date()), to: new Date() }) },
+            ].map((preset) => (
+              <Button key={preset.label} variant="outline" size="sm" className="border-border text-xs"
+                onClick={() => setDateRange(preset.getRange())}>
+                {preset.label}
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="range" selected={dateRange} onSelect={handleDateChange} numberOfMonths={2} className="p-3 pointer-events-auto" />
-            </PopoverContent>
-          </Popover>
+            ))}
+          </div>
         </div>
 
         <Button onClick={handleRefresh} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">

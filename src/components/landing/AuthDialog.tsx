@@ -63,10 +63,6 @@ export function AuthDialog({ trigger, defaultTab = "login" }: AuthDialogProps) {
                 <Input id="email-register" type="email" placeholder="your@email.com" className="bg-background border-border" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">{t("auth.phone")}</Label>
-                <Input id="phone" type="tel" placeholder="+1 (555) 123-4567" className="bg-background border-border" />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="password-register">{t("auth.password")}</Label>
                 <Input id="password-register" type="password" placeholder="••••••••" className="bg-background border-border" />
               </div>

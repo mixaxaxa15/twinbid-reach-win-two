@@ -19,7 +19,9 @@ export function HeroSection() {
         style={{
           backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
                            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px'
+          backgroundSize: '60px 60px',
+          maskImage: 'linear-gradient(to bottom, black 40%, transparent 80%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 80%)',
         }}
       />
 
@@ -73,7 +75,7 @@ export function HeroSection() {
         </div>
       </div>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce hidden md:flex items-center justify-center">
         <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
           <div className="w-1 h-2 bg-muted-foreground rounded-full" />
         </div>
