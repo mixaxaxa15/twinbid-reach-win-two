@@ -389,7 +389,7 @@ export default function DashboardStatistics() {
                     {appliedGroupBy === "hours" ? t("stats.chartTitleHours") : t("stats.chartTitle")}
                   </CardTitle>
                   <div className="flex gap-1">
-                    {(["impressions", "clicks", "spent"] as ChartMetric[]).map(m => (
+                    {(["impressions", "clicks", "spent"] as const).map(m => (
                       <Button key={m} variant={chartMetric === m ? "default" : "outline"} size="sm"
                         onClick={() => setChartMetric(m)}
                         className={cn("text-xs", chartMetric === m ? "bg-primary text-primary-foreground" : "border-border")}>
