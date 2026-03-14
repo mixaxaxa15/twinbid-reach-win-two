@@ -30,6 +30,7 @@ export interface Campaign {
   creative: Record<string, string>;
   targeting: Record<string, TargetingState>;
   description: string;
+  evenSpend: boolean;
 }
 
 const defaultTargeting = (): Record<string, TargetingState> =>
