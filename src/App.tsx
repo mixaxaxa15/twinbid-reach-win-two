@@ -29,19 +29,21 @@ const App = () => (
         <LanguageProvider>
           <NotificationProvider>
             <CampaignProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/dashboard" element={<Dashboard />}>
-                  <Route index element={<DashboardOverview />} />
-                  <Route path="campaigns" element={<DashboardCampaigns />} />
-                  <Route path="campaigns/create" element={<CreateCampaign />} />
-                  <Route path="campaigns/:id/edit" element={<EditCampaign />} />
-                  <Route path="statistics" element={<DashboardStatistics />} />
-                  <Route path="balance" element={<DashboardBalance />} />
-                  <Route path="settings" element={<DashboardSettings />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <StatisticsProvider>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/dashboard" element={<Dashboard />}>
+                    <Route index element={<DashboardOverview />} />
+                    <Route path="campaigns" element={<DashboardCampaigns />} />
+                    <Route path="campaigns/create" element={<CreateCampaign />} />
+                    <Route path="campaigns/:id/edit" element={<EditCampaign />} />
+                    <Route path="statistics" element={<DashboardStatistics />} />
+                    <Route path="balance" element={<DashboardBalance />} />
+                    <Route path="settings" element={<DashboardSettings />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </StatisticsProvider>
             </CampaignProvider>
           </NotificationProvider>
         </LanguageProvider>

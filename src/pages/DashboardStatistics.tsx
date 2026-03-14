@@ -87,33 +87,27 @@ export default function DashboardStatistics() {
   const { campaigns } = useCampaigns();
   const { t } = useLanguage();
   
-  // Applied state (what's actually shown) - campaign, period, filters require refresh
-  const [appliedCampaignIds, setAppliedCampaignIds] = useState<Set<string>>(new Set());
-  const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
-  const [appliedFilterCountry, setAppliedFilterCountry] = useState("all");
-  const [appliedFilterBrowser, setAppliedFilterBrowser] = useState("all");
-  const [appliedFilterDevice, setAppliedFilterDevice] = useState("all");
-  const [appliedFilterOS, setAppliedFilterOS] = useState("all");
+  const {
+    selectedCampaignIds, setSelectedCampaignIds,
+    dateRange, setDateRange,
+    clickCount, setClickCount,
+    filterCountry, setFilterCountry,
+    filterBrowser, setFilterBrowser,
+    filterDevice, setFilterDevice,
+    filterOS, setFilterOS,
+    groupBy, setGroupBy,
+    chartMetric, setChartMetric,
+    sortKey, setSortKey,
+    sortDir, setSortDir,
+    appliedCampaignIds, setAppliedCampaignIds,
+    appliedDateRange, setAppliedDateRange,
+    appliedFilterCountry, setAppliedFilterCountry,
+    appliedFilterBrowser, setAppliedFilterBrowser,
+    appliedFilterDevice, setAppliedFilterDevice,
+    appliedFilterOS, setAppliedFilterOS,
+  } = useStatistics();
 
-  // Draft state (what user is selecting before clicking refresh)
-  const [selectedCampaignIds, setSelectedCampaignIds] = useState<Set<string>>(new Set());
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [clickCount, setClickCount] = useState(0);
-  const [filterCountry, setFilterCountry] = useState("all");
-  const [filterBrowser, setFilterBrowser] = useState("all");
-  const [filterDevice, setFilterDevice] = useState("all");
-  const [filterOS, setFilterOS] = useState("all");
-
-  // Grouping applies immediately (no refresh needed)
-  const [groupBy, setGroupBy] = useState<GroupBy>("dates");
   const appliedGroupBy = groupBy;
-
-  // Chart metric selector
-  type ChartMetric = "impressions" | "clicks" | "spent";
-  const [chartMetric, setChartMetric] = useState<ChartMetric>("impressions");
-
-  const [sortKey, setSortKey] = useState<SortKey>("label");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const hasActiveFilters = appliedFilterCountry !== "all" || appliedFilterBrowser !== "all" || appliedFilterDevice !== "all" || appliedFilterOS !== "all";
 
