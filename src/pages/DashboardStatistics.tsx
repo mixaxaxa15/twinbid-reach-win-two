@@ -471,10 +471,10 @@ export default function DashboardStatistics() {
                       {sortedData.map((row) => (
                         <tr key={row.label} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                           <td className="py-3 px-4 font-medium truncate">{row.label}</td>
-                          <td className="py-3 px-4 text-right">{row.impressions.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-right">{row.clicks.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-right">{((row.clicks / row.impressions) * 100).toFixed(2)}%</td>
-                          <td className="py-3 px-4 text-right">${row.spent.toLocaleString()}</td>
+                          <td className="py-3 px-4">{row.impressions.toLocaleString()}</td>
+                          <td className="py-3 px-4">{row.clicks.toLocaleString()}</td>
+                          <td className="py-3 px-4">{((row.clicks / row.impressions) * 100).toFixed(2)}%</td>
+                          <td className="py-3 px-4">${row.spent.toLocaleString()}</td>
                         </tr>
                       ))}
                       <tr className="bg-muted/30 font-semibold">
