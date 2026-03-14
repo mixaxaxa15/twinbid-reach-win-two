@@ -33,7 +33,7 @@ export default function DashboardCampaigns() {
   const { t } = useLanguage();
   const [viewCampaign, setViewCampaign] = useState<Campaign | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
   const statusConfig: Record<string, { label: string; className: string }> = {
