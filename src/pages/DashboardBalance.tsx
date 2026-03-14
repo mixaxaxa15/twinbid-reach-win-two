@@ -154,6 +154,13 @@ export default function DashboardBalance() {
         type: "warning",
         persistent: true,
         action: { label: t("balance.notif.completePayment"), onClick: () => setShowTxDialog(true) },
+        onDismiss: () => {
+          // Cancel the pending payment when notification is dismissed
+          setPendingPayment(null);
+          setTxHash("");
+          setPendingNotificationId(null);
+          toast.info(t("balance.toast.paymentCanceled"));
+        },
       });
       setPendingNotificationId(nId);
       toast(t("balance.toast.notCompleted"), { duration: 5000 });
