@@ -370,12 +370,16 @@ export default function DashboardStatistics() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {metricCards.map((m) => (
               <Card key={m.label} className="bg-card border-border">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm text-muted-foreground">{m.label}</p>
-                    <m.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{m.label}</p>
+                      <p className="text-2xl font-bold mt-1">{m.value}</p>
+                    </div>
+                    <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center text-primary">
+                      <m.icon className="h-6 w-6" />
+                    </div>
                   </div>
-                  <p className="text-2xl font-bold">{m.value}</p>
                 </CardContent>
               </Card>
             ))}

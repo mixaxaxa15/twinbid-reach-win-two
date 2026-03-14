@@ -100,11 +100,6 @@ export default function DashboardCampaigns() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder={t("campaigns.searchPlaceholder")} value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-background border-border" />
-          </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px] bg-background border-border">
               <Filter className="h-4 w-4 mr-2" /><SelectValue placeholder={t("campaigns.allStatuses")} />
