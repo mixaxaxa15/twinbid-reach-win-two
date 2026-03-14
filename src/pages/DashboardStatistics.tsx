@@ -281,8 +281,8 @@ export default function DashboardStatistics() {
             {[
               { label: t("stats.today"), getRange: () => { const d = new Date(); return { from: d, to: d }; } },
               { label: t("stats.yesterday"), getRange: () => { const d = subDays(new Date(), 1); return { from: d, to: d }; } },
-              { label: t("stats.week"), getRange: () => ({ from: startOfWeek(new Date(), { weekStartsOn: 1 }), to: new Date() }) },
-              { label: t("stats.month"), getRange: () => ({ from: startOfMonth(new Date()), to: new Date() }) },
+              { label: t("stats.week"), getRange: () => ({ from: subDays(new Date(), 6), to: new Date() }) },
+              { label: t("stats.month"), getRange: () => ({ from: subDays(new Date(), 29), to: new Date() }) },
             ].map((preset) => (
               <Button key={preset.label} variant="outline" size="sm" className="border-border text-xs"
                 onClick={() => setDateRange(preset.getRange())}>
