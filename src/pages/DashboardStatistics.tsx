@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,6 +14,7 @@ import type { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { useCampaigns } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useStatistics } from "@/contexts/StatisticsContext";
 
 type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "country";
 type SortKey = "label" | "impressions" | "clicks" | "spent";
