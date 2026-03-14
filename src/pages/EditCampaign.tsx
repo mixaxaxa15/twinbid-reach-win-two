@@ -46,6 +46,7 @@ export default function EditCampaign() {
   const [trafficQuality, setTrafficQuality] = useState<TrafficQuality>("common");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [evenSpend, setEvenSpend] = useState(false);
   const [initialCreative, setInitialCreative] = useState<Record<string, string>>({});
   const [imageFileName, setImageFileName] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -59,6 +60,7 @@ export default function EditCampaign() {
       setDailyBudget(campaign.dailyBudget ? String(campaign.dailyBudget) : "");
       setPriceValue(String(campaign.priceValue)); setPricingModel(campaign.pricingModel);
       setTrafficQuality(campaign.trafficQuality); setStartDate(campaign.startDate); setEndDate(campaign.endDate);
+      setEvenSpend(campaign.evenSpend ?? false);
     }
   }, [campaign]);
 
@@ -134,7 +136,7 @@ export default function EditCampaign() {
       name: name.trim(), description, creative,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
       budget: tb, dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
-      priceValue: pv, pricingModel, trafficQuality, startDate, endDate, status: newStatus,
+      priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
     });
     
     if (isRestart) {
@@ -244,6 +246,7 @@ export default function EditCampaign() {
                 trafficQuality={trafficQuality} setTrafficQuality={setTrafficQuality}
                 startDate={startDate} setStartDate={setStartDate}
                 endDate={endDate} setEndDate={setEndDate}
+                evenSpend={evenSpend} setEvenSpend={setEvenSpend}
                 errors={errors}
               />
             </CardContent>

@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { HelpCircle, AlertTriangle, Info, CalendarIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar } from "@/components/ui/calendar";
@@ -50,6 +51,8 @@ interface BudgetSectionProps {
   setStartDate: (v: string) => void;
   endDate: string;
   setEndDate: (v: string) => void;
+  evenSpend: boolean;
+  setEvenSpend: (v: boolean) => void;
   errors?: Record<string, string>;
 }
 
@@ -57,6 +60,7 @@ export function BudgetSection({
   formatKey, totalBudget, setTotalBudget, dailyBudget, setDailyBudget,
   priceValue, setPriceValue, pricingModel, setPricingModel,
   trafficQuality, setTrafficQuality, startDate, setStartDate, endDate, setEndDate,
+  evenSpend, setEvenSpend,
   errors = {},
 }: BudgetSectionProps) {
   const { t } = useLanguage();
@@ -235,6 +239,19 @@ export function BudgetSection({
           {(endDateInvalid || errors.endDate) && <p className="text-xs text-destructive">{errors.endDate || t("budget.endDateError")}</p>}
         </div>
         {errors.dates && <p className="text-xs text-destructive col-span-2">{errors.dates}</p>}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Switch checked={evenSpend} onCheckedChange={setEvenSpend} />
+        <Label className="cursor-pointer" onClick={() => setEvenSpend(!evenSpend)}>{t("budget.evenSpend")}</Label>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            <p className="text-sm">{t("budget.evenSpendTooltip")}</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );
