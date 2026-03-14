@@ -60,6 +60,7 @@ export default function EditCampaign() {
       setDailyBudget(campaign.dailyBudget ? String(campaign.dailyBudget) : "");
       setPriceValue(String(campaign.priceValue)); setPricingModel(campaign.pricingModel);
       setTrafficQuality(campaign.trafficQuality); setStartDate(campaign.startDate); setEndDate(campaign.endDate);
+      setEvenSpend(campaign.evenSpend ?? false);
     }
   }, [campaign]);
 
