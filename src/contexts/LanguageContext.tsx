@@ -432,8 +432,6 @@ const translations: Record<string, Record<Lang, string>> = {
   "notFound.message": { ru: "Страница не найдена", en: "Page not found" },
   "notFound.back": { ru: "Вернуться на главную", en: "Return to Home" },
 
-  // Stats chart hours
-  "stats.chartTitleHours": { ru: "Динамика показов по часам", en: "Impressions dynamics by hours" },
 
   // Budget date picker
   "budget.selectDate": { ru: "Выберите дату", en: "Select date" },
