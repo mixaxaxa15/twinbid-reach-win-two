@@ -1,30 +1,20 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, AlertCircle, Upload } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality } from "@/contexts/CampaignContext";
+import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type Creative } from "@/contexts/CampaignContext";
 import { TargetingSection } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
+import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const formatCreativeFields: Record<string, string[]> = {
-  banner: ["link", "imageFile", "adText"], popunder: ["link"],
-  native: ["link", "imageFile", "adText", "title"], push: ["link", "imageFile", "adText", "title"],
-  video: ["link", "vastUrl"], ctv: ["link", "vastUrl"],
-};
-
-const fieldLabels: Record<string, { label: string; placeholder: string }> = {
-  link: { label: "URL *", placeholder: "https://..." },
-  imageFile: { label: "", placeholder: "" },
-  adText: { label: "Ad text", placeholder: "Text..." }, title: { label: "Title", placeholder: "Title..." },
-  vastUrl: { label: "VAST Tag URL", placeholder: "https://..." },
-};
+const bannerSizes = ["300x100", "300x250", "300x600", "728x90"];
 
 export default function EditCampaign() {
   const navigate = useNavigate();
@@ -36,8 +26,10 @@ export default function EditCampaign() {
   const campaign = getCampaign(id || "");
 
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [creative, setCreative] = useState<Record<string, string>>({});
+  const [bannerSize, setBannerSize] = useState("");
+  const [brandName, setBrandName] = useState("");
+  const [creatives, setCreatives] = useState<Creative[]>([]);
+  const [initialCreatives, setInitialCreatives] = useState<Creative[]>([]);
   const [lists, setLists] = useState<Record<string, TargetingState>>({});
   const [totalBudget, setTotalBudget] = useState("");
   const [dailyBudget, setDailyBudget] = useState("");
@@ -47,31 +39,38 @@ export default function EditCampaign() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [evenSpend, setEvenSpend] = useState(false);
-  const [initialCreative, setInitialCreative] = useState<Record<string, string>>({});
-  const [imageFileName, setImageFileName] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (campaign) {
-      setName(campaign.name); setDescription(campaign.description);
-      setCreative(campaign.creative); setInitialCreative({ ...campaign.creative });
-      setLists(campaign.targeting); setTotalBudget(String(campaign.budget));
+      setName(campaign.name);
+      setBannerSize(campaign.bannerSize || "");
+      setBrandName(campaign.brandName || "");
+      // Migrate old creative format
+      const crvs = campaign.creatives?.length ? campaign.creatives :
+        campaign.creative ? [{ id: "migrated", url: campaign.creative.link || "", imageUrl: campaign.creative.imageUrl, title: campaign.creative.title, description: campaign.creative.adText }] :
+        [{ id: "migrated", url: "" }];
+      setCreatives(crvs);
+      setInitialCreatives(JSON.parse(JSON.stringify(crvs)));
+      setLists(campaign.targeting);
+      setTotalBudget(String(campaign.budget));
       setDailyBudget(campaign.dailyBudget ? String(campaign.dailyBudget) : "");
-      setPriceValue(String(campaign.priceValue)); setPricingModel(campaign.pricingModel);
-      setTrafficQuality(campaign.trafficQuality); setStartDate(campaign.startDate); setEndDate(campaign.endDate);
+      setPriceValue(String(campaign.priceValue));
+      setPricingModel(campaign.pricingModel);
+      setTrafficQuality(campaign.trafficQuality);
+      setStartDate(campaign.startDate);
+      setEndDate(campaign.endDate);
       setEvenSpend(campaign.evenSpend ?? false);
     }
   }, [campaign]);
 
-  const creativeFields = campaign ? (formatCreativeFields[campaign.formatKey] || []) : [];
-  const hasCreativeChanged = useMemo(() => creativeFields.some(f => {
-    if (f === "imageFile") return (creative.imageUrl || "") !== (initialCreative.imageUrl || "");
-    return (creative[f] || "") !== (initialCreative[f] || "");
-  }), [creative, initialCreative, creativeFields]);
+  const hasCreativeChanged = useMemo(() => {
+    return JSON.stringify(creatives) !== JSON.stringify(initialCreatives);
+  }, [creatives, initialCreatives]);
 
-  // Determine if this is a restart (completed campaign)
   const isRestart = campaign?.status === "completed";
+  const showBannerSize = campaign?.formatKey === "banner";
+  const showBrandName = campaign?.formatKey === "native" || campaign?.formatKey === "push";
 
   if (!campaign) {
     return (
@@ -88,21 +87,11 @@ export default function EditCampaign() {
 
   const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setCreative(prev => ({ ...prev, imageUrl: url }));
-      setImageFileName(file.name);
-      toast.success(t("create.imageUploaded"));
-    }
-  };
-
   const handleSave = () => {
     const e: Record<string, string> = {};
     const tb = parseNum(totalBudget);
     if (!totalBudget || isNaN(tb) || tb < 100) e.totalBudget = t("edit.errorBudgetMin");
-    
+
     const cpmLimits: Record<TrafficQuality, number> = { common: 0.3, high: 0.7, ultra: 0.9 };
     const minCpm = cpmLimits[trafficQuality];
     const min = pricingModel === "cpc" ? +(minCpm * 1.7 / 1000).toFixed(5) : minCpm;
@@ -112,33 +101,39 @@ export default function EditCampaign() {
     if (!startDate) e.startDate = t("create.required");
     if (!endDate) e.endDate = t("create.required");
     if (endDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const end = new Date(endDate);
-      if (end < today) e.endDate = t("create.endDateError");
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      if (new Date(endDate) < today) e.endDate = t("create.endDateError");
     }
     if (!name.trim()) e.name = t("create.required");
-    if (creativeFields.includes("link") && !creative.link?.trim()) e.link = t("create.required");
+
+    // Validate creatives
+    creatives.forEach(c => {
+      if (!c.url.trim()) e[`creative_${c.id}_url`] = t("create.required");
+      if (campaign.formatKey !== "popunder" && !c.imageUrl) e[`creative_${c.id}_image`] = t("create.required");
+      if ((campaign.formatKey === "native" || campaign.formatKey === "push") && !c.title?.trim()) e[`creative_${c.id}_title`] = t("create.required");
+    });
+
+    if (campaign.formatKey === "banner" && !bannerSize) e.bannerSize = t("create.required");
 
     setErrors(e);
     if (Object.keys(e).length > 0) return;
 
-    // Determine new status
     let newStatus = campaign.status;
     if (isRestart) {
-      // Restart: if content changed -> moderation, else -> active
       newStatus = hasCreativeChanged ? "moderation" : "active";
     } else if (hasCreativeChanged) {
       newStatus = "moderation";
     }
 
     updateCampaign(campaign.id, {
-      name: name.trim(), description, creative,
+      name: name.trim(), creatives,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
       budget: tb, dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
+      bannerSize: showBannerSize ? bannerSize : undefined,
+      brandName: showBrandName ? brandName : undefined,
     });
-    
+
     if (isRestart) {
       toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.restartedActive"));
     } else {
@@ -185,43 +180,33 @@ export default function EditCampaign() {
                 <Input value={campaign.format} disabled className="bg-muted border-border text-muted-foreground cursor-not-allowed" />
                 <p className="text-xs text-muted-foreground">{t("edit.formatLocked")}</p>
               </div>
-              {creativeFields.map((field) => {
-                if (field === "imageFile") {
-                  return (
-                    <div key={field} className="space-y-2">
-                      <Label>{t("create.uploadImage")}</Label>
-                      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                      <div className="flex items-center gap-3">
-                        <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="border-border gap-2">
-                          <Upload className="h-4 w-4" /> {t("create.uploadImage")}
-                        </Button>
-                        {imageFileName && <span className="text-sm text-muted-foreground">{imageFileName}</span>}
-                      </div>
-                      {creative.imageUrl && (
-                        <img src={creative.imageUrl} alt="Preview" className="mt-2 max-h-32 rounded border border-border" />
-                      )}
-                    </div>
-                  );
-                }
-                const cfg = fieldLabels[field];
-                if (!cfg || !cfg.label) return null;
-                return (
-                  <div key={field} className="space-y-2">
-                    <Label>{cfg.label}</Label>
-                    {field === "adText" ? (
-                      <Textarea value={creative[field] || ""} onChange={(e) => setCreative(prev => ({ ...prev, [field]: e.target.value }))}
-                        placeholder={cfg.placeholder} className={`bg-background border-border resize-none ${errors[field] ? "border-destructive" : ""}`} rows={3} />
-                    ) : (
-                      <Input value={creative[field] || ""} onChange={(e) => setCreative(prev => ({ ...prev, [field]: e.target.value }))}
-                        placeholder={cfg.placeholder} className={`bg-background border-border ${errors[field] ? "border-destructive" : ""}`} />
-                    )}
-                    {errors[field] && <p className="text-xs text-destructive">{errors[field]}</p>}
-                  </div>
-                );
-              })}
-              <div className="space-y-2">
-                <Label>{t("edit.description")}</Label>
-                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="bg-background border-border resize-none" rows={2} />
+
+              {showBannerSize && (
+                <div className="space-y-2">
+                  <Label>{t("create.bannerSize")} *</Label>
+                  <Select value={bannerSize} onValueChange={setBannerSize}>
+                    <SelectTrigger className={`bg-background border-border ${errors.bannerSize ? "border-destructive" : ""}`}>
+                      <SelectValue placeholder={t("create.selectBannerSize")} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      {bannerSizes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {errors.bannerSize && <p className="text-xs text-destructive">{errors.bannerSize}</p>}
+                </div>
+              )}
+
+              {showBrandName && (
+                <div className="space-y-2">
+                  <Label>{t("create.brandName")} ({t("create.optional")})</Label>
+                  <Input value={brandName} onChange={(e) => setBrandName(e.target.value)}
+                    placeholder={t("create.brandNamePlaceholder")} className="bg-background border-border" />
+                </div>
+              )}
+
+              <div className="pt-2">
+                <p className="text-sm font-medium text-muted-foreground mb-3">{t("create.creatives")}</p>
+                <CreativesEditor formatKey={campaign.formatKey} creatives={creatives} onChange={setCreatives} errors={errors} />
               </div>
             </CardContent>
           </Card>

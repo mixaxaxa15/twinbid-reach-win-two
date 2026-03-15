@@ -1,35 +1,28 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type ListMode } from "@/contexts/CampaignContext";
+import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type ListMode, type Creative } from "@/contexts/CampaignContext";
 import { TargetingSection, targetingConfigs } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
+import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const formatCreativeFields: Record<string, { label: string; fields: string[] }> = {
-  banner: { label: "Баннер", fields: ["link", "imageFile", "adText"] },
-  popunder: { label: "Popunder", fields: ["link"] },
-  native: { label: "Native", fields: ["link", "imageFile", "adText", "title"] },
-  push: { label: "In-page Push", fields: ["link", "imageFile", "adText", "title"] },
+const formatLabels: Record<string, string> = {
+  banner: "Баннер", popunder: "Popunder", native: "Native", push: "In-page Push",
 };
 
-const fieldLabels: Record<string, { label: string; placeholder: string }> = {
-  link: { label: "URL *", placeholder: "https://example.com/landing" },
-  imageFile: { label: "", placeholder: "" },
-  adText: { label: "Ad text", placeholder: "Your ad text..." },
-  title: { label: "Title", placeholder: "Headline" },
-  vastUrl: { label: "VAST Tag URL *", placeholder: "https://example.com/vast.xml" },
-};
+const bannerSizes = ["300x100", "300x250", "300x600", "728x90"];
 
 const defaultTargeting = (): Record<string, TargetingState> =>
   Object.fromEntries(targetingConfigs.map(c => [c.key, { mode: "none" as ListMode, items: [] }]));
+
+const generateId = () => String(Date.now()) + Math.random().toString(36).slice(2, 6);
 
 export default function CreateCampaign() {
   const navigate = useNavigate();
@@ -39,8 +32,9 @@ export default function CreateCampaign() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [adFormat, setAdFormat] = useState("");
-  const [description, setDescription] = useState("");
-  const [creativeFields, setCreativeFields] = useState<Record<string, string>>({});
+  const [bannerSize, setBannerSize] = useState("");
+  const [brandName, setBrandName] = useState("");
+  const [creatives, setCreatives] = useState<Creative[]>([{ id: generateId(), url: "" }]);
   const [lists, setLists] = useState<Record<string, TargetingState>>(defaultTargeting());
   const [totalBudget, setTotalBudget] = useState("");
   const [dailyBudget, setDailyBudget] = useState("");
@@ -50,31 +44,28 @@ export default function CreateCampaign() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [evenSpend, setEvenSpend] = useState(false);
-  const [imageFileName, setImageFileName] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const savedAsDraft = useRef(false);
 
   const updateList = (key: string, updates: Partial<TargetingState>) => {
     setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
   };
 
-  const currentFormatFields = adFormat ? formatCreativeFields[adFormat]?.fields || [] : [];
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setCreativeFields(prev => ({ ...prev, imageUrl: url }));
-      setImageFileName(file.name);
-      toast.success(t("create.imageUploaded"));
-    }
-  };
+  const showBannerSize = adFormat === "banner";
+  const showBrandName = adFormat === "native" || adFormat === "push";
 
   const validateStep1 = () => {
     const e: Record<string, string> = {};
     if (!name.trim()) e.name = t("create.required");
     if (!adFormat) e.adFormat = t("create.selectFormatError");
-    if (adFormat && currentFormatFields.includes("link") && !creativeFields.link?.trim()) e.link = t("create.required");
+    if (adFormat === "banner" && !bannerSize) e.bannerSize = t("create.required");
+
+    // Validate creatives
+    creatives.forEach(c => {
+      if (!c.url.trim()) e[`creative_${c.id}_url`] = t("create.required");
+      if (adFormat !== "popunder" && !c.imageUrl) e[`creative_${c.id}_image`] = t("create.required");
+      if ((adFormat === "native" || adFormat === "push") && !c.title?.trim()) e[`creative_${c.id}_title`] = t("create.required");
+    });
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -91,10 +82,8 @@ export default function CreateCampaign() {
     if (!startDate) e.startDate = t("create.required");
     if (!endDate) e.endDate = t("create.required");
     if (endDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const end = new Date(endDate);
-      if (end < today) e.endDate = t("create.endDateError");
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      if (new Date(endDate) < today) e.endDate = t("create.endDateError");
     }
     if (!startDate || !endDate) e.dates = t("create.endDateRequired");
     setErrors(e);
@@ -117,49 +106,39 @@ export default function CreateCampaign() {
 
   const handleCreate = () => {
     addCampaign({
-      name: name.trim(), status: "moderation", format: formatCreativeFields[adFormat]?.label || adFormat,
+      name: name.trim(), status: "moderation", format: formatLabels[adFormat] || adFormat,
       formatKey: adFormat, budget: parseNum(totalBudget), dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: parseNum(priceValue),
-      trafficQuality, startDate, endDate, creative: creativeFields,
+      trafficQuality, startDate, endDate, creatives,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
-      description, evenSpend,
+      evenSpend, bannerSize: adFormat === "banner" ? bannerSize : undefined,
+      brandName: showBrandName ? brandName : undefined,
     });
-    savedAsDraft.current = true; // mark as saved
+    savedAsDraft.current = true;
     toast.success(t("create.created"));
     navigate("/dashboard/campaigns");
   };
 
-  // Save as draft on exit if not completed
   const saveDraft = () => {
     if (savedAsDraft.current) return;
-    if (!name.trim() && !adFormat) return; // nothing to save
+    if (!name.trim() && !adFormat) return;
     savedAsDraft.current = true;
     addCampaign({
       name: name.trim() || "Draft", status: "draft",
-      format: formatCreativeFields[adFormat]?.label || adFormat || "",
+      format: formatLabels[adFormat] || adFormat || "",
       formatKey: adFormat || "", budget: totalBudget ? parseNum(totalBudget) : 0,
       dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: priceValue ? parseNum(priceValue) : 0,
-      trafficQuality, startDate, endDate, creative: creativeFields,
+      trafficQuality, startDate, endDate, creatives,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
-      description, evenSpend,
+      evenSpend, bannerSize: adFormat === "banner" ? bannerSize : undefined,
+      brandName: showBrandName ? brandName : undefined,
     });
   };
 
-  const handleBack = () => {
-    saveDraft();
-    navigate("/dashboard/campaigns");
-  };
+  const handleBack = () => { saveDraft(); navigate("/dashboard/campaigns"); };
 
-  // Save draft on unmount (browser back, etc)
-  useEffect(() => {
-    return () => {
-      if (!savedAsDraft.current && (name.trim() || adFormat)) {
-        // We can't call addCampaign in cleanup reliably, so we skip
-        // The explicit back button handles it
-      }
-    };
-  }, []);
+  useEffect(() => { return () => {}; }, []);
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -197,66 +176,50 @@ export default function CreateCampaign() {
               </div>
               <div className="space-y-2">
                 <Label>{t("create.adFormat")}</Label>
-                <Select value={adFormat} onValueChange={setAdFormat}>
+                <Select value={adFormat} onValueChange={(v) => { setAdFormat(v); setCreatives([{ id: generateId(), url: "" }]); }}>
                   <SelectTrigger className={`bg-background border-border ${errors.adFormat ? "border-destructive" : ""}`}>
                     <SelectValue placeholder={t("create.selectFormat")} />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
-                    {Object.entries(formatCreativeFields).map(([val, cfg]) => (
-                      <SelectItem key={val} value={val}>{cfg.label}</SelectItem>
+                    {Object.entries(formatLabels).map(([val, label]) => (
+                      <SelectItem key={val} value={val}>{label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {errors.adFormat && <p className="text-xs text-destructive">{errors.adFormat}</p>}
               </div>
-              {currentFormatFields.length > 0 && (
-                <div className="space-y-4 p-4 rounded-lg border border-border bg-background/30">
-                  <p className="text-sm font-medium text-muted-foreground">{t("create.creativeFor")} «{formatCreativeFields[adFormat]?.label}»</p>
-                  {currentFormatFields.map((field) => {
-                    if (field === "imageFile") {
-                      return (
-                        <div key={field} className="space-y-2">
-                          <Label>{t("create.uploadImage")}</Label>
-                          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                          <div className="flex items-center gap-3">
-                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="border-border gap-2">
-                              <Upload className="h-4 w-4" /> {t("create.uploadImage")}
-                            </Button>
-                            {imageFileName && <span className="text-sm text-muted-foreground">{imageFileName}</span>}
-                          </div>
-                          {creativeFields.imageUrl && (
-                            <img src={creativeFields.imageUrl} alt="Preview" className="mt-2 max-h-32 rounded border border-border" />
-                          )}
-                        </div>
-                      );
-                    }
-                    const cfg = fieldLabels[field];
-                    if (!cfg || !cfg.label) return null;
-                    return (
-                      <div key={field} className="space-y-2">
-                        <Label>{cfg.label}</Label>
-                        {field === "adText" ? (
-                          <Textarea value={creativeFields[field] || ""}
-                            onChange={(e) => setCreativeFields(prev => ({ ...prev, [field]: e.target.value }))}
-                            placeholder={cfg.placeholder}
-                            className={`bg-background border-border resize-none ${errors[field] ? "border-destructive" : ""}`} rows={3} />
-                        ) : (
-                          <Input value={creativeFields[field] || ""}
-                            onChange={(e) => setCreativeFields(prev => ({ ...prev, [field]: e.target.value }))}
-                            placeholder={cfg.placeholder}
-                            className={`bg-background border-border ${errors[field] ? "border-destructive" : ""}`} />
-                        )}
-                        {errors[field] && <p className="text-xs text-destructive">{errors[field]}</p>}
-                      </div>
-                    );
-                  })}
+
+              {showBannerSize && (
+                <div className="space-y-2">
+                  <Label>{t("create.bannerSize")} *</Label>
+                  <Select value={bannerSize} onValueChange={setBannerSize}>
+                    <SelectTrigger className={`bg-background border-border ${errors.bannerSize ? "border-destructive" : ""}`}>
+                      <SelectValue placeholder={t("create.selectBannerSize")} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      {bannerSizes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {errors.bannerSize && <p className="text-xs text-destructive">{errors.bannerSize}</p>}
                 </div>
               )}
-              <div className="space-y-2">
-                <Label>{t("create.description")}</Label>
-                <Textarea value={description} onChange={(e) => setDescription(e.target.value)}
-                  placeholder={t("create.descPlaceholder")} className="bg-background border-border resize-none" rows={2} />
-              </div>
+
+              {showBrandName && (
+                <div className="space-y-2">
+                  <Label>{t("create.brandName")} ({t("create.optional")})</Label>
+                  <Input value={brandName} onChange={(e) => setBrandName(e.target.value)}
+                    placeholder={t("create.brandNamePlaceholder")} className="bg-background border-border" />
+                </div>
+              )}
+
+              {adFormat && (
+                <>
+                  <div className="pt-2">
+                    <p className="text-sm font-medium text-muted-foreground mb-3">{t("create.creatives")}</p>
+                    <CreativesEditor formatKey={adFormat} creatives={creatives} onChange={setCreatives} errors={errors} />
+                  </div>
+                </>
+              )}
             </>
           )}
 
