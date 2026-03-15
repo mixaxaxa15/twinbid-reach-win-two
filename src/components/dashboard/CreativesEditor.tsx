@@ -111,9 +111,11 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
         </div>
       ))}
 
-      <Button type="button" variant="outline" onClick={addCreative} className="border-border gap-2 w-full">
-        <Plus className="h-4 w-4" /> {t("create.addCreative")}
-      </Button>
+      {formatKey !== "popunder" && (
+        <Button type="button" variant="outline" onClick={addCreative} className="border-border gap-2 w-full">
+          <Plus className="h-4 w-4" /> {t("create.addCreative")}
+        </Button>
+      )}
     </div>
   );
 }

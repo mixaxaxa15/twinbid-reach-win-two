@@ -14,7 +14,7 @@ import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const formatLabels: Record<string, string> = {
-  banner: "Баннер", popunder: "Popunder", native: "Native", push: "In-page Push",
+  banner: "Banner", popunder: "Popunder", native: "Native", push: "In-page Push",
 };
 
 const bannerSizes = ["300x100", "300x250", "300x600", "728x90"];
