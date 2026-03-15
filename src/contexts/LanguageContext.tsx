@@ -335,7 +335,6 @@ const translations: Record<string, Record<Lang, string>> = {
   "edit.name": { ru: "Название", en: "Name" },
   "edit.formatLabel": { ru: "Формат рекламы", en: "Ad format" },
   "edit.formatLocked": { ru: "Формат нельзя изменить после создания", en: "Format cannot be changed after creation" },
-  "edit.description": { ru: "Описание (опционально)", en: "Description (optional)" },
   "edit.moderationWarning": { ru: "Изменён контент кампании — после сохранения она будет отправлена на модерацию", en: "Campaign content changed — it will be sent for moderation after saving" },
   "edit.save": { ru: "Сохранить", en: "Save" },
   "edit.savedModeration": { ru: "Кампания сохранена и отправлена на модерацию", en: "Campaign saved and sent for moderation" },
