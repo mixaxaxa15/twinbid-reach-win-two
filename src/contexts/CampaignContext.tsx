@@ -10,6 +10,15 @@ export interface TargetingState {
   items: string[];
 }
 
+export interface Creative {
+  id: string;
+  url: string;
+  imageUrl?: string;
+  imageFileName?: string;
+  title?: string;
+  description?: string;
+}
+
 export interface Campaign {
   id: string;
   name: string;
@@ -27,10 +36,14 @@ export interface Campaign {
   trafficQuality: TrafficQuality;
   startDate: string;
   endDate: string;
-  creative: Record<string, string>;
+  creatives: Creative[];
   targeting: Record<string, TargetingState>;
-  description: string;
   evenSpend: boolean;
+  bannerSize?: string;
+  brandName?: string;
+  /** @deprecated kept for backward compat with old data */
+  creative?: Record<string, string>;
+  description?: string;
 }
 
 const defaultTargeting = (): Record<string, TargetingState> =>
