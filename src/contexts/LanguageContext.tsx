@@ -107,6 +107,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "header.notifications": { ru: "Уведомления", en: "Notifications" },
   "header.noNotifications": { ru: "Нет уведомлений", en: "No notifications" },
   "header.advertiser": { ru: "Рекламодатель", en: "Advertiser" },
+  "header.manager": { ru: "Персональный менеджер", en: "Personal manager" },
 
   // Dashboard Overview
   "overview.recentCampaigns": { ru: "Кампании", en: "Campaigns" },
