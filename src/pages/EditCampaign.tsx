@@ -136,7 +136,9 @@ export default function EditCampaign() {
       brandName: showBrandName ? brandName : undefined,
     });
 
-    if (isRestart) {
+    if (campaign.status === "draft") {
+      toast.success(t("edit.savedModeration"));
+    } else if (isRestart) {
       toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.restartedActive"));
     } else {
       toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.saved"));
