@@ -257,6 +257,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "campaigns.copyPostfix": { ru: "(копия)", en: "(copy)" },
   "campaigns.pause": { ru: "Приостановить", en: "Pause" },
   "campaigns.start": { ru: "Запустить", en: "Start" },
+  "campaigns.finishCreation": { ru: "Завершить создание", en: "Finish creation" },
   "campaigns.delete": { ru: "Удалить", en: "Delete" },
   "campaigns.notFound": { ru: "Кампании не найдены", en: "No campaigns found" },
   "campaigns.deleteConfirm": { ru: "Удалить кампанию?", en: "Delete campaign?" },
