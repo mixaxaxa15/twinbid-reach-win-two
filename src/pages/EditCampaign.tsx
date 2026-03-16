@@ -119,7 +119,9 @@ export default function EditCampaign() {
     if (Object.keys(e).length > 0) return;
 
     let newStatus = campaign.status;
-    if (isRestart) {
+    if (campaign.status === "draft") {
+      newStatus = "moderation";
+    } else if (isRestart) {
       newStatus = hasCreativeChanged ? "moderation" : "active";
     } else if (hasCreativeChanged) {
       newStatus = "moderation";
@@ -134,7 +136,9 @@ export default function EditCampaign() {
       brandName: showBrandName ? brandName : undefined,
     });
 
-    if (isRestart) {
+    if (campaign.status === "draft") {
+      toast.success(t("edit.savedModeration"));
+    } else if (isRestart) {
       toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.restartedActive"));
     } else {
       toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.saved"));
