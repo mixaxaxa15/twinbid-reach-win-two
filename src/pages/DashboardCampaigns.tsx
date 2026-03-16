@@ -174,9 +174,9 @@ export default function DashboardCampaigns() {
                               <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Play className="h-4 w-4" /> {t("campaigns.start")}</DropdownMenuItem>
                             )}
 
-                            {/* Draft: only start if complete */}
-                            {campaign.status === "draft" && isDraftComplete(campaign) && (
-                              <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Play className="h-4 w-4" /> {t("campaigns.start")}</DropdownMenuItem>
+                            {/* Draft: finish creation */}
+                            {campaign.status === "draft" && (
+                              <DropdownMenuItem className="gap-2" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}><Pencil className="h-4 w-4" /> {t("campaigns.finishCreation")}</DropdownMenuItem>
                             )}
 
                             {/* Completed: restart */}
