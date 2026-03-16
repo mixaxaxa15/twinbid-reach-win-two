@@ -36,7 +36,13 @@ export function DashboardHeader() {
   return (
     <>
       <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between">
-        <div className="flex-1" />
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>{t("header.manager")}:</span>
+          <a href="https://t.me/GregTwinbid" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 transition-colors font-medium">
+            <Send className="h-4 w-4" />
+            @GregTwinbid
+          </a>
+        </div>
         <div className="flex items-center gap-4">
           <LanguageSelector />
           <Popover open={open} onOpenChange={setOpen}>
