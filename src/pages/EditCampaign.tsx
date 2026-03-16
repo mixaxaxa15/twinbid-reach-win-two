@@ -119,7 +119,9 @@ export default function EditCampaign() {
     if (Object.keys(e).length > 0) return;
 
     let newStatus = campaign.status;
-    if (isRestart) {
+    if (campaign.status === "draft") {
+      newStatus = "moderation";
+    } else if (isRestart) {
       newStatus = hasCreativeChanged ? "moderation" : "active";
     } else if (hasCreativeChanged) {
       newStatus = "moderation";
