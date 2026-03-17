@@ -72,6 +72,9 @@ export default function EditCampaign() {
     return JSON.stringify(creatives) !== JSON.stringify(initialCreatives);
   }, [creatives, initialCreatives]);
 
+  const hasTrafficTypeChanged = trafficType !== initialTrafficType;
+  const needsModeration = hasCreativeChanged || hasTrafficTypeChanged;
+
   const isRestart = campaign?.status === "completed";
   const showBannerSize = campaign?.formatKey === "banner";
   const showBrandName = campaign?.formatKey === "native" || campaign?.formatKey === "push";
