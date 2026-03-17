@@ -39,6 +39,8 @@ export default function EditCampaign() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [evenSpend, setEvenSpend] = useState(false);
+  const [trafficType, setTrafficType] = useState<TrafficType>("mainstream");
+  const [initialTrafficType, setInitialTrafficType] = useState<TrafficType>("mainstream");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -61,12 +63,17 @@ export default function EditCampaign() {
       setStartDate(campaign.startDate);
       setEndDate(campaign.endDate);
       setEvenSpend(campaign.evenSpend ?? false);
+      setTrafficType(campaign.trafficType || "mainstream");
+      setInitialTrafficType(campaign.trafficType || "mainstream");
     }
   }, [campaign]);
 
   const hasCreativeChanged = useMemo(() => {
     return JSON.stringify(creatives) !== JSON.stringify(initialCreatives);
   }, [creatives, initialCreatives]);
+
+  const hasTrafficTypeChanged = trafficType !== initialTrafficType;
+  const needsModeration = hasCreativeChanged || hasTrafficTypeChanged;
 
   const isRestart = campaign?.status === "completed";
   const showBannerSize = campaign?.formatKey === "banner";
@@ -122,13 +129,13 @@ export default function EditCampaign() {
     if (campaign.status === "draft") {
       newStatus = "moderation";
     } else if (isRestart) {
-      newStatus = hasCreativeChanged ? "moderation" : "active";
-    } else if (hasCreativeChanged) {
+      newStatus = needsModeration ? "moderation" : "active";
+    } else if (needsModeration) {
       newStatus = "moderation";
     }
 
     updateCampaign(campaign.id, {
-      name: name.trim(), creatives,
+      name: name.trim(), creatives, trafficType,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
       budget: tb, dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
@@ -139,9 +146,9 @@ export default function EditCampaign() {
     if (campaign.status === "draft") {
       toast.success(t("edit.savedModeration"));
     } else if (isRestart) {
-      toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.restartedActive"));
+      toast.success(needsModeration ? t("edit.savedModeration") : t("edit.restartedActive"));
     } else {
-      toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.saved"));
+      toast.success(needsModeration ? t("edit.savedModeration") : t("edit.saved"));
     }
     navigate("/dashboard/campaigns");
   };
@@ -156,7 +163,7 @@ export default function EditCampaign() {
         </div>
       </div>
 
-      {hasCreativeChanged && (
+      {needsModeration && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
           <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0" />
           <p className="text-sm text-yellow-500">{t("edit.moderationWarning")}</p>
@@ -175,7 +182,16 @@ export default function EditCampaign() {
             <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
                 <Label>{t("create.trafficType")}</Label>
-                <Input value={t(`create.${campaign.trafficType || "mainstream"}`)} disabled className="bg-muted border-border text-muted-foreground cursor-not-allowed" />
+                <Select value={trafficType} onValueChange={(v) => setTrafficType(v as TrafficType)}>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="mainstream">{t("create.mainstream")}</SelectItem>
+                    <SelectItem value="adult">{t("create.adult")}</SelectItem>
+                    <SelectItem value="mixed">{t("create.mixed")}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>{t("edit.name")} *</Label>
