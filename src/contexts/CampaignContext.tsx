@@ -4,6 +4,7 @@ export type CampaignStatus = "active" | "paused" | "draft" | "completed" | "mode
 export type PricingModel = "cpm" | "cpc";
 export type TrafficQuality = "common" | "high" | "ultra";
 export type ListMode = "none" | "white" | "black";
+export type TrafficType = "mainstream" | "adult" | "mixed";
 
 export interface TargetingState {
   mode: ListMode;
