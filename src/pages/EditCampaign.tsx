@@ -174,6 +174,10 @@ export default function EditCampaign() {
           <Card className="bg-card border-border">
             <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
+                <Label>{t("create.trafficType")}</Label>
+                <Input value={t(`create.${campaign.trafficType || "mainstream"}`)} disabled className="bg-muted border-border text-muted-foreground cursor-not-allowed" />
+              </div>
+              <div className="space-y-2">
                 <Label>{t("edit.name")} *</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)}
                   className={`bg-background border-border ${errors.name ? "border-destructive" : ""}`} />
