@@ -182,7 +182,16 @@ export default function EditCampaign() {
             <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
                 <Label>{t("create.trafficType")}</Label>
-                <Input value={t(`create.${campaign.trafficType || "mainstream"}`)} disabled className="bg-muted border-border text-muted-foreground cursor-not-allowed" />
+                <Select value={trafficType} onValueChange={(v) => setTrafficType(v as TrafficType)}>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="mainstream">{t("create.mainstream")}</SelectItem>
+                    <SelectItem value="adult">{t("create.adult")}</SelectItem>
+                    <SelectItem value="mixed">{t("create.mixed")}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>{t("edit.name")} *</Label>
