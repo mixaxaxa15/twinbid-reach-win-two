@@ -30,6 +30,7 @@ export default function CreateCampaign() {
   const { t } = useLanguage();
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [trafficType, setTrafficType] = useState<TrafficType>("mainstream");
   const [name, setName] = useState("");
   const [adFormat, setAdFormat] = useState("");
   const [bannerSize, setBannerSize] = useState("");
