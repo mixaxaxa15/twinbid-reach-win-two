@@ -169,6 +169,20 @@ export default function CreateCampaign() {
           {step === 1 && (
             <>
               <div className="space-y-2">
+                <Label>{t("create.trafficType")} *</Label>
+                <Select value={trafficType} onValueChange={(v) => setTrafficType(v as TrafficType)}>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="mainstream">{t("create.mainstream")}</SelectItem>
+                    <SelectItem value="adult">{t("create.adult")}</SelectItem>
+                    <SelectItem value="mixed">{t("create.mixed")}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">{t("create.trafficTypeHint")}</p>
+              </div>
+              <div className="space-y-2">
                 <Label>{t("create.campaignName")}</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)}
                   placeholder={t("create.campaignNamePlaceholder")}
