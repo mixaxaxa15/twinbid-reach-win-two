@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type Creative } from "@/contexts/CampaignContext";
+import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type Creative } from "@/contexts/CampaignContext";
 import { TargetingSection } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
@@ -173,6 +173,10 @@ export default function EditCampaign() {
         <TabsContent value="general">
           <Card className="bg-card border-border">
             <CardContent className="space-y-5 pt-6">
+              <div className="space-y-2">
+                <Label>{t("create.trafficType")}</Label>
+                <Input value={t(`create.${campaign.trafficType || "mainstream"}`)} disabled className="bg-muted border-border text-muted-foreground cursor-not-allowed" />
+              </div>
               <div className="space-y-2">
                 <Label>{t("edit.name")} *</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)}

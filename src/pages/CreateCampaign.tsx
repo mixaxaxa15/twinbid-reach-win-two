@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type ListMode, type Creative } from "@/contexts/CampaignContext";
+import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type ListMode, type Creative } from "@/contexts/CampaignContext";
 import { TargetingSection, targetingConfigs } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
@@ -30,6 +30,7 @@ export default function CreateCampaign() {
   const { t } = useLanguage();
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [trafficType, setTrafficType] = useState<TrafficType>("mainstream");
   const [name, setName] = useState("");
   const [adFormat, setAdFormat] = useState("");
   const [bannerSize, setBannerSize] = useState("");
@@ -107,7 +108,7 @@ export default function CreateCampaign() {
   const handleCreate = () => {
     addCampaign({
       name: name.trim(), status: "moderation", format: formatLabels[adFormat] || adFormat,
-      formatKey: adFormat, budget: parseNum(totalBudget), dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
+      formatKey: adFormat, trafficType, budget: parseNum(totalBudget), dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: parseNum(priceValue),
       trafficQuality, startDate, endDate, creatives,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
@@ -126,7 +127,7 @@ export default function CreateCampaign() {
     addCampaign({
       name: name.trim() || "Draft", status: "draft",
       format: formatLabels[adFormat] || adFormat || "",
-      formatKey: adFormat || "", budget: totalBudget ? parseNum(totalBudget) : 0,
+      formatKey: adFormat || "", trafficType, budget: totalBudget ? parseNum(totalBudget) : 0,
       dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: priceValue ? parseNum(priceValue) : 0,
       trafficQuality, startDate, endDate, creatives,
@@ -167,6 +168,20 @@ export default function CreateCampaign() {
         <CardContent className="space-y-5">
           {step === 1 && (
             <>
+              <div className="space-y-2">
+                <Label>{t("create.trafficType")} *</Label>
+                <Select value={trafficType} onValueChange={(v) => setTrafficType(v as TrafficType)}>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="mainstream">{t("create.mainstream")}</SelectItem>
+                    <SelectItem value="adult">{t("create.adult")}</SelectItem>
+                    <SelectItem value="mixed">{t("create.mixed")}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">{t("create.trafficTypeHint")}</p>
+              </div>
               <div className="space-y-2">
                 <Label>{t("create.campaignName")}</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)}
