@@ -129,13 +129,13 @@ export default function EditCampaign() {
     if (campaign.status === "draft") {
       newStatus = "moderation";
     } else if (isRestart) {
-      newStatus = hasCreativeChanged ? "moderation" : "active";
-    } else if (hasCreativeChanged) {
+      newStatus = needsModeration ? "moderation" : "active";
+    } else if (needsModeration) {
       newStatus = "moderation";
     }
 
     updateCampaign(campaign.id, {
-      name: name.trim(), creatives,
+      name: name.trim(), creatives, trafficType,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
       budget: tb, dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
@@ -146,9 +146,9 @@ export default function EditCampaign() {
     if (campaign.status === "draft") {
       toast.success(t("edit.savedModeration"));
     } else if (isRestart) {
-      toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.restartedActive"));
+      toast.success(needsModeration ? t("edit.savedModeration") : t("edit.restartedActive"));
     } else {
-      toast.success(hasCreativeChanged ? t("edit.savedModeration") : t("edit.saved"));
+      toast.success(needsModeration ? t("edit.savedModeration") : t("edit.saved"));
     }
     navigate("/dashboard/campaigns");
   };
