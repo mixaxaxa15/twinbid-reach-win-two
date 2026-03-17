@@ -63,6 +63,8 @@ export default function EditCampaign() {
       setStartDate(campaign.startDate);
       setEndDate(campaign.endDate);
       setEvenSpend(campaign.evenSpend ?? false);
+      setTrafficType(campaign.trafficType || "mainstream");
+      setInitialTrafficType(campaign.trafficType || "mainstream");
     }
   }, [campaign]);
 
