@@ -42,6 +42,7 @@ export interface Campaign {
   evenSpend: boolean;
   bannerSize?: string;
   brandName?: string;
+  trafficType: TrafficType;
   /** @deprecated kept for backward compat with old data */
   creative?: Record<string, string>;
   description?: string;
