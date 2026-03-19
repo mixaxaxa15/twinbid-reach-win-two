@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Wallet, Plus, ArrowDownLeft, Receipt, Copy, ExternalLink } from "lucide-react";
+import { Wallet, Plus, ArrowDownLeft, Receipt, Copy, ExternalLink, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -17,6 +17,12 @@ const usdtMethods = [
   { id: "usdt_trc20", label: "USDT (TRC-20)", desc: "Tether on Tron", address: "TXkRh4pKz7w9Yb2mN5vQx8Gp3jL6fD0eW" },
   { id: "usdt_erc20", label: "USDT (ERC-20)", desc: "Tether on Ethereum", address: "0x3F7a9c2B1d5E8f4A6C0b9D1e2F3a4B5c6D7e8F9a" },
 ];
+
+const PROMO_CODES: Record<string, { bonus: number; label: string }> = {
+  WELCOME10: { bonus: 10, label: "Welcome 10%" },
+  BOOST20: { bonus: 20, label: "Boost 20%" },
+  VIP25: { bonus: 25, label: "VIP 25%" },
+};
 
 interface Transaction {
   id: string;
@@ -42,7 +48,9 @@ export default function DashboardBalance() {
   const [selectedMethod, setSelectedMethod] = useState("usdt_trc20");
   const [showTxDialog, setShowTxDialog] = useState(false);
   const [txHash, setTxHash] = useState("");
-  const [pendingPayment, setPendingPayment] = useState<{ amount: number; method: string } | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; bonus: number } | null>(null);
+  const [pendingPayment, setPendingPayment] = useState<{ amount: number; method: string; promo?: string; bonus?: number } | null>(null);
   const [pendingNotificationId, setPendingNotificationId] = useState<string | null>(null);
   const { addNotification, removeNotification } = useNotifications();
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
@@ -72,13 +80,31 @@ export default function DashboardBalance() {
 
   const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount;
 
+  const handleApplyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (!code) return;
+    const promo = PROMO_CODES[code];
+    if (promo) {
+      setAppliedPromo({ code, bonus: promo.bonus });
+      toast.success(t("balance.promo.applied").replace("{percent}", `${promo.bonus}`));
+    } else {
+      setAppliedPromo(null);
+      toast.error(t("balance.promo.invalid"));
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoCode("");
+  };
+
   const handleTopUp = () => {
     if (!finalAmount || finalAmount < 100) return;
     if (pendingPayment) {
       toast.error(t("balance.toast.pendingExists"));
       return;
     }
-    setPendingPayment({ amount: finalAmount, method: selectedMethod });
+    setPendingPayment({ amount: finalAmount, method: selectedMethod, promo: appliedPromo?.code, bonus: appliedPromo?.bonus });
     setTxHash("");
     setShowTxDialog(true);
     if (pendingNotificationId) {
@@ -257,9 +283,40 @@ export default function DashboardBalance() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Tag className="h-4 w-4" />
+                {t("balance.promo.label")}
+              </Label>
+              <div className="flex gap-2 max-w-sm">
+                <Input
+                  placeholder={t("balance.promo.placeholder")}
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  className="bg-background border-border uppercase"
+                  disabled={!!appliedPromo}
+                />
+                {appliedPromo ? (
+                  <Button variant="outline" onClick={handleRemovePromo} className="border-border shrink-0">
+                    {t("balance.promo.remove")}
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={handleApplyPromo} className="border-border shrink-0" disabled={!promoCode.trim()}>
+                    {t("balance.promo.apply")}
+                  </Button>
+                )}
+              </div>
+              {appliedPromo && (
+                <p className="text-sm text-primary font-medium">
+                  ✓ {t("balance.promo.active").replace("{code}", appliedPromo.code).replace("{percent}", `${appliedPromo.bonus}`)}
+                </p>
+              )}
+            </div>
+
             <Button onClick={handleTopUp} className="bg-accent hover:bg-accent/90 text-accent-foreground"
               disabled={!finalAmount || finalAmount < 100}>
               {t("balance.topUpBtn")} {finalAmount ? `$${finalAmount.toLocaleString()}` : ""}
+              {appliedPromo && finalAmount ? ` (+${Math.floor(finalAmount * appliedPromo.bonus / 100)}$ ${t("balance.promo.bonusShort")})` : ""}
             </Button>
             <p className="text-xs text-muted-foreground">{t("balance.minAmount")}</p>
           </CardContent>
@@ -276,6 +333,11 @@ export default function DashboardBalance() {
           <div className="space-y-4 mt-2">
             <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
               <p className="text-sm font-medium">{t("balance.topUpAmount")} <span className="text-primary">${pendingPayment?.amount.toLocaleString()}</span></p>
+              {pendingPayment?.bonus && (
+                <p className="text-sm text-primary mt-1">
+                  + {t("balance.promo.bonusShort")}: +{Math.floor((pendingPayment.amount * pendingPayment.bonus) / 100)}$ ({pendingPayment.promo}, +{pendingPayment.bonus}%)
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
