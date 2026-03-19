@@ -67,6 +67,7 @@ export default function EditCampaign() {
       setEvenSpend(campaign.evenSpend ?? false);
       setTrafficType(campaign.trafficType || "mainstream");
       setInitialTrafficType(campaign.trafficType || "mainstream");
+      setVerticals(campaign.verticals || []);
     }
   }, [campaign]);
 
