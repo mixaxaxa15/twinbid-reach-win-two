@@ -455,6 +455,15 @@ const translations: Record<string, Record<Lang, string>> = {
   "notFound.back": { ru: "Вернуться на главную", en: "Return to Home" },
 
 
+  // Vertical
+  "create.vertical": { ru: "Вертикаль", en: "Vertical" },
+
+  // Cashback
+  "cashback.title": { ru: "Система кэшбэка", en: "Cashback system" },
+  "cashback.subtitle": { ru: "Получайте возврат бюджета за объём трат — чем больше тратите, тем больше экономите", en: "Get budget returns based on spend volume — the more you spend, the more you save" },
+  "cashback.perWeek": { ru: "в неделю", en: "per week" },
+  "cashback.from": { ru: "от", en: "from" },
+
   // Budget date picker
   "budget.selectDate": { ru: "Выберите дату", en: "Select date" },
 

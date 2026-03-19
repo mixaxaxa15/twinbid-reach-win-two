@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type ListMode, type Creative } from "@/contexts/CampaignContext";
+import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type ListMode, type Creative, type Vertical, VERTICALS } from "@/contexts/CampaignContext";
+import { Checkbox } from "@/components/ui/checkbox";
 import { TargetingSection, targetingConfigs } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
@@ -35,6 +36,7 @@ export default function CreateCampaign() {
   const [adFormat, setAdFormat] = useState("");
   const [bannerSize, setBannerSize] = useState("");
   const [brandName, setBrandName] = useState("");
+  const [verticals, setVerticals] = useState<Vertical[]>([]);
   const [creatives, setCreatives] = useState<Creative[]>([{ id: generateId(), url: "" }]);
   const [lists, setLists] = useState<Record<string, TargetingState>>(defaultTargeting());
   const [totalBudget, setTotalBudget] = useState("");
@@ -108,7 +110,7 @@ export default function CreateCampaign() {
   const handleCreate = () => {
     addCampaign({
       name: name.trim(), status: "moderation", format: formatLabels[adFormat] || adFormat,
-      formatKey: adFormat, trafficType, budget: parseNum(totalBudget), dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
+      formatKey: adFormat, trafficType, verticals, budget: parseNum(totalBudget), dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: parseNum(priceValue),
       trafficQuality, startDate, endDate, creatives,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
@@ -127,7 +129,7 @@ export default function CreateCampaign() {
     addCampaign({
       name: name.trim() || "Draft", status: "draft",
       format: formatLabels[adFormat] || adFormat || "",
-      formatKey: adFormat || "", trafficType, budget: totalBudget ? parseNum(totalBudget) : 0,
+      formatKey: adFormat || "", trafficType, verticals, budget: totalBudget ? parseNum(totalBudget) : 0,
       dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: priceValue ? parseNum(priceValue) : 0,
       trafficQuality, startDate, endDate, creatives,
@@ -181,6 +183,22 @@ export default function CreateCampaign() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">{t("create.trafficTypeHint")}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>{t("create.vertical")} ({t("create.optional")})</Label>
+                <div className="flex flex-wrap gap-3">
+                  {VERTICALS.map(v => (
+                    <label key={v} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                      <Checkbox
+                        checked={verticals.includes(v)}
+                        onCheckedChange={(checked) =>
+                          setVerticals(prev => checked ? [...prev, v] : prev.filter(x => x !== v))
+                        }
+                      />
+                      {v}
+                    </label>
+                  ))}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>{t("create.campaignName")}</Label>

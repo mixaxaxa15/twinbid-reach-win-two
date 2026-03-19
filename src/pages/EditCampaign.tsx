@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type Creative } from "@/contexts/CampaignContext";
+import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type Creative, type Vertical, VERTICALS } from "@/contexts/CampaignContext";
+import { Checkbox } from "@/components/ui/checkbox";
 import { TargetingSection } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
@@ -41,6 +42,7 @@ export default function EditCampaign() {
   const [evenSpend, setEvenSpend] = useState(false);
   const [trafficType, setTrafficType] = useState<TrafficType>("mainstream");
   const [initialTrafficType, setInitialTrafficType] = useState<TrafficType>("mainstream");
+  const [verticals, setVerticals] = useState<Vertical[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -65,6 +67,7 @@ export default function EditCampaign() {
       setEvenSpend(campaign.evenSpend ?? false);
       setTrafficType(campaign.trafficType || "mainstream");
       setInitialTrafficType(campaign.trafficType || "mainstream");
+      setVerticals(campaign.verticals || []);
     }
   }, [campaign]);
 
@@ -135,7 +138,7 @@ export default function EditCampaign() {
     }
 
     updateCampaign(campaign.id, {
-      name: name.trim(), creatives, trafficType,
+      name: name.trim(), creatives, trafficType, verticals,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
       budget: tb, dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
@@ -192,6 +195,22 @@ export default function EditCampaign() {
                     <SelectItem value="mixed">{t("create.mixed")}</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{t("create.vertical")} ({t("create.optional")})</Label>
+                <div className="flex flex-wrap gap-3">
+                  {VERTICALS.map(v => (
+                    <label key={v} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                      <Checkbox
+                        checked={verticals.includes(v)}
+                        onCheckedChange={(checked) =>
+                          setVerticals(prev => checked ? [...prev, v] : prev.filter(x => x !== v))
+                        }
+                      />
+                      {v}
+                    </label>
+                  ))}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>{t("edit.name")} *</Label>
