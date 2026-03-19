@@ -80,13 +80,31 @@ export default function DashboardBalance() {
 
   const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount;
 
+  const handleApplyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (!code) return;
+    const promo = PROMO_CODES[code];
+    if (promo) {
+      setAppliedPromo({ code, bonus: promo.bonus });
+      toast.success(t("balance.promo.applied").replace("{percent}", `${promo.bonus}`));
+    } else {
+      setAppliedPromo(null);
+      toast.error(t("balance.promo.invalid"));
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoCode("");
+  };
+
   const handleTopUp = () => {
     if (!finalAmount || finalAmount < 100) return;
     if (pendingPayment) {
       toast.error(t("balance.toast.pendingExists"));
       return;
     }
-    setPendingPayment({ amount: finalAmount, method: selectedMethod });
+    setPendingPayment({ amount: finalAmount, method: selectedMethod, promo: appliedPromo?.code, bonus: appliedPromo?.bonus });
     setTxHash("");
     setShowTxDialog(true);
     if (pendingNotificationId) {
