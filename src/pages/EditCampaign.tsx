@@ -42,6 +42,7 @@ export default function EditCampaign() {
   const [evenSpend, setEvenSpend] = useState(false);
   const [trafficType, setTrafficType] = useState<TrafficType>("mainstream");
   const [initialTrafficType, setInitialTrafficType] = useState<TrafficType>("mainstream");
+  const [verticals, setVerticals] = useState<Vertical[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
