@@ -110,7 +110,7 @@ export default function CreateCampaign() {
   const handleCreate = () => {
     addCampaign({
       name: name.trim(), status: "moderation", format: formatLabels[adFormat] || adFormat,
-      formatKey: adFormat, trafficType, budget: parseNum(totalBudget), dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
+      formatKey: adFormat, trafficType, verticals, budget: parseNum(totalBudget), dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: parseNum(priceValue),
       trafficQuality, startDate, endDate, creatives,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
