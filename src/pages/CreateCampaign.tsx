@@ -129,7 +129,7 @@ export default function CreateCampaign() {
     addCampaign({
       name: name.trim() || "Draft", status: "draft",
       format: formatLabels[adFormat] || adFormat || "",
-      formatKey: adFormat || "", trafficType, budget: totalBudget ? parseNum(totalBudget) : 0,
+      formatKey: adFormat || "", trafficType, verticals, budget: totalBudget ? parseNum(totalBudget) : 0,
       dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: priceValue ? parseNum(priceValue) : 0,
       trafficQuality, startDate, endDate, creatives,

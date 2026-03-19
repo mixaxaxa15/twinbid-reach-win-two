@@ -20,6 +20,12 @@ export interface Creative {
   description?: string;
 }
 
+export const VERTICALS = [
+  "Dating", "Nutra", "Betting / iGaming", "Gaming", "Crypto",
+  "Finance", "Software", "E-commerce", "Beauty", "Adult", "Other",
+] as const;
+export type Vertical = typeof VERTICALS[number];
+
 export interface Campaign {
   id: string;
   name: string;
@@ -43,6 +49,7 @@ export interface Campaign {
   bannerSize?: string;
   brandName?: string;
   trafficType: TrafficType;
+  verticals: Vertical[];
   /** @deprecated kept for backward compat with old data */
   creative?: Record<string, string>;
   description?: string;
