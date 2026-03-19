@@ -283,9 +283,40 @@ export default function DashboardBalance() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Tag className="h-4 w-4" />
+                {t("balance.promo.label")}
+              </Label>
+              <div className="flex gap-2 max-w-sm">
+                <Input
+                  placeholder={t("balance.promo.placeholder")}
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  className="bg-background border-border uppercase"
+                  disabled={!!appliedPromo}
+                />
+                {appliedPromo ? (
+                  <Button variant="outline" onClick={handleRemovePromo} className="border-border shrink-0">
+                    {t("balance.promo.remove")}
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={handleApplyPromo} className="border-border shrink-0" disabled={!promoCode.trim()}>
+                    {t("balance.promo.apply")}
+                  </Button>
+                )}
+              </div>
+              {appliedPromo && (
+                <p className="text-sm text-primary font-medium">
+                  ✓ {t("balance.promo.active").replace("{code}", appliedPromo.code).replace("{percent}", `${appliedPromo.bonus}`)}
+                </p>
+              )}
+            </div>
+
             <Button onClick={handleTopUp} className="bg-accent hover:bg-accent/90 text-accent-foreground"
               disabled={!finalAmount || finalAmount < 100}>
               {t("balance.topUpBtn")} {finalAmount ? `$${finalAmount.toLocaleString()}` : ""}
+              {appliedPromo && finalAmount ? ` (+${Math.floor(finalAmount * appliedPromo.bonus / 100)}$ ${t("balance.promo.bonusShort")})` : ""}
             </Button>
             <p className="text-xs text-muted-foreground">{t("balance.minAmount")}</p>
           </CardContent>
