@@ -333,6 +333,11 @@ export default function DashboardBalance() {
           <div className="space-y-4 mt-2">
             <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
               <p className="text-sm font-medium">{t("balance.topUpAmount")} <span className="text-primary">${pendingPayment?.amount.toLocaleString()}</span></p>
+              {pendingPayment?.bonus && (
+                <p className="text-sm text-primary mt-1">
+                  + {t("balance.promo.bonusShort")}: +{Math.floor((pendingPayment.amount * pendingPayment.bonus) / 100)}$ ({pendingPayment.promo}, +{pendingPayment.bonus}%)
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
