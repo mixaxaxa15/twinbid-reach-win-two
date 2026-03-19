@@ -197,6 +197,22 @@ export default function EditCampaign() {
                 </Select>
               </div>
               <div className="space-y-2">
+                <Label>{t("create.vertical")} ({t("create.optional")})</Label>
+                <div className="flex flex-wrap gap-3">
+                  {VERTICALS.map(v => (
+                    <label key={v} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                      <Checkbox
+                        checked={verticals.includes(v)}
+                        onCheckedChange={(checked) =>
+                          setVerticals(prev => checked ? [...prev, v] : prev.filter(x => x !== v))
+                        }
+                      />
+                      {v}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
                 <Label>{t("edit.name")} *</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)}
                   className={`bg-background border-border ${errors.name ? "border-destructive" : ""}`} />
