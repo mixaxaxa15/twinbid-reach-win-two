@@ -36,6 +36,7 @@ export default function CreateCampaign() {
   const [adFormat, setAdFormat] = useState("");
   const [bannerSize, setBannerSize] = useState("");
   const [brandName, setBrandName] = useState("");
+  const [verticals, setVerticals] = useState<Vertical[]>([]);
   const [creatives, setCreatives] = useState<Creative[]>([{ id: generateId(), url: "" }]);
   const [lists, setLists] = useState<Record<string, TargetingState>>(defaultTargeting());
   const [totalBudget, setTotalBudget] = useState("");
