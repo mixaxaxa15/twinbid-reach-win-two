@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Wallet, Plus, ArrowDownLeft, Receipt, Copy, ExternalLink } from "lucide-react";
+import { Wallet, Plus, ArrowDownLeft, Receipt, Copy, ExternalLink, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -17,6 +17,12 @@ const usdtMethods = [
   { id: "usdt_trc20", label: "USDT (TRC-20)", desc: "Tether on Tron", address: "TXkRh4pKz7w9Yb2mN5vQx8Gp3jL6fD0eW" },
   { id: "usdt_erc20", label: "USDT (ERC-20)", desc: "Tether on Ethereum", address: "0x3F7a9c2B1d5E8f4A6C0b9D1e2F3a4B5c6D7e8F9a" },
 ];
+
+const PROMO_CODES: Record<string, { bonus: number; label: string }> = {
+  WELCOME10: { bonus: 10, label: "Welcome 10%" },
+  BOOST20: { bonus: 20, label: "Boost 20%" },
+  VIP25: { bonus: 25, label: "VIP 25%" },
+};
 
 interface Transaction {
   id: string;
@@ -42,7 +48,9 @@ export default function DashboardBalance() {
   const [selectedMethod, setSelectedMethod] = useState("usdt_trc20");
   const [showTxDialog, setShowTxDialog] = useState(false);
   const [txHash, setTxHash] = useState("");
-  const [pendingPayment, setPendingPayment] = useState<{ amount: number; method: string } | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; bonus: number } | null>(null);
+  const [pendingPayment, setPendingPayment] = useState<{ amount: number; method: string; promo?: string; bonus?: number } | null>(null);
   const [pendingNotificationId, setPendingNotificationId] = useState<string | null>(null);
   const { addNotification, removeNotification } = useNotifications();
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
