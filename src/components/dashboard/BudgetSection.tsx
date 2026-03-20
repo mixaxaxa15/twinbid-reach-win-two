@@ -28,8 +28,8 @@ const formatCpmLimits: Record<string, Record<TrafficQuality, { min: number; rec:
     ultra: { min: 0.005, rec: 0.035 },
   },
   popunder: {
-    common: { min: 0.3, rec: 3.0 },
-    high: { min: 0.7, rec: 4.7 },
+    common: { min: 0.3, rec: 1.8 },
+    high: { min: 0.7, rec: 3.0 },
     ultra: { min: 0.9, rec: 4.7 },
   },
 };
