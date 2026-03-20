@@ -94,8 +94,14 @@ export default function CreateCampaign() {
   };
 
   const getMinPrice = () => {
-    const cpmLimits: Record<TrafficQuality, number> = { common: 0.3, high: 0.7, ultra: 0.9 };
-    const minCpm = cpmLimits[trafficQuality];
+    const formatMins: Record<string, Record<TrafficQuality, number>> = {
+      banner: { common: 0.01, high: 0.01, ultra: 0.01 },
+      native: { common: 0.01, high: 0.01, ultra: 0.01 },
+      push: { common: 0.005, high: 0.005, ultra: 0.005 },
+      popunder: { common: 0.3, high: 0.7, ultra: 0.9 },
+    };
+    const mins = formatMins[adFormat] || formatMins.banner;
+    const minCpm = mins[trafficQuality];
     if (pricingModel === "cpc") return { min: +(minCpm * 1.7 / 1000).toFixed(5) };
     return { min: minCpm };
   };
