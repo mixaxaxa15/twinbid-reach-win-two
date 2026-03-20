@@ -231,7 +231,7 @@ function SitesInput({ items, onAdd, t }: { items: string[]; onAdd: (items: strin
         <Input
           value={value}
           onChange={e => setValue(e.target.value)}
-          placeholder="site1.com,site2.com"
+          placeholder="'12345','abdjhx'"
           className="bg-background border-border flex-1"
           onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
         />

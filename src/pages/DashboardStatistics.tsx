@@ -45,7 +45,15 @@ function getCampaignData(campaignId: string, groupBy: GroupBy): { label: string;
     });
   }
   if (groupBy === "hours") {
-    const days = Array.from({ length: 8 }, (_, i) => String(i + 1).padStart(2, "0") + ".03.2026");
+    const now = new Date();
+    const days = Array.from({ length: 14 }, (_, i) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 13 + i);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}.${month}.${year}`;
+    });
     return days.flatMap(day =>
       Array.from({ length: 24 }, (_, h) => ({
         label: `${day} ${String(h).padStart(2, "0")}:00`,

@@ -83,7 +83,7 @@ export function BudgetSection({
 }: BudgetSectionProps) {
   const { t } = useLanguage();
   const availableModels = getAvailableModels(formatKey);
-  const limits = getPriceLimits(trafficQuality, pricingModel);
+  const limits = getPriceLimits(formatKey, trafficQuality, pricingModel);
   const priceNum = parseNumericValue(priceValue);
   const isBelowMin = priceValue !== "" && priceNum < limits.min;
   const isBelowRec = priceValue !== "" && priceNum >= limits.min && priceNum < limits.rec;
