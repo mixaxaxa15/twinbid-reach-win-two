@@ -38,9 +38,11 @@ const CPC_MULTIPLIER = 1.7 / 1000;
 
 function getPriceLimits(formatKey: string, quality: TrafficQuality, model: PricingModel) {
   const limits = formatCpmLimits[formatKey] || formatCpmLimits.banner;
-  const cpm = limits[quality];
-  if (model === "cpm") return cpm;
-  return { min: +(cpm.min * CPC_MULTIPLIER).toFixed(5), rec: +(cpm.rec * CPC_MULTIPLIER).toFixed(5) };
+  const vals = limits[quality];
+  if (model === "cpm") return vals;
+  // Push values are already in CPC; only popunder needs conversion
+  if (formatKey === "push") return vals;
+  return { min: +(vals.min * CPC_MULTIPLIER).toFixed(5), rec: +(vals.rec * CPC_MULTIPLIER).toFixed(5) };
 }
 
 function getAvailableModels(formatKey: string): PricingModel[] {
