@@ -31,13 +31,29 @@ function getCampaignData(campaignId: string, groupBy: GroupBy): { label: string;
   const r = (min: number, max: number) => Math.floor(rng() * (max - min)) + min;
 
   if (groupBy === "dates") {
-    return Array.from({ length: 8 }, (_, i) => ({
-      label: String(i + 1).padStart(2, "0") + ".03.2026",
-      impressions: r(1000, 8000), clicks: r(50, 500), spent: r(500, 4000),
-    }));
+    const now = new Date();
+    return Array.from({ length: 30 }, (_, i) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 29 + i);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return {
+        label: `${day}.${month}.${year}`,
+        impressions: r(1000, 8000), clicks: r(50, 500), spent: r(500, 4000),
+      };
+    });
   }
   if (groupBy === "hours") {
-    const days = Array.from({ length: 8 }, (_, i) => String(i + 1).padStart(2, "0") + ".03.2026");
+    const now = new Date();
+    const days = Array.from({ length: 14 }, (_, i) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 13 + i);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}.${month}.${year}`;
+    });
     return days.flatMap(day =>
       Array.from({ length: 24 }, (_, h) => ({
         label: `${day} ${String(h).padStart(2, "0")}:00`,

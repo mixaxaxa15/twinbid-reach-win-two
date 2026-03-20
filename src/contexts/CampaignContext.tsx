@@ -57,7 +57,7 @@ export interface Campaign {
 
 const defaultTargeting = (): Record<string, TargetingState> =>
   Object.fromEntries(
-    ["country","city","deviceType","os","osVersion","browser","dayOfWeek","hour","subid","sites"]
+    ["country","language","city","deviceType","os","osVersion","browser","dayOfWeek","hour","subid","sites"]
       .map(k => [k, { mode: "none" as ListMode, items: [] }])
   );
 

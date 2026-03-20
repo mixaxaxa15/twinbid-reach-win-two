@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 const targetingOptions: Record<string, string[]> = {
   country: ["US","GB","DE","FR","IT","ES","BR","RU","IN","JP","KR","CN","AU","CA","MX","AR","CO","PL","NL","SE","NO","DK","FI","CZ","AT","CH","BE","PT","GR","TR","UA","RO","HU","BG","HR","SK","SI","LT","LV","EE","IE","IL","SA","AE","EG","ZA","NG","KE","TH","VN","PH","ID","MY","SG","TW","HK","NZ","CL","PE"],
+  language: ["EN","ES","FR","DE","IT","PT","RU","ZH","JA","KO","AR","HI","TR","PL","NL","SV","NO","DA","FI","CS","RO","HU","BG","HR","SK","SL","LT","LV","ET","EL","HE","TH","VI","ID","MS","UK","SR","BS","MK","SQ","KA","HY","AZ","UZ","KK","TG","KY","MN","MY","KM","LO","BN","TA","TE","ML","KN","MR","GU","PA","SI","NE"],
   deviceType: ["Mobile","Desktop","Tablet","Smart TV","Console"],
   os: ["Android","iOS","Windows","macOS","Linux","ChromeOS","HarmonyOS"],
   browser: ["Chrome","Safari","Firefox","Edge","Opera","Samsung Internet","UC Browser","Brave","Vivaldi","Yandex Browser"],
@@ -20,7 +21,7 @@ const targetingOptions: Record<string, string[]> = {
 };
 
 const targetingConfigKeys = [
-  "country", "deviceType", "os", "browser", "dayOfWeek", "hour", "sites",
+  "country", "language", "deviceType", "os", "browser", "dayOfWeek", "hour", "sites",
 ];
 
 export const targetingConfigs = targetingConfigKeys.map(key => ({ key, labelKey: `targeting.${key}` }));
@@ -230,7 +231,7 @@ function SitesInput({ items, onAdd, t }: { items: string[]; onAdd: (items: strin
         <Input
           value={value}
           onChange={e => setValue(e.target.value)}
-          placeholder="site1.com,site2.com"
+          placeholder="'12345','abdjhx'"
           className="bg-background border-border flex-1"
           onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
         />
