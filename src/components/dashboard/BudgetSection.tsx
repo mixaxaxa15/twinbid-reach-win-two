@@ -11,16 +11,34 @@ import { format } from "date-fns";
 import type { PricingModel, TrafficQuality } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const cpmLimits: Record<TrafficQuality, { min: number; rec: number }> = {
-  common: { min: 0.3, rec: 0.7 },
-  high: { min: 0.7, rec: 1.1 },
-  ultra: { min: 0.9, rec: 1.7 },
+const formatCpmLimits: Record<string, Record<TrafficQuality, { min: number; rec: number }>> = {
+  banner: {
+    common: { min: 0.01, rec: 0.05 },
+    high: { min: 0.01, rec: 0.07 },
+    ultra: { min: 0.01, rec: 0.14 },
+  },
+  native: {
+    common: { min: 0.01, rec: 0.05 },
+    high: { min: 0.01, rec: 0.07 },
+    ultra: { min: 0.01, rec: 0.14 },
+  },
+  push: {
+    common: { min: 0.005, rec: 0.01 },
+    high: { min: 0.005, rec: 0.017 },
+    ultra: { min: 0.005, rec: 0.035 },
+  },
+  popunder: {
+    common: { min: 0.3, rec: 3.0 },
+    high: { min: 0.7, rec: 4.7 },
+    ultra: { min: 0.9, rec: 4.7 },
+  },
 };
 
 const CPC_MULTIPLIER = 1.7 / 1000;
 
-function getPriceLimits(quality: TrafficQuality, model: PricingModel) {
-  const cpm = cpmLimits[quality];
+function getPriceLimits(formatKey: string, quality: TrafficQuality, model: PricingModel) {
+  const limits = formatCpmLimits[formatKey] || formatCpmLimits.banner;
+  const cpm = limits[quality];
   if (model === "cpm") return cpm;
   return { min: +(cpm.min * CPC_MULTIPLIER).toFixed(5), rec: +(cpm.rec * CPC_MULTIPLIER).toFixed(5) };
 }
