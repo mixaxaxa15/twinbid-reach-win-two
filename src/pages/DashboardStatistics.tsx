@@ -139,20 +139,25 @@ export default function DashboardStatistics() {
     [campaigns]
   );
 
-  // Build list of available creatives based on selected campaigns
+  // Selected single campaign id (empty string = all)
+  const selectedCampaignId = useMemo(() => {
+    if (selectedCampaignIds.size === 1) return Array.from(selectedCampaignIds)[0];
+    return "";
+  }, [selectedCampaignIds]);
+
+  // Build list of available creatives based on selected campaign
   const availableCreatives = useMemo(() => {
     const result: { id: string; label: string }[] = [];
-    const campaignIds = selectedCampaignIds.size > 0 ? Array.from(selectedCampaignIds) : [];
-    for (const cId of campaignIds) {
-      const campaign = campaigns.find(c => c.id === cId);
-      if (!campaign) continue;
-      campaign.creatives.forEach((cr, idx) => {
-        const creativeId = `${cId}.${idx + 1}`;
-        result.push({ id: creativeId, label: `${creativeId} — ${cr.title || cr.url || `Creative #${idx + 1}`}` });
-      });
-    }
+    if (!selectedCampaignId) return result;
+    const campaign = campaigns.find(c => c.id === selectedCampaignId);
+    if (!campaign) return result;
+    campaign.creatives.forEach((cr, idx) => {
+      const creativeId = `${selectedCampaignId}.${idx + 1}`;
+      const label = cr.name || cr.title || cr.url || `Creative #${idx + 1}`;
+      result.push({ id: creativeId, label });
+    });
     return result;
-  }, [selectedCampaignIds, campaigns]);
+  }, [selectedCampaignId, campaigns]);
 
   const hasSelection = appliedCampaignIds.size > 0 && appliedDateRange?.from;
 
@@ -192,8 +197,13 @@ export default function DashboardStatistics() {
     else { setSortKey("impressions"); setSortDir("desc"); }
   }, [appliedGroupBy]);
 
-  const handleRefresh = useCallback(() => {
-    setAppliedCampaignIds(new Set(selectedCampaignIds));
+   const handleRefresh = useCallback(() => {
+    // For "all" campaigns, add all active campaign ids
+    if (selectedCampaignIds.size === 0) {
+      setAppliedCampaignIds(new Set(activeCampaigns.map(c => c.id)));
+    } else {
+      setAppliedCampaignIds(new Set(selectedCampaignIds));
+    }
     setAppliedCreativeIds(new Set(selectedCreativeIds));
     setAppliedDateRange(dateRange);
     setAppliedFilterCountry(filterCountry);
@@ -201,14 +211,16 @@ export default function DashboardStatistics() {
     setAppliedFilterDevice(filterDevice);
     setAppliedFilterOS(filterOS);
     toast.success(t("stats.refreshed"));
-  }, [selectedCampaignIds, selectedCreativeIds, dateRange, filterCountry, filterBrowser, filterDevice, filterOS, t]);
+  }, [selectedCampaignIds, selectedCreativeIds, dateRange, filterCountry, filterBrowser, filterDevice, filterOS, t, activeCampaigns]);
 
-  const handleCampaignChange = (id: string) => {
-    setSelectedCampaignIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
+  const handleCampaignSelect = (value: string) => {
+    if (value === "all") {
+      setSelectedCampaignIds(new Set());
+    } else {
+      setSelectedCampaignIds(new Set([value]));
+    }
+    // Reset creative selection when campaign changes
+    setSelectedCreativeIds(new Set());
   };
 
   const handleDateChange = (range: DateRange | undefined) => {
@@ -265,41 +277,27 @@ export default function DashboardStatistics() {
       <div className="flex flex-wrap items-end gap-6">
         <div className="flex flex-col gap-2">
           <Label className="text-sm text-muted-foreground font-medium">{t("stats.campaigns")}</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
-                {selectedCampaignIds.size === 0 ? t("stats.selectCampaign") : selectedCampaignIds.size === activeCampaigns.length ? t("stats.selectAll") : `${t("stats.selected")} ${selectedCampaignIds.size}`}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[280px] p-2" align="start">
-              <div className="space-y-1 max-h-64 overflow-y-auto">
-                <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm font-medium border-b border-border pb-2 mb-1">
-                  <Checkbox checked={selectedCampaignIds.size === activeCampaigns.length} onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedCampaignIds(new Set(activeCampaigns.map(c => c.id)));
-                    } else {
-                      setSelectedCampaignIds(new Set());
-                    }
-                  }} />
-                  {t("stats.selectAll")}
-                </label>
-                {activeCampaigns.map(c => (
-                  <label key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
-                    <Checkbox checked={selectedCampaignIds.has(c.id)} onCheckedChange={() => handleCampaignChange(c.id)} />
-                    <span className="text-muted-foreground mr-1">{c.id}</span> {c.name}
-                  </label>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
+          <Select value={selectedCampaignId || "all"} onValueChange={handleCampaignSelect}>
+            <SelectTrigger className="w-[280px] bg-background border-border">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("stats.allCampaigns")}</SelectItem>
+              {activeCampaigns.map(c => (
+                <SelectItem key={c.id} value={c.id}>
+                  <span className="text-muted-foreground mr-1">{c.id}</span> — {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex flex-col gap-2">
           <Label className="text-sm text-muted-foreground font-medium">{t("stats.creatives")}</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal" disabled={selectedCampaignIds.size === 0}>
-                {selectedCampaignIds.size === 0
+              <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal" disabled={!selectedCampaignId}>
+                {!selectedCampaignId
                   ? t("stats.selectCreative")
                   : selectedCreativeIds.size === 0
                     ? t("stats.allCreatives")
