@@ -105,6 +105,7 @@ export default function DashboardStatistics() {
   
   const {
     selectedCampaignIds, setSelectedCampaignIds,
+    selectedCreativeIds, setSelectedCreativeIds,
     dateRange, setDateRange,
     clickCount, setClickCount,
     filterCountry, setFilterCountry,
@@ -116,6 +117,7 @@ export default function DashboardStatistics() {
     sortKey, setSortKey,
     sortDir, setSortDir,
     appliedCampaignIds, setAppliedCampaignIds,
+    appliedCreativeIds, setAppliedCreativeIds,
     appliedDateRange, setAppliedDateRange,
     appliedFilterCountry, setAppliedFilterCountry,
     appliedFilterBrowser, setAppliedFilterBrowser,
