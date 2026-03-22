@@ -197,8 +197,13 @@ export default function DashboardStatistics() {
     else { setSortKey("impressions"); setSortDir("desc"); }
   }, [appliedGroupBy]);
 
-  const handleRefresh = useCallback(() => {
-    setAppliedCampaignIds(new Set(selectedCampaignIds));
+   const handleRefresh = useCallback(() => {
+    // For "all" campaigns, add all active campaign ids
+    if (selectedCampaignIds.size === 0) {
+      setAppliedCampaignIds(new Set(activeCampaigns.map(c => c.id)));
+    } else {
+      setAppliedCampaignIds(new Set(selectedCampaignIds));
+    }
     setAppliedCreativeIds(new Set(selectedCreativeIds));
     setAppliedDateRange(dateRange);
     setAppliedFilterCountry(filterCountry);
@@ -206,13 +211,16 @@ export default function DashboardStatistics() {
     setAppliedFilterDevice(filterDevice);
     setAppliedFilterOS(filterOS);
     toast.success(t("stats.refreshed"));
-  }, [selectedCampaignIds, selectedCreativeIds, dateRange, filterCountry, filterBrowser, filterDevice, filterOS, t]);
+  }, [selectedCampaignIds, selectedCreativeIds, dateRange, filterCountry, filterBrowser, filterDevice, filterOS, t, activeCampaigns]);
 
-  const handleCampaignChange = (id: string) => {
-    setSelectedCampaignIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
+  const handleCampaignSelect = (value: string) => {
+    if (value === "all") {
+      setSelectedCampaignIds(new Set());
+    } else {
+      setSelectedCampaignIds(new Set([value]));
+    }
+    // Reset creative selection when campaign changes
+    setSelectedCreativeIds(new Set());
     });
   };
 
