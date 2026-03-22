@@ -331,6 +331,7 @@ export default function DashboardStatistics() {
           </Popover>
         </div>
 
+        <div className="flex flex-col gap-2">
           <Label className="text-sm text-muted-foreground font-medium">{t("stats.period")}</Label>
           <div className="flex items-center gap-2">
             <Popover>
