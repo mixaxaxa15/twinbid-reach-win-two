@@ -221,7 +221,6 @@ export default function DashboardStatistics() {
     }
     // Reset creative selection when campaign changes
     setSelectedCreativeIds(new Set());
-    });
   };
 
   const handleDateChange = (range: DateRange | undefined) => {
