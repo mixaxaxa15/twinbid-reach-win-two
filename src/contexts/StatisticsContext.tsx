@@ -51,6 +51,7 @@ const StatisticsContext = createContext<StatisticsState | null>(null);
 
 export function StatisticsProvider({ children }: { children: ReactNode }) {
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<Set<string>>(new Set());
+  const [selectedCreativeIds, setSelectedCreativeIds] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [clickCount, setClickCount] = useState(0);
   const [filterCountry, setFilterCountry] = useState("all");
@@ -62,6 +63,7 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
   const [sortKey, setSortKey] = useState<SortKey>("label");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [appliedCampaignIds, setAppliedCampaignIds] = useState<Set<string>>(new Set());
+  const [appliedCreativeIds, setAppliedCreativeIds] = useState<Set<string>>(new Set());
   const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
   const [appliedFilterCountry, setAppliedFilterCountry] = useState("all");
   const [appliedFilterBrowser, setAppliedFilterBrowser] = useState("all");
@@ -71,6 +73,7 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
   return (
     <StatisticsContext.Provider value={{
       selectedCampaignIds, setSelectedCampaignIds,
+      selectedCreativeIds, setSelectedCreativeIds,
       dateRange, setDateRange,
       clickCount, setClickCount,
       filterCountry, setFilterCountry,
@@ -82,6 +85,7 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
       sortKey, setSortKey,
       sortDir, setSortDir,
       appliedCampaignIds, setAppliedCampaignIds,
+      appliedCreativeIds, setAppliedCreativeIds,
       appliedDateRange, setAppliedDateRange,
       appliedFilterCountry, setAppliedFilterCountry,
       appliedFilterBrowser, setAppliedFilterBrowser,
