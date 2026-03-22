@@ -295,6 +295,42 @@ export default function DashboardStatistics() {
         </div>
 
         <div className="flex flex-col gap-2">
+          <Label className="text-sm text-muted-foreground font-medium">{t("stats.creatives")}</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal" disabled={selectedCampaignIds.size === 0}>
+                {selectedCampaignIds.size === 0
+                  ? t("stats.selectCreative")
+                  : selectedCreativeIds.size === 0
+                    ? t("stats.allCreatives")
+                    : `${t("stats.selected")} ${selectedCreativeIds.size}`}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px] p-2" align="start">
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm font-medium border-b border-border pb-2 mb-1">
+                  <Checkbox checked={selectedCreativeIds.size === 0} onCheckedChange={(checked) => {
+                    if (checked) setSelectedCreativeIds(new Set());
+                  }} />
+                  {t("stats.allCreatives")}
+                </label>
+                {availableCreatives.map(cr => (
+                  <label key={cr.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                    <Checkbox checked={selectedCreativeIds.has(cr.id)} onCheckedChange={() => {
+                      setSelectedCreativeIds(prev => {
+                        const next = new Set(prev);
+                        if (next.has(cr.id)) next.delete(cr.id); else next.add(cr.id);
+                        return next;
+                      });
+                    }} />
+                    <span className="truncate">{cr.label}</span>
+                  </label>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
           <Label className="text-sm text-muted-foreground font-medium">{t("stats.period")}</Label>
           <div className="flex items-center gap-2">
             <Popover>
