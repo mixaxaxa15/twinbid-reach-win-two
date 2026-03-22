@@ -277,41 +277,27 @@ export default function DashboardStatistics() {
       <div className="flex flex-wrap items-end gap-6">
         <div className="flex flex-col gap-2">
           <Label className="text-sm text-muted-foreground font-medium">{t("stats.campaigns")}</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal">
-                {selectedCampaignIds.size === 0 ? t("stats.selectCampaign") : selectedCampaignIds.size === activeCampaigns.length ? t("stats.selectAll") : `${t("stats.selected")} ${selectedCampaignIds.size}`}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[280px] p-2" align="start">
-              <div className="space-y-1 max-h-64 overflow-y-auto">
-                <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm font-medium border-b border-border pb-2 mb-1">
-                  <Checkbox checked={selectedCampaignIds.size === activeCampaigns.length} onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedCampaignIds(new Set(activeCampaigns.map(c => c.id)));
-                    } else {
-                      setSelectedCampaignIds(new Set());
-                    }
-                  }} />
-                  {t("stats.selectAll")}
-                </label>
-                {activeCampaigns.map(c => (
-                  <label key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
-                    <Checkbox checked={selectedCampaignIds.has(c.id)} onCheckedChange={() => handleCampaignChange(c.id)} />
-                    <span className="text-muted-foreground mr-1">{c.id}</span> {c.name}
-                  </label>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
+          <Select value={selectedCampaignId || "all"} onValueChange={handleCampaignSelect}>
+            <SelectTrigger className="w-[280px] bg-background border-border">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("stats.allCampaigns")}</SelectItem>
+              {activeCampaigns.map(c => (
+                <SelectItem key={c.id} value={c.id}>
+                  <span className="text-muted-foreground mr-1">{c.id}</span> — {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex flex-col gap-2">
           <Label className="text-sm text-muted-foreground font-medium">{t("stats.creatives")}</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal" disabled={selectedCampaignIds.size === 0}>
-                {selectedCampaignIds.size === 0
+              <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal" disabled={!selectedCampaignId}>
+                {!selectedCampaignId
                   ? t("stats.selectCreative")
                   : selectedCreativeIds.size === 0
                     ? t("stats.allCreatives")
