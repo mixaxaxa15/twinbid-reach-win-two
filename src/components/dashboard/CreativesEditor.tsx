@@ -63,6 +63,15 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
             )}
           </div>
 
+          <div className="space-y-2">
+            <Label>{t("create.creativeName")} *</Label>
+            <Input value={creative.name || ""} onChange={e => updateCreative(creative.id, { name: e.target.value })}
+              placeholder={t("create.creativeNamePlaceholder")}
+              className={`bg-background border-border ${errors[`creative_${creative.id}_name`] ? "border-destructive" : ""}`} />
+            <p className="text-xs text-muted-foreground">{t("create.creativeNameHint")}</p>
+            {errors[`creative_${creative.id}_name`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_name`]}</p>}
+          </div>
+
           {showTitle && (
             <div className="space-y-2">
               <Label>Title *</Label>

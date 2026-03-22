@@ -13,6 +13,7 @@ export interface TargetingState {
 
 export interface Creative {
   id: string;
+  name?: string;
   url: string;
   imageUrl?: string;
   imageFileName?: string;
