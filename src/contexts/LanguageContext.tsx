@@ -241,7 +241,6 @@ const translations: Record<string, Record<Lang, string>> = {
   "stats.creatives": { ru: "Креативы", en: "Creatives" },
   "stats.selectCreative": { ru: "Выберите креатив", en: "Select creative" },
   "stats.allCreatives": { ru: "Все креативы", en: "All creatives" },
-  "stats.allCampaigns": { ru: "Все кампании", en: "All campaigns" },
   "stats.today": { ru: "Сегодня", en: "Today" },
   "stats.yesterday": { ru: "Вчера", en: "Yesterday" },
    "stats.week": { ru: "7 дней", en: "7 days" },
