@@ -9,6 +9,8 @@ type SortDir = "asc" | "desc";
 interface StatisticsState {
   selectedCampaignIds: Set<string>;
   setSelectedCampaignIds: React.Dispatch<React.SetStateAction<Set<string>>>;
+  selectedCreativeIds: Set<string>;
+  setSelectedCreativeIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   dateRange: DateRange | undefined;
   setDateRange: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
   clickCount: number;
@@ -31,6 +33,8 @@ interface StatisticsState {
   setSortDir: React.Dispatch<React.SetStateAction<SortDir>>;
   appliedCampaignIds: Set<string>;
   setAppliedCampaignIds: React.Dispatch<React.SetStateAction<Set<string>>>;
+  appliedCreativeIds: Set<string>;
+  setAppliedCreativeIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   appliedDateRange: DateRange | undefined;
   setAppliedDateRange: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
   appliedFilterCountry: string;
