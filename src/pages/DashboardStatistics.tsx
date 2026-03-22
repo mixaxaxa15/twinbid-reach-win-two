@@ -139,20 +139,25 @@ export default function DashboardStatistics() {
     [campaigns]
   );
 
-  // Build list of available creatives based on selected campaigns
+  // Selected single campaign id (empty string = all)
+  const selectedCampaignId = useMemo(() => {
+    if (selectedCampaignIds.size === 1) return Array.from(selectedCampaignIds)[0];
+    return "";
+  }, [selectedCampaignIds]);
+
+  // Build list of available creatives based on selected campaign
   const availableCreatives = useMemo(() => {
     const result: { id: string; label: string }[] = [];
-    const campaignIds = selectedCampaignIds.size > 0 ? Array.from(selectedCampaignIds) : [];
-    for (const cId of campaignIds) {
-      const campaign = campaigns.find(c => c.id === cId);
-      if (!campaign) continue;
-      campaign.creatives.forEach((cr, idx) => {
-        const creativeId = `${cId}.${idx + 1}`;
-        result.push({ id: creativeId, label: `${creativeId} — ${cr.title || cr.url || `Creative #${idx + 1}`}` });
-      });
-    }
+    if (!selectedCampaignId) return result;
+    const campaign = campaigns.find(c => c.id === selectedCampaignId);
+    if (!campaign) return result;
+    campaign.creatives.forEach((cr, idx) => {
+      const creativeId = `${selectedCampaignId}.${idx + 1}`;
+      const label = cr.name || cr.title || cr.url || `Creative #${idx + 1}`;
+      result.push({ id: creativeId, label });
+    });
     return result;
-  }, [selectedCampaignIds, campaigns]);
+  }, [selectedCampaignId, campaigns]);
 
   const hasSelection = appliedCampaignIds.size > 0 && appliedDateRange?.from;
 
