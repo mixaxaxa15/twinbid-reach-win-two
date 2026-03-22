@@ -105,6 +105,7 @@ export default function DashboardStatistics() {
   
   const {
     selectedCampaignIds, setSelectedCampaignIds,
+    selectedCreativeIds, setSelectedCreativeIds,
     dateRange, setDateRange,
     clickCount, setClickCount,
     filterCountry, setFilterCountry,
@@ -116,6 +117,7 @@ export default function DashboardStatistics() {
     sortKey, setSortKey,
     sortDir, setSortDir,
     appliedCampaignIds, setAppliedCampaignIds,
+    appliedCreativeIds, setAppliedCreativeIds,
     appliedDateRange, setAppliedDateRange,
     appliedFilterCountry, setAppliedFilterCountry,
     appliedFilterBrowser, setAppliedFilterBrowser,
@@ -136,6 +138,21 @@ export default function DashboardStatistics() {
     campaigns.filter(c => c.status === "active" || c.status === "completed" || c.status === "paused"),
     [campaigns]
   );
+
+  // Build list of available creatives based on selected campaigns
+  const availableCreatives = useMemo(() => {
+    const result: { id: string; label: string }[] = [];
+    const campaignIds = selectedCampaignIds.size > 0 ? Array.from(selectedCampaignIds) : [];
+    for (const cId of campaignIds) {
+      const campaign = campaigns.find(c => c.id === cId);
+      if (!campaign) continue;
+      campaign.creatives.forEach((cr, idx) => {
+        const creativeId = `${cId}.${idx + 1}`;
+        result.push({ id: creativeId, label: `${creativeId} — ${cr.title || cr.url || `Creative #${idx + 1}`}` });
+      });
+    }
+    return result;
+  }, [selectedCampaignIds, campaigns]);
 
   const hasSelection = appliedCampaignIds.size > 0 && appliedDateRange?.from;
 
@@ -177,13 +194,14 @@ export default function DashboardStatistics() {
 
   const handleRefresh = useCallback(() => {
     setAppliedCampaignIds(new Set(selectedCampaignIds));
+    setAppliedCreativeIds(new Set(selectedCreativeIds));
     setAppliedDateRange(dateRange);
     setAppliedFilterCountry(filterCountry);
     setAppliedFilterBrowser(filterBrowser);
     setAppliedFilterDevice(filterDevice);
     setAppliedFilterOS(filterOS);
     toast.success(t("stats.refreshed"));
-  }, [selectedCampaignIds, dateRange, filterCountry, filterBrowser, filterDevice, filterOS, t]);
+  }, [selectedCampaignIds, selectedCreativeIds, dateRange, filterCountry, filterBrowser, filterDevice, filterOS, t]);
 
   const handleCampaignChange = (id: string) => {
     setSelectedCampaignIds(prev => {
@@ -268,7 +286,44 @@ export default function DashboardStatistics() {
                 {activeCampaigns.map(c => (
                   <label key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
                     <Checkbox checked={selectedCampaignIds.has(c.id)} onCheckedChange={() => handleCampaignChange(c.id)} />
-                    {c.name}
+                    <span className="text-muted-foreground mr-1">{c.id}</span> {c.name}
+                  </label>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label className="text-sm text-muted-foreground font-medium">{t("stats.creatives")}</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[260px] justify-start bg-background border-border text-left font-normal" disabled={selectedCampaignIds.size === 0}>
+                {selectedCampaignIds.size === 0
+                  ? t("stats.selectCreative")
+                  : selectedCreativeIds.size === 0
+                    ? t("stats.allCreatives")
+                    : `${t("stats.selected")} ${selectedCreativeIds.size}`}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px] p-2" align="start">
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm font-medium border-b border-border pb-2 mb-1">
+                  <Checkbox checked={selectedCreativeIds.size === 0} onCheckedChange={(checked) => {
+                    if (checked) setSelectedCreativeIds(new Set());
+                  }} />
+                  {t("stats.allCreatives")}
+                </label>
+                {availableCreatives.map(cr => (
+                  <label key={cr.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                    <Checkbox checked={selectedCreativeIds.has(cr.id)} onCheckedChange={() => {
+                      setSelectedCreativeIds(prev => {
+                        const next = new Set(prev);
+                        if (next.has(cr.id)) next.delete(cr.id); else next.add(cr.id);
+                        return next;
+                      });
+                    }} />
+                    <span className="truncate">{cr.label}</span>
                   </label>
                 ))}
               </div>
