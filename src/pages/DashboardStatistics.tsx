@@ -286,7 +286,7 @@ export default function DashboardStatistics() {
                 {activeCampaigns.map(c => (
                   <label key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
                     <Checkbox checked={selectedCampaignIds.has(c.id)} onCheckedChange={() => handleCampaignChange(c.id)} />
-                    {c.name}
+                    <span className="text-muted-foreground mr-1">{c.id}</span> {c.name}
                   </label>
                 ))}
               </div>
