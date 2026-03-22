@@ -139,6 +139,21 @@ export default function DashboardStatistics() {
     [campaigns]
   );
 
+  // Build list of available creatives based on selected campaigns
+  const availableCreatives = useMemo(() => {
+    const result: { id: string; label: string }[] = [];
+    const campaignIds = selectedCampaignIds.size > 0 ? Array.from(selectedCampaignIds) : [];
+    for (const cId of campaignIds) {
+      const campaign = campaigns.find(c => c.id === cId);
+      if (!campaign) continue;
+      campaign.creatives.forEach((cr, idx) => {
+        const creativeId = `${cId}.${idx + 1}`;
+        result.push({ id: creativeId, label: `${creativeId} — ${cr.title || cr.url || `Creative #${idx + 1}`}` });
+      });
+    }
+    return result;
+  }, [selectedCampaignIds, campaigns]);
+
   const hasSelection = appliedCampaignIds.size > 0 && appliedDateRange?.from;
 
   const data = useMemo(() => {
