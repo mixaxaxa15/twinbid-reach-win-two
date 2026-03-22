@@ -85,7 +85,14 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
     try {
       const stored = localStorage.getItem("twinbid_campaigns");
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed: Campaign[] = JSON.parse(stored);
+        // Migrate: ensure every campaign has a creatives array
+        return parsed.map(c => ({
+          ...c,
+          creatives: Array.isArray(c.creatives) ? c.creatives : [],
+        }));
+      }
     } catch {}
     return initialCampaigns;
   });
