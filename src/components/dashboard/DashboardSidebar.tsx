@@ -2,12 +2,14 @@ import { LayoutDashboard, Megaphone, Wallet, Settings, LogOut, BarChart3 } from 
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import twinbidLogo from "@/assets/twinbid-logo.svg";
 
 export function DashboardSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
+  const { signOut } = useAuth();
 
   const menuItems = [
     { icon: LayoutDashboard, label: t("sidebar.overview"), path: "/dashboard" },
@@ -42,7 +44,7 @@ export function DashboardSidebar() {
         })}
       </nav>
       <div className="p-4 border-t border-border">
-        <button onClick={() => navigate("/")} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
+        <button onClick={async () => { await signOut(); navigate("/"); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
           <LogOut className="h-5 w-5" /><span>{t("sidebar.logout")}</span>
         </button>
       </div>

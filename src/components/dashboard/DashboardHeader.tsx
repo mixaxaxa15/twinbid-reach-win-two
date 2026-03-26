@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useNotifications, type Notification } from "@/contexts/NotificationContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 export function DashboardHeader() {
   const { notifications, removeNotification } = useNotifications();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const [confirmDismiss, setConfirmDismiss] = useState<Notification | null>(null);
@@ -101,7 +103,7 @@ export function DashboardHeader() {
               <User className="h-5 w-5 text-primary" />
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-sm font-medium">user@example.com</p>
+              <p className="text-sm font-medium">{user?.email || "user@example.com"}</p>
               <p className="text-xs text-muted-foreground">{t("header.advertiser")}</p>
             </div>
           </button>

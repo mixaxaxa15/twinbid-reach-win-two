@@ -7,6 +7,8 @@ import { CampaignProvider } from "./contexts/CampaignContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { StatisticsProvider } from "./contexts/StatisticsContext";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
@@ -27,25 +29,27 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <LanguageProvider>
-          <NotificationProvider>
-            <CampaignProvider>
-              <StatisticsProvider>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/dashboard" element={<Dashboard />}>
-                    <Route index element={<DashboardOverview />} />
-                    <Route path="campaigns" element={<DashboardCampaigns />} />
-                    <Route path="campaigns/create" element={<CreateCampaign />} />
-                    <Route path="campaigns/:id/edit" element={<EditCampaign />} />
-                    <Route path="statistics" element={<DashboardStatistics />} />
-                    <Route path="balance" element={<DashboardBalance />} />
-                    <Route path="settings" element={<DashboardSettings />} />
-                  </Route>
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </StatisticsProvider>
-            </CampaignProvider>
-          </NotificationProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <CampaignProvider>
+                <StatisticsProvider>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
+                      <Route index element={<DashboardOverview />} />
+                      <Route path="campaigns" element={<DashboardCampaigns />} />
+                      <Route path="campaigns/create" element={<CreateCampaign />} />
+                      <Route path="campaigns/:id/edit" element={<EditCampaign />} />
+                      <Route path="statistics" element={<DashboardStatistics />} />
+                      <Route path="balance" element={<DashboardBalance />} />
+                      <Route path="settings" element={<DashboardSettings />} />
+                    </Route>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </StatisticsProvider>
+              </CampaignProvider>
+            </NotificationProvider>
+          </AuthProvider>
         </LanguageProvider>
       </BrowserRouter>
     </TooltipProvider>
