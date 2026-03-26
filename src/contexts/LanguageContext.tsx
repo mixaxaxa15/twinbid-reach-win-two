@@ -93,6 +93,9 @@ const translations: Record<string, Record<Lang, string>> = {
   "auth.confirmPassword": { ru: "Подтвердите пароль", en: "Confirm password" },
   "auth.loginBtn": { ru: "Войти", en: "Log in" },
   "auth.registerBtn": { ru: "Зарегистрироваться", en: "Sign up" },
+  "auth.passwordMismatch": { ru: "Пароли не совпадают", en: "Passwords do not match" },
+  "auth.passwordTooShort": { ru: "Пароль должен содержать минимум 6 символов", en: "Password must be at least 6 characters" },
+  "auth.checkEmail": { ru: "Проверьте вашу почту для подтверждения аккаунта", en: "Check your email to confirm your account" },
 
   // Dashboard Sidebar
   "sidebar.overview": { ru: "Обзор", en: "Overview" },
