@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface AuthDialogProps {
   trigger?: React.ReactNode;
@@ -14,13 +16,49 @@ interface AuthDialogProps {
 
 export function AuthDialog({ trigger, defaultTab = "login" }: AuthDialogProps) {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirm, setRegConfirm] = useState("");
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { signIn, signUp } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    const { error } = await signIn(loginEmail, loginPassword);
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setOpen(false);
     navigate("/dashboard");
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (regPassword !== regConfirm) {
+      toast.error(t("auth.passwordMismatch") || "Passwords do not match");
+      return;
+    }
+    if (regPassword.length < 6) {
+      toast.error(t("auth.passwordTooShort") || "Password must be at least 6 characters");
+      return;
+    }
+    setLoading(true);
+    const { error } = await signUp(regEmail, regPassword, regName);
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(t("auth.checkEmail") || "Check your email to confirm your account");
+    setOpen(false);
   };
 
   return (
@@ -40,37 +78,47 @@ export function AuthDialog({ trigger, defaultTab = "login" }: AuthDialogProps) {
             <TabsTrigger value="register">{t("auth.register")}</TabsTrigger>
           </TabsList>
           <TabsContent value="login" className="space-y-4 mt-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email-login">{t("auth.email")}</Label>
-                <Input id="email-login" type="email" placeholder="your@email.com" className="bg-background border-border" />
+                <Input id="email-login" type="email" placeholder="your@email.com" className="bg-background border-border"
+                  value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password-login">{t("auth.password")}</Label>
-                <Input id="password-login" type="password" placeholder="••••••••" className="bg-background border-border" />
+                <Input id="password-login" type="password" placeholder="••••••••" className="bg-background border-border"
+                  value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required />
               </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90">{t("auth.loginBtn")}</Button>
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
+                {loading ? "..." : t("auth.loginBtn")}
+              </Button>
             </form>
           </TabsContent>
           <TabsContent value="register" className="space-y-4 mt-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">{t("auth.name")}</Label>
-                <Input id="name" placeholder="John Doe" className="bg-background border-border" />
+                <Input id="name" placeholder="John Doe" className="bg-background border-border"
+                  value={regName} onChange={(e) => setRegName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email-register">{t("auth.email")}</Label>
-                <Input id="email-register" type="email" placeholder="your@email.com" className="bg-background border-border" />
+                <Input id="email-register" type="email" placeholder="your@email.com" className="bg-background border-border"
+                  value={regEmail} onChange={(e) => setRegEmail(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password-register">{t("auth.password")}</Label>
-                <Input id="password-register" type="password" placeholder="••••••••" className="bg-background border-border" />
+                <Input id="password-register" type="password" placeholder="••••••••" className="bg-background border-border"
+                  value={regPassword} onChange={(e) => setRegPassword(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password-confirm">{t("auth.confirmPassword")}</Label>
-                <Input id="password-confirm" type="password" placeholder="••••••••" className="bg-background border-border" />
+                <Input id="password-confirm" type="password" placeholder="••••••••" className="bg-background border-border"
+                  value={regConfirm} onChange={(e) => setRegConfirm(e.target.value)} required />
               </div>
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">{t("auth.registerBtn")}</Button>
+              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={loading}>
+                {loading ? "..." : t("auth.registerBtn")}
+              </Button>
             </form>
           </TabsContent>
         </Tabs>
