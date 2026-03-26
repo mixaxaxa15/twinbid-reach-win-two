@@ -5,11 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Wallet, Plus, ArrowDownLeft, Receipt, Copy, ExternalLink, Tag } from "lucide-react";
+import { Wallet, Plus, Receipt, Copy, ExternalLink, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useProfile } from "@/contexts/ProfileContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const amounts = [100, 250, 500, 1000, 5000];
 
@@ -18,31 +21,22 @@ const usdtMethods = [
   { id: "usdt_erc20", label: "USDT (ERC-20)", desc: "Tether on Ethereum", address: "0x3F7a9c2B1d5E8f4A6C0b9D1e2F3a4B5c6D7e8F9a" },
 ];
 
-const PROMO_CODES: Record<string, { bonus: number; label: string }> = {
-  WELCOME10: { bonus: 10, label: "Welcome 10%" },
-  BOOST20: { bonus: 20, label: "Boost 20%" },
-  VIP25: { bonus: 25, label: "VIP 25%" },
-};
-
-interface Transaction {
+interface TopupRequest {
   id: string;
   amount: number;
-  date: string;
-  method: string;
-  status: "completed" | "pending";
+  created_at: string;
+  payment_method: string;
+  status: "pending" | "approved" | "rejected";
+  promo_code: string | null;
+  bonus_percent: number | null;
 }
-
-const initialTransactions: Transaction[] = [
-  { id: "1", amount: 500, date: "14.02.2026", method: "USDT (TRC-20)", status: "completed" },
-  { id: "4", amount: 250, date: "12.02.2026", method: "USDT (TRC-20)", status: "completed" },
-  { id: "6", amount: 1000, date: "10.02.2026", method: "USDT (ERC-20)", status: "completed" },
-  { id: "7", amount: 100, date: "08.02.2026", method: "USDT (TRC-20)", status: "pending" },
-];
-
-const BALANCE = 4523;
 
 export default function DashboardBalance() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
+  const { addNotification, removeNotification } = useNotifications();
+
   const [selectedAmount, setSelectedAmount] = useState<number | null>(250);
   const [customAmount, setCustomAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState("usdt_trc20");
@@ -52,45 +46,56 @@ export default function DashboardBalance() {
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; bonus: number } | null>(null);
   const [pendingPayment, setPendingPayment] = useState<{ amount: number; method: string; promo?: string; bonus?: number } | null>(null);
   const [pendingNotificationId, setPendingNotificationId] = useState<string | null>(null);
-  const { addNotification, removeNotification } = useNotifications();
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    try {
-      const stored = localStorage.getItem("twinbid_transactions");
-      if (stored) return JSON.parse(stored);
-    } catch {}
-    return initialTransactions;
-  });
+  const [topupRequests, setTopupRequests] = useState<TopupRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
 
-  const persistTransactions = (txs: Transaction[]) => {
-    setTransactions(txs);
-    localStorage.setItem("twinbid_transactions", JSON.stringify(txs));
+  const balance = profile?.balance ?? 0;
+
+  const fetchTopupRequests = async () => {
+    if (!user) return;
+    setLoadingRequests(true);
+    const { data, error } = await supabase
+      .from("topup_requests")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    if (!error && data) setTopupRequests(data as TopupRequest[]);
+    setLoadingRequests(false);
   };
 
-  useEffect(() => {
-    if (BALANCE < 10) {
-      addNotification({
-        title: t("balance.notif.lowBalance"),
-        description: `${t("balance.notif.lowBalanceDesc")} $${BALANCE}. ${t("balance.notif.recommend")}`,
-        type: "warning",
-        persistent: true,
-        action: { label: t("balance.notif.topUp"), onClick: () => window.location.hash = "" },
-      });
-    }
-  }, []);
+  useEffect(() => { fetchTopupRequests(); }, [user]);
+
+  // Check if there's a pending topup request
+  const hasPendingRequest = topupRequests.some(r => r.status === "pending");
 
   const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount;
 
-  const handleApplyPromo = () => {
+  const handleApplyPromo = async () => {
     const code = promoCode.trim().toUpperCase();
     if (!code) return;
-    const promo = PROMO_CODES[code];
-    if (promo) {
-      setAppliedPromo({ code, bonus: promo.bonus });
-      toast.success(t("balance.promo.applied").replace("{percent}", `${promo.bonus}`));
-    } else {
+    const { data, error } = await supabase
+      .from("promo_codes")
+      .select("*")
+      .eq("code", code)
+      .eq("is_active", true)
+      .single();
+    if (error || !data) {
       setAppliedPromo(null);
       toast.error(t("balance.promo.invalid"));
+      return;
     }
+    // Check expiry
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      toast.error(t("balance.promo.invalid"));
+      return;
+    }
+    // Check max uses
+    if (data.max_uses && data.current_uses >= data.max_uses) {
+      toast.error(t("balance.promo.invalid"));
+      return;
+    }
+    setAppliedPromo({ code, bonus: Number(data.bonus_percent) });
+    toast.success(t("balance.promo.applied").replace("{percent}", `${data.bonus_percent}`));
   };
 
   const handleRemovePromo = () => {
@@ -100,7 +105,7 @@ export default function DashboardBalance() {
 
   const handleTopUp = () => {
     if (!finalAmount || finalAmount < 100) return;
-    if (pendingPayment) {
+    if (hasPendingRequest || pendingPayment) {
       toast.error(t("balance.toast.pendingExists"));
       return;
     }
@@ -113,22 +118,38 @@ export default function DashboardBalance() {
     }
   };
 
-  const handleSubmitTx = () => {
-    if (!txHash.trim()) {
-      toast.error(t("balance.toast.enterHash"));
+  const handleSubmitTx = async () => {
+    if (!txHash.trim() || !user || !pendingPayment) return;
+
+    const { error } = await supabase.from("topup_requests").insert({
+      user_id: user.id,
+      amount: pendingPayment.amount,
+      payment_method: pendingPayment.method,
+      tx_hash: txHash.trim(),
+      promo_code: pendingPayment.promo || null,
+      bonus_percent: pendingPayment.bonus || 0,
+    });
+
+    if (error) {
+      toast.error("Error submitting payment");
+      console.error(error);
       return;
     }
-    const methodLabel = usdtMethods.find(m => m.id === pendingPayment?.method)?.label || pendingPayment?.method || "";
-    const now = new Date();
-    const dateStr = `${String(now.getDate()).padStart(2, "0")}.${String(now.getMonth() + 1).padStart(2, "0")}.${now.getFullYear()}`;
-    const newTx: Transaction = {
-      id: Date.now().toString(),
-      amount: pendingPayment?.amount || 0,
-      date: dateStr,
-      method: methodLabel,
-      status: "pending",
-    };
-    persistTransactions([newTx, ...transactions]);
+
+    // Record promo usage if applicable
+    if (pendingPayment.promo) {
+      const { data: promoData } = await supabase
+        .from("promo_codes")
+        .select("id")
+        .eq("code", pendingPayment.promo)
+        .single();
+      if (promoData) {
+        await supabase.from("promo_usage").insert({
+          user_id: user.id,
+          promo_code_id: promoData.id,
+        });
+      }
+    }
 
     toast.success(t("balance.toast.paymentSent"), {
       duration: 8000,
@@ -139,10 +160,9 @@ export default function DashboardBalance() {
       },
     });
 
-    // Add notification about successful payment submission
     addNotification({
       title: t("balance.notif.paymentSuccess"),
-      description: t("balance.notif.paymentSuccessDesc").replace("${amount}", `$${pendingPayment?.amount.toLocaleString()}`),
+      description: t("balance.notif.paymentSuccessDesc").replace("${amount}", `$${pendingPayment.amount.toLocaleString()}`),
       type: "info",
       persistent: false,
       action: {
@@ -154,10 +174,13 @@ export default function DashboardBalance() {
     setShowTxDialog(false);
     setPendingPayment(null);
     setTxHash("");
+    setAppliedPromo(null);
+    setPromoCode("");
     if (pendingNotificationId) {
       removeNotification(pendingNotificationId);
       setPendingNotificationId(null);
     }
+    fetchTopupRequests();
   };
 
   const handleCancelPayment = () => {
@@ -181,7 +204,6 @@ export default function DashboardBalance() {
         persistent: true,
         action: { label: t("balance.notif.completePayment"), onClick: () => setShowTxDialog(true) },
         onDismiss: () => {
-          // Cancel the pending payment when notification is dismissed
           setPendingPayment(null);
           setTxHash("");
           setPendingNotificationId(null);
@@ -202,6 +224,17 @@ export default function DashboardBalance() {
 
   const currentMethod = usdtMethods.find(m => m.id === selectedMethod);
 
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
+  };
+
+  const statusMap: Record<string, { label: string; className: string }> = {
+    pending: { label: t("balance.pending"), className: "text-yellow-500 border-yellow-500/20" },
+    approved: { label: t("balance.completed"), className: "text-green-500 border-green-500/20" },
+    rejected: { label: t("balance.rejected") || "Rejected", className: "text-destructive border-destructive/20" },
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -219,22 +252,8 @@ export default function DashboardBalance() {
               <div>
                 <p className="text-sm text-muted-foreground">{t("balance.current")}</p>
                 <p className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  ${BALANCE.toLocaleString()}
+                  {profileLoading ? "..." : `$${balance.toLocaleString()}`}
                 </p>
-              </div>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("balance.spentToday")}</span>
-                <span>$32</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("balance.spentWeek")}</span>
-                <span>$184</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("balance.estimatedDays")}</span>
-                <span className="text-primary font-medium">~14 {t("balance.days")}</span>
               </div>
             </div>
           </CardContent>
@@ -314,7 +333,7 @@ export default function DashboardBalance() {
             </div>
 
             <Button onClick={handleTopUp} className="bg-accent hover:bg-accent/90 text-accent-foreground"
-              disabled={!finalAmount || finalAmount < 100}>
+              disabled={!finalAmount || finalAmount < 100 || hasPendingRequest}>
               {t("balance.topUpBtn")} {finalAmount ? `$${finalAmount.toLocaleString()}` : ""}
               {appliedPromo && finalAmount ? ` (+${Math.floor(finalAmount * appliedPromo.bonus / 100)}$ ${t("balance.promo.bonusShort")})` : ""}
             </Button>
@@ -387,7 +406,9 @@ export default function DashboardBalance() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            {transactions.length === 0 ? (
+            {loadingRequests ? (
+              <div className="py-12 text-center text-muted-foreground">Loading...</div>
+            ) : topupRequests.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground">{t("balance.noTransactions")}</div>
             ) : (
               <table className="w-full">
@@ -395,25 +416,32 @@ export default function DashboardBalance() {
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.date")}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.description")}</th>
-                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.amountCol")}</th>
-                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.statusCol")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.amountCol")}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("balance.statusCol")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((tx) => (
-                    <tr key={tx.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                      <td className="py-3 px-4 text-sm">{tx.date}</td>
-                      <td className="py-3 px-4 text-sm">{t("balance.topUpVia")} · {tx.method}</td>
-                      <td className="py-3 px-4 text-sm text-left font-medium text-green-500">
-                        +${tx.amount.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-4 text-left">
-                        <Badge variant="outline" className={cn("font-normal", tx.status === "completed" ? "text-green-500 border-green-500/20" : "text-yellow-500 border-yellow-500/20")}>
-                          {tx.status === "completed" ? t("balance.completed") : t("balance.pending")}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
+                  {topupRequests.map((req) => {
+                    const methodLabel = usdtMethods.find(m => m.id === req.payment_method)?.label || req.payment_method;
+                    const st = statusMap[req.status] || statusMap.pending;
+                    return (
+                      <tr key={req.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                        <td className="py-3 px-4 text-sm">{formatDate(req.created_at)}</td>
+                        <td className="py-3 px-4 text-sm">
+                          {t("balance.topUpVia")} · {methodLabel}
+                          {req.promo_code && <span className="text-primary ml-1">({req.promo_code})</span>}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-left font-medium text-green-500">
+                          +${req.amount.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-4 text-left">
+                          <Badge variant="outline" className={cn("font-normal", st.className)}>
+                            {st.label}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}

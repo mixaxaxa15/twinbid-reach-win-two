@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export type CampaignStatus = "active" | "paused" | "draft" | "completed" | "moderation";
 export type PricingModel = "cpm" | "cpc";
@@ -17,6 +19,7 @@ export interface Creative {
   url: string;
   imageUrl?: string;
   imageFileName?: string;
+  storagePath?: string;
   title?: string;
   description?: string;
 }
@@ -51,76 +54,225 @@ export interface Campaign {
   brandName?: string;
   trafficType: TrafficType;
   verticals: Vertical[];
-  /** @deprecated kept for backward compat with old data */
-  creative?: Record<string, string>;
   description?: string;
 }
 
-const defaultTargeting = (): Record<string, TargetingState> =>
-  Object.fromEntries(
-    ["country","language","city","deviceType","os","osVersion","browser","dayOfWeek","hour","subid","sites"]
-      .map(k => [k, { mode: "none" as ListMode, items: [] }])
-  );
+function mapCampaignFromDb(row: any, creatives: Creative[]): Campaign {
+  return {
+    id: row.id,
+    name: row.name,
+    status: row.status,
+    format: row.format,
+    formatKey: row.format_key,
+    budget: Number(row.budget) || 0,
+    dailyBudget: row.daily_budget != null ? Number(row.daily_budget) : null,
+    spent: Number(row.spent) || 0,
+    impressions: Number(row.impressions) || 0,
+    clicks: Number(row.clicks) || 0,
+    ctr: Number(row.ctr) || 0,
+    pricingModel: row.pricing_model,
+    priceValue: Number(row.price_value) || 0,
+    trafficQuality: row.traffic_quality,
+    startDate: row.start_date || "",
+    endDate: row.end_date || "",
+    creatives,
+    targeting: (row.targeting && typeof row.targeting === "object") ? row.targeting : {},
+    evenSpend: row.even_spend ?? false,
+    bannerSize: row.banner_size || undefined,
+    brandName: row.brand_name || undefined,
+    trafficType: row.traffic_type || "mainstream",
+    verticals: Array.isArray(row.verticals) ? row.verticals : [],
+    description: row.description || undefined,
+  };
+}
 
-const initialCampaigns: Campaign[] = [
-  { id: "10001", name: "Летняя распродажа 2024", status: "active", format: "Banner", formatKey: "banner", budget: 5000, dailyBudget: null, spent: 2340, impressions: 45230, clicks: 2890, ctr: 6.39, pricingModel: "cpm", priceValue: 2.5, trafficQuality: "common", trafficType: "mainstream", verticals: ["E-commerce"], startDate: "2024-06-01", endDate: "2024-08-31", creatives: [{ id: "c1", name: "Summer Banner", url: "https://example.com/summer", imageUrl: "https://example.com/banner.jpg" }], targeting: defaultTargeting(), evenSpend: false, bannerSize: "300x250" },
-  { id: "10002", name: "Новая коллекция", status: "active", format: "Popunder", formatKey: "popunder", budget: 10000, dailyBudget: 500, spent: 6780, impressions: 89120, clicks: 5670, ctr: 6.36, pricingModel: "cpm", priceValue: 3.1, trafficQuality: "high", trafficType: "mainstream", verticals: ["Beauty", "E-commerce"], startDate: "2024-05-15", endDate: "2024-09-15", creatives: [{ id: "c2", name: "Collection Landing", url: "https://example.com/new" }], targeting: defaultTargeting(), evenSpend: false },
-  { id: "10003", name: "Бренд-кампания", status: "paused", format: "Native", formatKey: "native", budget: 3000, dailyBudget: null, spent: 1520, impressions: 28900, clicks: 1240, ctr: 4.29, pricingModel: "cpm", priceValue: 2.0, trafficQuality: "common", trafficType: "mixed", verticals: ["Dating"], startDate: "2024-04-01", endDate: "2024-07-01", creatives: [{ id: "c3", name: "Brand Native", url: "https://example.com/brand", imageUrl: "https://example.com/native.jpg", title: "Бренд", description: "Откройте для себя" }], targeting: defaultTargeting(), evenSpend: false, brandName: "MyBrand" },
-  { id: "10004", name: "Тестовая кампания", status: "draft", format: "In-page Push", formatKey: "push", budget: 2500, dailyBudget: null, spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel: "cpc", priceValue: 0.005, trafficQuality: "common", trafficType: "mainstream", verticals: [], startDate: "", endDate: "", creatives: [{ id: "c4", name: "Test Push", url: "https://example.com/test", title: "Test" }], targeting: defaultTargeting(), evenSpend: false },
-  { id: "10005", name: "Осенний запуск", status: "completed", format: "Banner", formatKey: "banner", budget: 7500, dailyBudget: 300, spent: 7420, impressions: 152000, clicks: 9120, ctr: 6.0, pricingModel: "cpm", priceValue: 2.2, trafficQuality: "ultra", trafficType: "adult", verticals: ["Adult"], startDate: "2024-09-01", endDate: "2024-11-30", creatives: [{ id: "c5", name: "Autumn Banner", url: "https://example.com/autumn", imageUrl: "https://example.com/autumn.jpg" }], targeting: defaultTargeting(), evenSpend: true, bannerSize: "728x90" },
-  { id: "10006", name: "Ретаргетинг Q1", status: "moderation", format: "Native", formatKey: "native", budget: 4000, dailyBudget: null, spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel: "cpm", priceValue: 2.8, trafficQuality: "high", trafficType: "mainstream", verticals: ["Crypto", "Finance"], startDate: "2025-01-01", endDate: "2025-03-31", creatives: [{ id: "c6", name: "Retarget Native", url: "https://example.com/retarget", title: "Retarget" }], targeting: defaultTargeting(), evenSpend: false },
-];
+function mapCreativeFromDb(row: any): Creative {
+  return {
+    id: row.id,
+    name: row.name || undefined,
+    url: row.url,
+    imageUrl: row.image_url || undefined,
+    imageFileName: row.image_file_name || undefined,
+    storagePath: row.storage_path || undefined,
+    title: row.title || undefined,
+    description: row.description || undefined,
+  };
+}
 
 interface CampaignContextType {
   campaigns: Campaign[];
-  addCampaign: (c: Omit<Campaign, "id">) => void;
-  updateCampaign: (id: string, updates: Partial<Campaign>) => void;
-  deleteCampaign: (id: string) => void;
+  loading: boolean;
+  addCampaign: (c: Omit<Campaign, "id">) => Promise<string | undefined>;
+  updateCampaign: (id: string, updates: Partial<Campaign>) => Promise<void>;
+  deleteCampaign: (id: string) => Promise<void>;
   getCampaign: (id: string) => Campaign | undefined;
+  refetch: () => Promise<void>;
 }
 
 const CampaignContext = createContext<CampaignContextType | null>(null);
 
 export function CampaignProvider({ children }: { children: ReactNode }) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
-    try {
-      const stored = localStorage.getItem("twinbid_campaigns");
-      if (stored) {
-        const parsed: Campaign[] = JSON.parse(stored);
-        // Migrate: ensure every campaign has a creatives array
-        return parsed.map(c => ({
-          ...c,
-          creatives: Array.isArray(c.creatives) ? c.creatives : [],
-        }));
+  const { user } = useAuth();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCampaigns = useCallback(async () => {
+    if (!user) { setCampaigns([]); setLoading(false); return; }
+    setLoading(true);
+    const { data: rows, error } = await supabase
+      .from("campaigns")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) { console.error("Campaigns fetch error:", error); setLoading(false); return; }
+
+    const ids = (rows || []).map(r => r.id);
+    let creativesMap = new Map<string, Creative[]>();
+
+    if (ids.length > 0) {
+      const { data: crRows } = await supabase
+        .from("creatives")
+        .select("*")
+        .in("campaign_id", ids);
+      (crRows || []).forEach(cr => {
+        const list = creativesMap.get(cr.campaign_id) || [];
+        list.push(mapCreativeFromDb(cr));
+        creativesMap.set(cr.campaign_id, list);
+      });
+    }
+
+    setCampaigns((rows || []).map(r => mapCampaignFromDb(r, creativesMap.get(r.id) || [])));
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
+
+  const addCampaign = useCallback(async (c: Omit<Campaign, "id">): Promise<string | undefined> => {
+    if (!user) return undefined;
+    const { data, error } = await supabase
+      .from("campaigns")
+      .insert({
+        user_id: user.id,
+        name: c.name,
+        status: c.status,
+        format: c.format,
+        format_key: c.formatKey,
+        budget: c.budget,
+        daily_budget: c.dailyBudget,
+        spent: c.spent,
+        impressions: c.impressions,
+        clicks: c.clicks,
+        ctr: c.ctr,
+        pricing_model: c.pricingModel,
+        price_value: c.priceValue,
+        traffic_quality: c.trafficQuality,
+        traffic_type: c.trafficType,
+        start_date: c.startDate || null,
+        end_date: c.endDate || null,
+        targeting: c.targeting as any,
+        even_spend: c.evenSpend,
+        banner_size: c.bannerSize || null,
+        brand_name: c.brandName || null,
+        verticals: c.verticals,
+        description: c.description || null,
+      })
+      .select("id")
+      .single();
+
+    if (error) { console.error("Add campaign error:", error); return undefined; }
+
+    const campaignId = data.id;
+
+    // Insert creatives
+    if (c.creatives.length > 0) {
+      const { error: crError } = await supabase
+        .from("creatives")
+        .insert(c.creatives.map(cr => ({
+          campaign_id: campaignId,
+          url: cr.url,
+          name: cr.name || null,
+          image_url: cr.imageUrl || null,
+          image_file_name: cr.imageFileName || null,
+          storage_path: cr.storagePath || null,
+          title: cr.title || null,
+          description: cr.description || null,
+        })));
+      if (crError) console.error("Add creatives error:", crError);
+    }
+
+    await fetchCampaigns();
+    return campaignId;
+  }, [user, fetchCampaigns]);
+
+  const updateCampaign = useCallback(async (id: string, updates: Partial<Campaign>) => {
+    if (!user) return;
+    const dbUpdates: any = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.format !== undefined) dbUpdates.format = updates.format;
+    if (updates.formatKey !== undefined) dbUpdates.format_key = updates.formatKey;
+    if (updates.budget !== undefined) dbUpdates.budget = updates.budget;
+    if (updates.dailyBudget !== undefined) dbUpdates.daily_budget = updates.dailyBudget;
+    if (updates.spent !== undefined) dbUpdates.spent = updates.spent;
+    if (updates.impressions !== undefined) dbUpdates.impressions = updates.impressions;
+    if (updates.clicks !== undefined) dbUpdates.clicks = updates.clicks;
+    if (updates.ctr !== undefined) dbUpdates.ctr = updates.ctr;
+    if (updates.pricingModel !== undefined) dbUpdates.pricing_model = updates.pricingModel;
+    if (updates.priceValue !== undefined) dbUpdates.price_value = updates.priceValue;
+    if (updates.trafficQuality !== undefined) dbUpdates.traffic_quality = updates.trafficQuality;
+    if (updates.trafficType !== undefined) dbUpdates.traffic_type = updates.trafficType;
+    if (updates.startDate !== undefined) dbUpdates.start_date = updates.startDate || null;
+    if (updates.endDate !== undefined) dbUpdates.end_date = updates.endDate || null;
+    if (updates.targeting !== undefined) dbUpdates.targeting = updates.targeting;
+    if (updates.evenSpend !== undefined) dbUpdates.even_spend = updates.evenSpend;
+    if (updates.bannerSize !== undefined) dbUpdates.banner_size = updates.bannerSize;
+    if (updates.brandName !== undefined) dbUpdates.brand_name = updates.brandName;
+    if (updates.verticals !== undefined) dbUpdates.verticals = updates.verticals;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+
+    if (Object.keys(dbUpdates).length > 0) {
+      const { error } = await supabase.from("campaigns").update(dbUpdates).eq("id", id);
+      if (error) { console.error("Update campaign error:", error); return; }
+    }
+
+    // Update creatives if provided
+    if (updates.creatives !== undefined) {
+      // Delete old creatives and insert new ones
+      await supabase.from("creatives").delete().eq("campaign_id", id);
+      if (updates.creatives.length > 0) {
+        await supabase.from("creatives").insert(
+          updates.creatives.map(cr => ({
+            campaign_id: id,
+            url: cr.url,
+            name: cr.name || null,
+            image_url: cr.imageUrl || null,
+            image_file_name: cr.imageFileName || null,
+            storage_path: cr.storagePath || null,
+            title: cr.title || null,
+            description: cr.description || null,
+          }))
+        );
       }
-    } catch {}
-    return initialCampaigns;
-  });
+    }
 
-  const persist = (updated: Campaign[]) => {
-    setCampaigns(updated);
-    localStorage.setItem("twinbid_campaigns", JSON.stringify(updated));
-  };
+    await fetchCampaigns();
+  }, [user, fetchCampaigns]);
 
-  const addCampaign = useCallback((c: Omit<Campaign, "id">) => {
-    const id = String(Date.now()).slice(-5);
-    persist([...campaigns, { ...c, id }]);
-  }, [campaigns]);
-
-  const updateCampaign = useCallback((id: string, updates: Partial<Campaign>) => {
-    persist(campaigns.map(c => c.id === id ? { ...c, ...updates } : c));
-  }, [campaigns]);
-
-  const deleteCampaign = useCallback((id: string) => {
-    persist(campaigns.filter(c => c.id !== id));
-  }, [campaigns]);
+  const deleteCampaign = useCallback(async (id: string) => {
+    if (!user) return;
+    // Creatives will be cascade-deleted via FK
+    const { error } = await supabase.from("campaigns").delete().eq("id", id);
+    if (error) { console.error("Delete campaign error:", error); return; }
+    await fetchCampaigns();
+  }, [user, fetchCampaigns]);
 
   const getCampaign = useCallback((id: string) => {
     return campaigns.find(c => c.id === id);
   }, [campaigns]);
 
   return (
-    <CampaignContext.Provider value={{ campaigns, addCampaign, updateCampaign, deleteCampaign, getCampaign }}>
+    <CampaignContext.Provider value={{ campaigns, loading, addCampaign, updateCampaign, deleteCampaign, getCampaign, refetch: fetchCampaigns }}>
       {children}
     </CampaignContext.Provider>
   );

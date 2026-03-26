@@ -1,14 +1,20 @@
 import { TrendingUp, Eye, MousePointer, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCampaigns } from "@/contexts/CampaignContext";
 
 export function StatsCards() {
   const { t } = useLanguage();
+  const { campaigns } = useCampaigns();
+
+  const totalImpressions = campaigns.reduce((s, c) => s + c.impressions, 0);
+  const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0);
+  const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
 
   const stats = [
-    { label: t("statsCards.impressions"), value: "124,892", change: "+12.5%", icon: Eye, color: "text-primary" },
-    { label: t("statsCards.clicks"), value: "8,234", change: "+8.2%", icon: MousePointer, color: "text-primary" },
-    { label: t("statsCards.ctr"), value: "6.59%", change: "+2.1%", icon: Target, color: "text-primary" },
+    { label: t("statsCards.impressions"), value: totalImpressions.toLocaleString(), icon: Eye, color: "text-primary" },
+    { label: t("statsCards.clicks"), value: totalClicks.toLocaleString(), icon: MousePointer, color: "text-primary" },
+    { label: t("statsCards.ctr"), value: `${ctr}%`, icon: Target, color: "text-primary" },
   ];
 
   return (
@@ -20,10 +26,6 @@ export function StatsCards() {
               <div>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
                 <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                <div className="flex items-center gap-1 mt-2">
-                  <TrendingUp className="h-3 w-3 text-primary" />
-                  <span className="text-xs text-primary">{stat.change}</span>
-                </div>
               </div>
               <div className={`h-12 w-12 rounded-lg bg-muted flex items-center justify-center ${stat.color}`}>
                 <stat.icon className="h-6 w-6" />
