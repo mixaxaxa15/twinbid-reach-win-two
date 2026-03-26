@@ -50,10 +50,7 @@ export default function EditCampaign() {
       setName(campaign.name);
       setBannerSize(campaign.bannerSize || "");
       setBrandName(campaign.brandName || "");
-      // Migrate old creative format
-      const crvs = campaign.creatives?.length ? campaign.creatives :
-        campaign.creative ? [{ id: "migrated", url: campaign.creative.link || "", imageUrl: campaign.creative.imageUrl, title: campaign.creative.title, description: campaign.creative.adText }] :
-        [{ id: "migrated", url: "" }];
+      const crvs = campaign.creatives?.length ? campaign.creatives : [{ id: "migrated", url: "" }];
       setCreatives(crvs);
       setInitialCreatives(JSON.parse(JSON.stringify(crvs)));
       setLists(campaign.targeting);
