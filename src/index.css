@@ -147,6 +147,16 @@
     box-shadow: var(--glow-primary);
     transform: translateY(-2px);
   }
+
+  .scroll-indicator {
+    display: none;
+  }
+}
+
+@media (min-width: 1280px) and (min-height: 800px) {
+  .scroll-indicator {
+    display: flex;
+  }
 }
 
 /* Hide number input spinners */
