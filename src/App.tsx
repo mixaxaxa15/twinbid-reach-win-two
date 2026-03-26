@@ -8,6 +8,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { StatisticsProvider } from "./contexts/StatisticsContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ProfileProvider } from "./contexts/ProfileContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -30,8 +31,9 @@ const App = () => (
       <BrowserRouter>
         <LanguageProvider>
           <AuthProvider>
-            <NotificationProvider>
-              <CampaignProvider>
+            <ProfileProvider>
+              <NotificationProvider>
+                <CampaignProvider>
                 <StatisticsProvider>
                   <Routes>
                     <Route path="/" element={<Index />} />
@@ -46,9 +48,10 @@ const App = () => (
                     </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                </StatisticsProvider>
-              </CampaignProvider>
-            </NotificationProvider>
+                  </StatisticsProvider>
+                </CampaignProvider>
+              </NotificationProvider>
+            </ProfileProvider>
           </AuthProvider>
         </LanguageProvider>
       </BrowserRouter>

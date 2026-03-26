@@ -21,7 +21,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 function isDraftComplete(c: Campaign): boolean {
   if (!c.name.trim()) return false;
   if (!c.formatKey) return false;
-  if (!c.creative.link?.trim()) return false;
+  if (!c.creatives?.length || !c.creatives[0]?.url?.trim()) return false;
   if (c.budget < 100) return false;
   if (!c.priceValue) return false;
   return true;
