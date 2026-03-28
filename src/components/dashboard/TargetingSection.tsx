@@ -245,11 +245,12 @@ function SitesInput({ items, onAdd, t }: { items: string[]; onAdd: (items: strin
   );
 }
 
-function ListItem({ config, list, onUpdate }: {
+function ListItem({ config, list: rawList, onUpdate }: {
   config: typeof targetingConfigs[0];
   list: TargetingState;
   onUpdate: (updates: Partial<TargetingState>) => void;
 }) {
+  const list = { mode: rawList?.mode ?? "none", items: rawList?.items ?? [] };
   const { t } = useLanguage();
   const [inputValue, setInputValue] = useState("");
   const options = targetingOptions[config.key] || [];
