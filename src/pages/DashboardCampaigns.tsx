@@ -124,7 +124,7 @@ export default function DashboardCampaigns() {
 
         <Card className="bg-card border-border">
           <CardContent className="p-0">
-            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="sticky top-0 bg-card z-10">
                   <tr className="border-b border-border">
