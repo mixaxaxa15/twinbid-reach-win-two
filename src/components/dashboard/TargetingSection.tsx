@@ -9,9 +9,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+const countryNames: Record<string, string> = {
+  US:"United States",GB:"United Kingdom",DE:"Germany",FR:"France",IT:"Italy",ES:"Spain",BR:"Brazil",RU:"Russia",IN:"India",JP:"Japan",KR:"South Korea",CN:"China",AU:"Australia",CA:"Canada",MX:"Mexico",AR:"Argentina",CO:"Colombia",PL:"Poland",NL:"Netherlands",SE:"Sweden",NO:"Norway",DK:"Denmark",FI:"Finland",CZ:"Czech Republic",AT:"Austria",CH:"Switzerland",BE:"Belgium",PT:"Portugal",GR:"Greece",TR:"Turkey",UA:"Ukraine",RO:"Romania",HU:"Hungary",BG:"Bulgaria",HR:"Croatia",SK:"Slovakia",SI:"Slovenia",LT:"Lithuania",LV:"Latvia",EE:"Estonia",IE:"Ireland",IL:"Israel",SA:"Saudi Arabia",AE:"UAE",EG:"Egypt",ZA:"South Africa",NG:"Nigeria",KE:"Kenya",TH:"Thailand",VN:"Vietnam",PH:"Philippines",ID:"Indonesia",MY:"Malaysia",SG:"Singapore",TW:"Taiwan",HK:"Hong Kong",NZ:"New Zealand",CL:"Chile",PE:"Peru"
+};
+
+const languageNames: Record<string, string> = {
+  EN:"English",ES:"Spanish",FR:"French",DE:"German",IT:"Italian",PT:"Portuguese",RU:"Russian",ZH:"Chinese",JA:"Japanese",KO:"Korean",AR:"Arabic",HI:"Hindi",TR:"Turkish",PL:"Polish",NL:"Dutch",SV:"Swedish",NO:"Norwegian",DA:"Danish",FI:"Finnish",CS:"Czech",RO:"Romanian",HU:"Hungarian",BG:"Bulgarian",HR:"Croatian",SK:"Slovak",SL:"Slovenian",LT:"Lithuanian",LV:"Latvian",ET:"Estonian",EL:"Greek",HE:"Hebrew",TH:"Thai",VI:"Vietnamese",ID:"Indonesian",MS:"Malay",UK:"Ukrainian",SR:"Serbian",BS:"Bosnian",MK:"Macedonian",SQ:"Albanian",KA:"Georgian",HY:"Armenian",AZ:"Azerbaijani",UZ:"Uzbek",KK:"Kazakh",TG:"Tajik",KY:"Kyrgyz",MN:"Mongolian",MY:"Burmese",KM:"Khmer",LO:"Lao",BN:"Bengali",TA:"Tamil",TE:"Telugu",ML:"Malayalam",KN:"Kannada",MR:"Marathi",GU:"Gujarati",PA:"Punjabi",SI:"Sinhala",NE:"Nepali"
+};
+
 const targetingOptions: Record<string, string[]> = {
-  country: ["US","GB","DE","FR","IT","ES","BR","RU","IN","JP","KR","CN","AU","CA","MX","AR","CO","PL","NL","SE","NO","DK","FI","CZ","AT","CH","BE","PT","GR","TR","UA","RO","HU","BG","HR","SK","SI","LT","LV","EE","IE","IL","SA","AE","EG","ZA","NG","KE","TH","VN","PH","ID","MY","SG","TW","HK","NZ","CL","PE"],
-  language: ["EN","ES","FR","DE","IT","PT","RU","ZH","JA","KO","AR","HI","TR","PL","NL","SV","NO","DA","FI","CS","RO","HU","BG","HR","SK","SL","LT","LV","ET","EL","HE","TH","VI","ID","MS","UK","SR","BS","MK","SQ","KA","HY","AZ","UZ","KK","TG","KY","MN","MY","KM","LO","BN","TA","TE","ML","KN","MR","GU","PA","SI","NE"],
+  country: Object.keys(countryNames),
+  language: Object.keys(languageNames),
   deviceType: ["Mobile","Desktop","Tablet","Smart TV","Console"],
   os: ["Android","iOS","Windows","macOS","Linux","ChromeOS","HarmonyOS"],
   browser: ["Chrome","Safari","Firefox","Edge","Opera","Samsung Internet","UC Browser","Brave","Vivaldi","Yandex Browser"],
@@ -50,6 +58,8 @@ function AutocompleteInput({
 
   const getDisplayLabel = (option: string) => {
     if (option.startsWith("day.")) return t(option);
+    if (countryNames[option]) return `${countryNames[option]} (${option})`;
+    if (languageNames[option]) return `${languageNames[option]} (${option})`;
     return option;
   };
 
@@ -79,7 +89,6 @@ function AutocompleteInput({
     if (e.key === "Enter") {
       e.preventDefault();
       if (filtered.length > 0) handleAdd(filtered[0]);
-      else if (freeText && value.trim()) handleAdd(value.trim());
     }
   };
 
@@ -94,7 +103,7 @@ function AutocompleteInput({
         className="bg-background border-border"
         onKeyDown={handleKeyDown}
       />
-      {open && (filtered.length > 0 || (freeText && value.trim())) && (
+      {open && filtered.length > 0 && (
         <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto bg-card border border-border rounded-md shadow-lg">
           {filtered.map(option => (
             <button key={option} type="button"
@@ -103,13 +112,6 @@ function AutocompleteInput({
               {getDisplayLabel(option)}
             </button>
           ))}
-          {freeText && value.trim() && !filtered.includes(value.trim()) && !existingItems.includes(value.trim()) && (
-            <button type="button"
-              className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors text-muted-foreground"
-              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdd(value.trim()); }}>
-              {t("targeting.addCustom")} «{value.trim()}»
-            </button>
-          )}
         </div>
       )}
     </div>
@@ -257,6 +259,8 @@ function ListItem({ config, list, onUpdate }: {
 
   const getDisplayLabel = (item: string) => {
     if (item.startsWith("day.")) return t(item);
+    if (countryNames[item]) return `${countryNames[item]} (${item})`;
+    if (languageNames[item]) return `${languageNames[item]} (${item})`;
     return item;
   };
 
@@ -301,25 +305,16 @@ function ListItem({ config, list, onUpdate }: {
               t={t}
             />
           ) : (
-            <div className="flex gap-2">
-              <AutocompleteInput
-                options={options}
-                value={inputValue}
-                onChange={setInputValue}
-                onAdd={addItem}
-                existingItems={list.items}
-                placeholder={t("targeting.autocompletePlaceholder")}
-                freeText={false}
-                t={t}
-              />
-              <Button type="button" size="icon" variant="outline"
-                onClick={() => {
-                  if (inputValue.trim()) { addItem(inputValue.trim()); setInputValue(""); }
-                }}
-                className="border-border shrink-0">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+            <AutocompleteInput
+              options={options}
+              value={inputValue}
+              onChange={setInputValue}
+              onAdd={addItem}
+              existingItems={list.items}
+              placeholder={t("targeting.autocompletePlaceholder")}
+              freeText={false}
+              t={t}
+            />
           )}
           {list.items.length > 0 && !isHour && (
             <div className="flex flex-wrap gap-1.5">
