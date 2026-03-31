@@ -102,6 +102,28 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
               placeholder="https://example.com/landing"
               className={`bg-background border-border ${errors[`creative_${creative.id}_url`] ? "border-destructive" : ""}`} />
             {errors[`creative_${creative.id}_url`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_url`]}</p>}
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">{t("create.urlMacrosHint") || "Click to add tracking macros:"}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {URL_MACROS.map(macro => (
+                  <Badge
+                    key={macro}
+                    variant="outline"
+                    className="cursor-pointer text-xs font-mono hover:bg-primary/10 hover:border-primary/30 transition-colors"
+                    onClick={() => {
+                      const separator = creative.url.includes("?") ? "&" : "?";
+                      const token = `${macro}={${macro}}`;
+                      if (creative.url.includes(`{${macro}}`)) return;
+                      updateCreative(creative.id, {
+                        url: creative.url + separator + token,
+                      });
+                    }}
+                  >
+                    {`{${macro}}`}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           </div>
 
           {showImage && (
