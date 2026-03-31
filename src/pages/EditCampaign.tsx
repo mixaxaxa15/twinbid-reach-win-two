@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type Creative, type Vertical, VERTICALS } from "@/contexts/CampaignContext";
-import { Checkbox } from "@/components/ui/checkbox";
 import { TargetingSection } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
@@ -201,18 +200,24 @@ export default function EditCampaign() {
               </div>
               <div className="space-y-2">
                 <Label>{t("create.vertical")} ({t("create.optional")})</Label>
-                <div className="flex flex-wrap gap-3">
-                  {VERTICALS.map(v => (
-                    <label key={v} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                      <Checkbox
-                        checked={verticals.includes(v)}
-                        onCheckedChange={(checked) =>
-                          setVerticals(prev => checked ? [...prev, v] : prev.filter(x => x !== v))
-                        }
-                      />
-                      {v}
-                    </label>
-                  ))}
+                <div className="flex flex-wrap gap-2">
+                  {VERTICALS.map(v => {
+                    const isChecked = verticals.includes(v);
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setVerticals(prev => isChecked ? prev.filter(x => x !== v) : [...prev, v])}
+                        className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                          isChecked
+                            ? "bg-primary/15 border-primary/40 text-primary"
+                            : "bg-background border-border text-muted-foreground hover:border-primary/30"
+                        }`}
+                      >
+                        {v}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div className="space-y-2">
