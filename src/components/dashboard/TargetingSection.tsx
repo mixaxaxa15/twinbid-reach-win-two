@@ -117,10 +117,17 @@ function AutocompleteInput({
 }
 
 // Schedule: items are stored as "monday:0", "monday:5", "tuesday:23", etc.
+// Table-based UI: days on vertical axis, hours on horizontal axis
+const DAY_SHORT: Record<string, Record<string, string>> = {
+  ru: { monday: "Пн", tuesday: "Вт", wednesday: "Ср", thursday: "Чт", friday: "Пт", saturday: "Сб", sunday: "Вс" },
+  en: { monday: "Mo", tuesday: "Tu", wednesday: "We", thursday: "Th", friday: "Fr", saturday: "Sa", sunday: "Su" },
+};
+
 function SchedulePicker({ items, onUpdate, t }: { items: string[]; onUpdate: (items: string[]) => void; t: (key: string) => string }) {
-  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const { language } = useLanguage();
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [selectMode, setSelectMode] = useState(true);
+  const itemSet = useMemo(() => new Set(items), [items]);
 
   useEffect(() => {
     const up = () => setIsMouseDown(false);
@@ -128,92 +135,112 @@ function SchedulePicker({ items, onUpdate, t }: { items: string[]; onUpdate: (it
     return () => window.removeEventListener("mouseup", up);
   }, []);
 
-  const toggleDay = (day: string) => {
-    setExpandedDays(prev => {
-      const next = new Set(prev);
-      if (next.has(day)) next.delete(day); else next.add(day);
-      return next;
-    });
+  const toggleCell = (key: string, forceMode?: boolean) => {
+    const has = itemSet.has(key);
+    const shouldSelect = forceMode !== undefined ? forceMode : !has;
+    if (shouldSelect && !has) onUpdate([...items, key]);
+    else if (!shouldSelect && has) onUpdate(items.filter(i => i !== key));
   };
 
-  const dayHours = (day: string) => items.filter(i => i.startsWith(`${day}:`)).map(i => i.split(":")[1]);
+  const handleMouseDown = (key: string) => {
+    setIsMouseDown(true);
+    const has = itemSet.has(key);
+    setSelectMode(!has);
+    toggleCell(key);
+  };
 
-  const selectAllDay = (day: string) => {
+  const handleMouseEnter = (key: string) => {
+    if (!isMouseDown) return;
+    toggleCell(key, selectMode);
+  };
+
+  const toggleDay = (day: string) => {
     const allHours = Array.from({ length: 24 }, (_, i) => `${day}:${i}`);
-    const currentDayItems = items.filter(i => i.startsWith(`${day}:`));
-    if (currentDayItems.length === 24) {
-      // Deselect all
+    const allSelected = allHours.every(k => itemSet.has(k));
+    if (allSelected) {
       onUpdate(items.filter(i => !i.startsWith(`${day}:`)));
     } else {
-      // Select all
       const without = items.filter(i => !i.startsWith(`${day}:`));
       onUpdate([...without, ...allHours]);
     }
   };
 
-  const handleMouseDown = (key: string) => {
-    setIsMouseDown(true);
-    const has = items.includes(key);
-    setSelectMode(!has);
-    if (has) {
-      onUpdate(items.filter(i => i !== key));
+  const toggleHour = (hour: number) => {
+    const allKeys = DAYS.map(d => `${d}:${hour}`);
+    const allSelected = allKeys.every(k => itemSet.has(k));
+    if (allSelected) {
+      onUpdate(items.filter(i => !allKeys.includes(i)));
     } else {
-      onUpdate([...items, key]);
+      const without = items.filter(i => !allKeys.includes(i));
+      onUpdate([...without, ...allKeys]);
     }
   };
 
-  const handleMouseEnter = (key: string) => {
-    if (!isMouseDown) return;
-    if (selectMode) {
-      if (!items.includes(key)) onUpdate([...items, key]);
+  const toggleAll = () => {
+    const total = DAYS.length * 24;
+    if (itemSet.size >= total) {
+      onUpdate([]);
     } else {
-      onUpdate(items.filter(i => i !== key));
+      const all: string[] = [];
+      for (const d of DAYS) for (let h = 0; h < 24; h++) all.push(`${d}:${h}`);
+      onUpdate(all);
     }
   };
+
+  const shorts = DAY_SHORT[language] || DAY_SHORT.en;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <p className="text-xs text-muted-foreground">{t("targeting.scheduleHint")}</p>
-      {DAYS.map(day => {
-        const hours = dayHours(day);
-        const expanded = expandedDays.has(day);
-        return (
-          <div key={day} className="border border-border/50 rounded-md overflow-hidden">
-            <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 cursor-pointer select-none" onClick={() => toggleDay(day)}>
-              {expanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
-              <span className="text-sm font-medium flex-1">{t(`day.${day}`)}</span>
-              {hours.length > 0 && (
-                <Badge variant="outline" className="text-xs">{hours.length}h</Badge>
-              )}
-              <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-xs"
-                onClick={(e) => { e.stopPropagation(); selectAllDay(day); }}>
-                {hours.length === 24 ? t("targeting.deselectAll") : t("targeting.selectAll")}
-              </Button>
-            </div>
-            {expanded && (
-              <div className="p-2">
-                <div className="grid grid-cols-12 gap-1 select-none">
-                  {Array.from({ length: 24 }, (_, i) => {
-                    const key = `${day}:${i}`;
-                    const active = items.includes(key);
-                    return (
-                      <button key={i} type="button"
+      <div className="overflow-x-auto">
+        <table className="border-collapse select-none" style={{ tableLayout: "fixed" }}>
+          <thead>
+            <tr>
+              <th className="p-0">
+                <button type="button" onClick={toggleAll}
+                  className="w-10 h-7 text-[10px] font-medium text-muted-foreground hover:bg-muted rounded transition-colors">
+                  {t("targeting.selectAll")}
+                </button>
+              </th>
+              {Array.from({ length: 24 }, (_, h) => (
+                <th key={h} className="p-0">
+                  <button type="button" onClick={() => toggleHour(h)}
+                    className="w-7 h-7 text-[10px] font-medium text-muted-foreground hover:bg-muted rounded transition-colors">
+                    {h}
+                  </button>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {DAYS.map(day => (
+              <tr key={day}>
+                <td className="p-0">
+                  <button type="button" onClick={() => toggleDay(day)}
+                    className="w-10 h-7 text-[10px] font-medium text-muted-foreground hover:bg-muted rounded transition-colors text-left pl-1">
+                    {shorts[day]}
+                  </button>
+                </td>
+                {Array.from({ length: 24 }, (_, h) => {
+                  const key = `${day}:${h}`;
+                  const active = itemSet.has(key);
+                  return (
+                    <td key={h} className="p-px">
+                      <button type="button"
                         onMouseDown={(e) => { e.preventDefault(); handleMouseDown(key); }}
                         onMouseEnter={() => handleMouseEnter(key)}
                         className={cn(
-                          "py-1.5 rounded text-xs font-medium transition-colors cursor-pointer",
-                          active ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted"
-                        )}>
-                        {i}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+                          "w-7 h-7 rounded-sm text-[10px] transition-colors cursor-pointer",
+                          active ? "bg-primary text-primary-foreground" : "bg-muted/40 hover:bg-muted"
+                        )} />
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
