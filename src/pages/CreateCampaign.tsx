@@ -19,8 +19,19 @@ const formatLabels: Record<string, string> = {
 
 const bannerSizes = ["300x100", "300x250", "300x600", "728x90"];
 
+const allScheduleItems = (): string[] => {
+  const days = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
+  const items: string[] = [];
+  for (const d of days) for (let h = 0; h < 24; h++) items.push(`${d}:${h}`);
+  return items;
+};
+
 const defaultTargeting = (): Record<string, TargetingState> =>
-  Object.fromEntries(targetingConfigs.map(c => [c.key, { mode: "none" as ListMode, items: [] }]));
+  Object.fromEntries(targetingConfigs.map(c =>
+    c.key === "schedule"
+      ? [c.key, { mode: "white" as ListMode, items: allScheduleItems() }]
+      : [c.key, { mode: "none" as ListMode, items: [] }]
+  ));
 
 const generateId = () => String(Date.now()) + Math.random().toString(36).slice(2, 6);
 
