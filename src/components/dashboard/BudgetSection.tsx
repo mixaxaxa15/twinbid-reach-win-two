@@ -98,7 +98,7 @@ export function BudgetSection({
   })() : false;
 
   const trafficInfo: Record<TrafficQuality, { label: string; desc: string }> = {
-    common: { label: "Common", desc: t("budget.trafficCommon") },
+    common: { label: "Usual", desc: t("budget.trafficCommon") },
     high: { label: "High Quality", desc: t("budget.trafficHigh") },
     ultra: { label: "Ultra High Quality", desc: t("budget.trafficUltra") },
   };
