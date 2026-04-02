@@ -381,7 +381,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "targeting.addCustom": { ru: "Добавить", en: "Add" },
   "targeting.sitesHint": { ru: "Добавляйте ID сайтов по одному или через запятую (например: '12345','abdjhx')", en: "Add site IDs one by one or separated by commas (e.g.: '12345','abdjhx')" },
   "targeting.sitesFormatError": { ru: "Неверный формат. Используйте формат без пробелов и кавычек", en: "Invalid format. No spaces or quotes allowed" },
-  "targeting.scheduleHint": { ru: "Нажмите на день, чтобы развернуть и выбрать часы показа", en: "Click a day to expand and select display hours" },
+  "targeting.scheduleHint": { ru: "Кликните или протяните мышью для выбора часов. Кликните на день/час для выделения целого ряда/столбца", en: "Click or drag to select hours. Click a day/hour header to toggle an entire row/column" },
   "targeting.selectAll": { ru: "Все", en: "All" },
   "targeting.deselectAll": { ru: "Снять", en: "Clear" },
   "targeting.ipHint": { ru: "Введите IPv4 или IPv6 адреса через запятую", en: "Enter IPv4 or IPv6 addresses, comma-separated" },
