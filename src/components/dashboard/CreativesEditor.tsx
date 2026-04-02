@@ -11,7 +11,7 @@ import type { Creative } from "@/contexts/CampaignContext";
 
 const URL_MACROS = [
   "click_id", "site_id", "country_code", "creative_id",
-  "campaign_id", "browser", "device", "device_os",
+  "campaign_id", "browser", "device", "device_os", "ip_address",
 ] as const;
 
 interface CreativesEditorProps {
