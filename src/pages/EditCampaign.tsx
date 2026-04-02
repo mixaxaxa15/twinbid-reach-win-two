@@ -52,7 +52,15 @@ export default function EditCampaign() {
       const crvs = campaign.creatives?.length ? campaign.creatives : [{ id: "migrated", url: "" }];
       setCreatives(crvs);
       setInitialCreatives(JSON.parse(JSON.stringify(crvs)));
-      setLists(campaign.targeting);
+      const targeting = campaign.targeting || {};
+      // Default schedule to all days/hours if not set
+      if (!targeting.schedule || targeting.schedule.mode === "none" || !targeting.schedule.items?.length) {
+        const allItems: string[] = [];
+        const days = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
+        for (const d of days) for (let h = 0; h < 24; h++) allItems.push(`${d}:${h}`);
+        targeting.schedule = { mode: "white", items: allItems };
+      }
+      setLists(targeting);
       setTotalBudget(String(campaign.budget));
       setDailyBudget(campaign.dailyBudget ? String(campaign.dailyBudget) : "");
       setPriceValue(String(campaign.priceValue));
