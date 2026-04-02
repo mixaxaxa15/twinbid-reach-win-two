@@ -187,7 +187,7 @@ function SchedulePicker({ items, onUpdate, t }: { items: string[]; onUpdate: (it
     }
   };
 
-  const shorts = DAY_SHORT[language] || DAY_SHORT.en;
+  const shorts = DAY_SHORT[lang] || DAY_SHORT.en;
 
   return (
     <div className="space-y-2">
