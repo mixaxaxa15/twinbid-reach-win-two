@@ -190,7 +190,7 @@ function SchedulePicker({ items, onUpdate, t }: { items: string[]; onUpdate: (it
   const shorts = DAY_SHORT[lang] || DAY_SHORT.en;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <p className="text-xs text-muted-foreground">{t("targeting.scheduleHint")}</p>
       <div className="overflow-x-auto">
         <table className="border-collapse select-none" style={{ tableLayout: "fixed" }}>
@@ -198,14 +198,14 @@ function SchedulePicker({ items, onUpdate, t }: { items: string[]; onUpdate: (it
             <tr>
               <th className="p-0">
                 <button type="button" onClick={toggleAll}
-                  className="w-10 h-7 text-[10px] font-medium text-muted-foreground hover:bg-muted rounded transition-colors">
+                  className="w-8 h-5 text-[9px] font-medium text-muted-foreground hover:bg-muted rounded transition-colors">
                   {t("targeting.selectAll")}
                 </button>
               </th>
               {Array.from({ length: 24 }, (_, h) => (
                 <th key={h} className="p-0">
                   <button type="button" onClick={() => toggleHour(h)}
-                    className="w-7 h-7 text-[10px] font-medium text-muted-foreground hover:bg-muted rounded transition-colors">
+                    className="w-5 h-5 text-[9px] font-medium text-muted-foreground hover:bg-muted rounded transition-colors">
                     {h}
                   </button>
                 </th>
@@ -217,7 +217,7 @@ function SchedulePicker({ items, onUpdate, t }: { items: string[]; onUpdate: (it
               <tr key={day}>
                 <td className="p-0">
                   <button type="button" onClick={() => toggleDay(day)}
-                    className="w-10 h-7 text-[10px] font-medium text-muted-foreground hover:bg-muted rounded transition-colors text-left pl-1">
+                    className="w-8 h-5 text-[9px] font-medium text-muted-foreground hover:bg-muted rounded transition-colors text-left pl-0.5">
                     {shorts[day]}
                   </button>
                 </td>
@@ -230,8 +230,8 @@ function SchedulePicker({ items, onUpdate, t }: { items: string[]; onUpdate: (it
                         onMouseDown={(e) => { e.preventDefault(); handleMouseDown(key); }}
                         onMouseEnter={() => handleMouseEnter(key)}
                         className={cn(
-                          "w-7 h-7 rounded-sm text-[10px] transition-colors cursor-pointer",
-                          active ? "bg-primary text-primary-foreground" : "bg-muted/40 hover:bg-muted"
+                          "w-5 h-5 rounded-sm transition-colors cursor-pointer",
+                          active ? "bg-green-500" : "bg-muted/40 hover:bg-muted"
                         )} />
                     </td>
                   );
