@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X } from "lucide-react";
+import { Plus, X, ChevronDown, ChevronRight } from "lucide-react";
 import type { TargetingState, ListMode } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -23,13 +23,13 @@ const targetingOptions: Record<string, string[]> = {
   deviceType: ["Mobile","Desktop","Tablet","Smart TV","Console"],
   os: ["Android","iOS","Windows","macOS","Linux","ChromeOS","HarmonyOS"],
   browser: ["Chrome","Safari","Firefox","Edge","Opera","Samsung Internet","UC Browser","Brave","Vivaldi","Yandex Browser"],
-  dayOfWeek: ["day.monday","day.tuesday","day.wednesday","day.thursday","day.friday","day.saturday","day.sunday"],
-  hour: Array.from({ length: 24 }, (_, i) => String(i)),
   sites: [],
 };
 
+const DAYS = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const;
+
 const targetingConfigKeys = [
-  "country", "language", "deviceType", "os", "browser", "dayOfWeek", "hour", "sites",
+  "country", "language", "deviceType", "os", "browser", "schedule", "sites", "ip",
 ];
 
 export const targetingConfigs = targetingConfigKeys.map(key => ({ key, labelKey: `targeting.${key}` }));
@@ -40,7 +40,7 @@ interface TargetingSectionProps {
 }
 
 function AutocompleteInput({
-  options, value, onChange, onAdd, existingItems, placeholder, freeText, t,
+  options, value, onChange, onAdd, existingItems, placeholder, t,
 }: {
   options: string[];
   value: string;
@@ -48,7 +48,6 @@ function AutocompleteInput({
   onAdd: (v: string) => void;
   existingItems: string[];
   placeholder: string;
-  freeText: boolean;
   t: (key: string) => string;
 }) {
   const [open, setOpen] = useState(false);
@@ -57,7 +56,6 @@ function AutocompleteInput({
   const keepOpenRef = useRef(false);
 
   const getDisplayLabel = (option: string) => {
-    if (option.startsWith("day.")) return t(option);
     if (countryNames[option]) return `${countryNames[option]} (${option})`;
     if (languageNames[option]) return `${languageNames[option]} (${option})`;
     return option;
@@ -118,38 +116,11 @@ function AutocompleteInput({
   );
 }
 
-// Hour picker grid component
-function HourPicker({ items, onUpdate, t }: { items: string[]; onUpdate: (items: string[]) => void; t: (key: string) => string }) {
+// Schedule: items are stored as "monday:0", "monday:5", "tuesday:23", etc.
+function SchedulePicker({ items, onUpdate, t }: { items: string[]; onUpdate: (items: string[]) => void; t: (key: string) => string }) {
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
   const [isMouseDown, setIsMouseDown] = useState(false);
-  const [selectMode, setSelectMode] = useState(true); // true = selecting, false = deselecting
-
-  const toggleHour = (h: string) => {
-    if (items.includes(h)) {
-      onUpdate(items.filter(i => i !== h));
-    } else {
-      onUpdate([...items, h]);
-    }
-  };
-
-  const handleMouseDown = (h: string) => {
-    setIsMouseDown(true);
-    const newMode = !items.includes(h);
-    setSelectMode(newMode);
-    if (newMode) {
-      if (!items.includes(h)) onUpdate([...items, h]);
-    } else {
-      onUpdate(items.filter(i => i !== h));
-    }
-  };
-
-  const handleMouseEnter = (h: string) => {
-    if (!isMouseDown) return;
-    if (selectMode) {
-      if (!items.includes(h)) onUpdate([...items, h]);
-    } else {
-      onUpdate(items.filter(i => i !== h));
-    }
-  };
+  const [selectMode, setSelectMode] = useState(true);
 
   useEffect(() => {
     const up = () => setIsMouseDown(false);
@@ -157,48 +128,92 @@ function HourPicker({ items, onUpdate, t }: { items: string[]; onUpdate: (items:
     return () => window.removeEventListener("mouseup", up);
   }, []);
 
-  // Format selected hours as ranges
-  const formatRanges = () => {
-    if (items.length === 0) return "";
-    const sorted = items.map(Number).sort((a, b) => a - b);
-    const ranges: string[] = [];
-    let start = sorted[0];
-    let end = sorted[0];
-    for (let i = 1; i < sorted.length; i++) {
-      if (sorted[i] === end + 1) { end = sorted[i]; }
-      else {
-        ranges.push(start === end ? `${start}:00` : `${start}:00-${end}:00`);
-        start = sorted[i]; end = sorted[i];
-      }
+  const toggleDay = (day: string) => {
+    setExpandedDays(prev => {
+      const next = new Set(prev);
+      if (next.has(day)) next.delete(day); else next.add(day);
+      return next;
+    });
+  };
+
+  const dayHours = (day: string) => items.filter(i => i.startsWith(`${day}:`)).map(i => i.split(":")[1]);
+
+  const selectAllDay = (day: string) => {
+    const allHours = Array.from({ length: 24 }, (_, i) => `${day}:${i}`);
+    const currentDayItems = items.filter(i => i.startsWith(`${day}:`));
+    if (currentDayItems.length === 24) {
+      // Deselect all
+      onUpdate(items.filter(i => !i.startsWith(`${day}:`)));
+    } else {
+      // Select all
+      const without = items.filter(i => !i.startsWith(`${day}:`));
+      onUpdate([...without, ...allHours]);
     }
-    ranges.push(start === end ? `${start}:00` : `${start}:00-${end}:00`);
-    return ranges.join(", ");
+  };
+
+  const handleMouseDown = (key: string) => {
+    setIsMouseDown(true);
+    const has = items.includes(key);
+    setSelectMode(!has);
+    if (has) {
+      onUpdate(items.filter(i => i !== key));
+    } else {
+      onUpdate([...items, key]);
+    }
+  };
+
+  const handleMouseEnter = (key: string) => {
+    if (!isMouseDown) return;
+    if (selectMode) {
+      if (!items.includes(key)) onUpdate([...items, key]);
+    } else {
+      onUpdate(items.filter(i => i !== key));
+    }
   };
 
   return (
-    <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">{t("targeting.selectHours")}</p>
-      <div className="grid grid-cols-12 gap-1 select-none">
-        {Array.from({ length: 24 }, (_, i) => String(i)).map(h => (
-          <button
-            key={h}
-            type="button"
-            onMouseDown={(e) => { e.preventDefault(); handleMouseDown(h); }}
-            onMouseEnter={() => handleMouseEnter(h)}
-            className={cn(
-              "py-1.5 rounded text-xs font-medium transition-colors cursor-pointer",
-              items.includes(h)
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted"
+    <div className="space-y-1">
+      <p className="text-xs text-muted-foreground">{t("targeting.scheduleHint")}</p>
+      {DAYS.map(day => {
+        const hours = dayHours(day);
+        const expanded = expandedDays.has(day);
+        return (
+          <div key={day} className="border border-border/50 rounded-md overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 cursor-pointer select-none" onClick={() => toggleDay(day)}>
+              {expanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+              <span className="text-sm font-medium flex-1">{t(`day.${day}`)}</span>
+              {hours.length > 0 && (
+                <Badge variant="outline" className="text-xs">{hours.length}h</Badge>
+              )}
+              <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-xs"
+                onClick={(e) => { e.stopPropagation(); selectAllDay(day); }}>
+                {hours.length === 24 ? t("targeting.deselectAll") : t("targeting.selectAll")}
+              </Button>
+            </div>
+            {expanded && (
+              <div className="p-2">
+                <div className="grid grid-cols-12 gap-1 select-none">
+                  {Array.from({ length: 24 }, (_, i) => {
+                    const key = `${day}:${i}`;
+                    const active = items.includes(key);
+                    return (
+                      <button key={i} type="button"
+                        onMouseDown={(e) => { e.preventDefault(); handleMouseDown(key); }}
+                        onMouseEnter={() => handleMouseEnter(key)}
+                        className={cn(
+                          "py-1.5 rounded text-xs font-medium transition-colors cursor-pointer",
+                          active ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                        )}>
+                        {i}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             )}
-          >
-            {h}
-          </button>
-        ))}
-      </div>
-      {items.length > 0 && (
-        <p className="text-xs text-muted-foreground">{t("targeting.hourRange")} {formatRanges()}</p>
-      )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -210,19 +225,13 @@ function SitesInput({ items, onAdd, t }: { items: string[]; onAdd: (items: strin
   const handleAdd = () => {
     const raw = value.trim();
     if (!raw) return;
-
-    // Validate format: no spaces, no quotes
     if (/\s/.test(raw) || raw.includes('"') || raw.includes("'")) {
       toast.error(t("targeting.sitesFormatError"));
       return;
     }
-
-    // Split by comma
     const sites = raw.split(",").filter(s => s.trim()).map(s => s.trim());
     const valid = sites.filter(s => !items.includes(s));
-    if (valid.length > 0) {
-      onAdd(valid);
-    }
+    if (valid.length > 0) onAdd(valid);
     setValue("");
   };
 
@@ -230,13 +239,49 @@ function SitesInput({ items, onAdd, t }: { items: string[]; onAdd: (items: strin
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">{t("targeting.sitesHint")}</p>
       <div className="flex gap-2">
-        <Input
-          value={value}
-          onChange={e => setValue(e.target.value)}
-          placeholder="'12345','abdjhx'"
-          className="bg-background border-border flex-1"
-          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
-        />
+        <Input value={value} onChange={e => setValue(e.target.value)}
+          placeholder="'12345','abdjhx'" className="bg-background border-border flex-1"
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }} />
+        <Button type="button" size="icon" variant="outline" onClick={handleAdd} className="border-border shrink-0">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// IP input with IPv4/IPv6 validation
+const IPV4_RE = /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
+const IPV6_RE = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
+
+function isValidIp(v: string): boolean {
+  return IPV4_RE.test(v) || IPV6_RE.test(v);
+}
+
+function IpInput({ items, onAdd, t }: { items: string[]; onAdd: (newItems: string[]) => void; t: (key: string) => string }) {
+  const [value, setValue] = useState("");
+
+  const handleAdd = () => {
+    const raw = value.trim();
+    if (!raw) return;
+    const ips = raw.split(",").map(s => s.trim()).filter(Boolean);
+    const invalid = ips.filter(ip => !isValidIp(ip));
+    if (invalid.length > 0) {
+      toast.error(t("targeting.ipFormatError"));
+      return;
+    }
+    const valid = ips.filter(ip => !items.includes(ip));
+    if (valid.length > 0) onAdd(valid);
+    setValue("");
+  };
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">{t("targeting.ipHint")}</p>
+      <div className="flex gap-2">
+        <Input value={value} onChange={e => setValue(e.target.value)}
+          placeholder="192.168.1.1, 2001:db8::1" className="bg-background border-border flex-1"
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }} />
         <Button type="button" size="icon" variant="outline" onClick={handleAdd} className="border-border shrink-0">
           <Plus className="h-4 w-4" />
         </Button>
@@ -254,12 +299,11 @@ function ListItem({ config, list: rawList, onUpdate }: {
   const { t } = useLanguage();
   const [inputValue, setInputValue] = useState("");
   const options = targetingOptions[config.key] || [];
-  const isFreeText = config.key === "sites";
-  const isHour = config.key === "hour";
+  const isSchedule = config.key === "schedule";
   const isSites = config.key === "sites";
+  const isIp = config.key === "ip";
 
   const getDisplayLabel = (item: string) => {
-    if (item.startsWith("day.")) return t(item);
     if (countryNames[item]) return `${countryNames[item]} (${item})`;
     if (languageNames[item]) return `${languageNames[item]} (${item})`;
     return item;
@@ -275,12 +319,17 @@ function ListItem({ config, list: rawList, onUpdate }: {
     onUpdate({ items: list.items.filter(i => i !== item) });
   };
 
+  // For schedule, only show white/black (not "none" label, use "Off")
+  const modeButtons = isSchedule
+    ? (["none", "white"] as const)
+    : (["none", "white", "black"] as const);
+
   return (
     <div className="space-y-3 p-4 rounded-lg bg-background/50 border border-border/50">
       <div className="flex items-center justify-between">
         <Label className="font-medium">{t(config.labelKey)}</Label>
         <div className="flex gap-1.5">
-          {(["none", "white", "black"] as const).map((m) => (
+          {modeButtons.map((m) => (
             <Button key={m} type="button" size="sm" variant="outline"
               onClick={() => onUpdate({ mode: m })}
               className={
@@ -290,34 +339,27 @@ function ListItem({ config, list: rawList, onUpdate }: {
                     : "bg-primary text-primary-foreground border-primary"
                   : "border-border"
               }>
-              {m === "none" ? t("targeting.off") : m === "white" ? "White" : "Black"}
+              {m === "none" ? t("targeting.off") : isSchedule ? t("targeting.on") : m === "white" ? "White" : "Black"}
             </Button>
           ))}
         </div>
       </div>
       {list.mode !== "none" && (
         <div className="space-y-2">
-          {isHour ? (
-            <HourPicker items={list.items} onUpdate={(items) => onUpdate({ items })} t={t} />
+          {isSchedule ? (
+            <SchedulePicker items={list.items} onUpdate={(items) => onUpdate({ items })} t={t} />
           ) : isSites ? (
-            <SitesInput
-              items={list.items}
-              onAdd={(newItems) => onUpdate({ items: [...list.items, ...newItems] })}
-              t={t}
-            />
+            <SitesInput items={list.items} onAdd={(newItems) => onUpdate({ items: [...list.items, ...newItems] })} t={t} />
+          ) : isIp ? (
+            <IpInput items={list.items} onAdd={(newItems) => onUpdate({ items: [...list.items, ...newItems] })} t={t} />
           ) : (
             <AutocompleteInput
-              options={options}
-              value={inputValue}
-              onChange={setInputValue}
-              onAdd={addItem}
-              existingItems={list.items}
-              placeholder={t("targeting.autocompletePlaceholder")}
-              freeText={false}
-              t={t}
+              options={options} value={inputValue} onChange={setInputValue}
+              onAdd={addItem} existingItems={list.items}
+              placeholder={t("targeting.autocompletePlaceholder")} t={t}
             />
           )}
-          {list.items.length > 0 && !isHour && (
+          {list.items.length > 0 && !isSchedule && (
             <div className="flex flex-wrap gap-1.5">
               {list.items.map((item) => (
                 <Badge key={item} variant="outline"
@@ -335,6 +377,23 @@ function ListItem({ config, list: rawList, onUpdate }: {
 
 export function TargetingSection({ lists, onUpdate }: TargetingSectionProps) {
   const { t } = useLanguage();
+
+  // Migrate old dayOfWeek/hour data to schedule format
+  const effectiveLists = { ...lists };
+  if ((lists.dayOfWeek?.mode !== "none" && lists.dayOfWeek?.items?.length) || (lists.hour?.mode !== "none" && lists.hour?.items?.length)) {
+    if (!lists.schedule || lists.schedule.mode === "none") {
+      const days = lists.dayOfWeek?.items?.length ? lists.dayOfWeek.items.map(d => d.replace("day.", "")) : DAYS.slice();
+      const hours = lists.hour?.items?.length ? lists.hour.items : Array.from({ length: 24 }, (_, i) => String(i));
+      const scheduleItems: string[] = [];
+      for (const day of days) {
+        for (const h of hours) {
+          scheduleItems.push(`${day}:${h}`);
+        }
+      }
+      effectiveLists.schedule = { mode: "white", items: scheduleItems };
+    }
+  }
+
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">{t("targeting.description")}</p>
@@ -342,7 +401,7 @@ export function TargetingSection({ lists, onUpdate }: TargetingSectionProps) {
         <ListItem
           key={config.key}
           config={config}
-          list={lists[config.key] || { mode: "none", items: [] }}
+          list={effectiveLists[config.key] || { mode: "none", items: [] }}
           onUpdate={(updates) => onUpdate(config.key, updates)}
         />
       ))}
