@@ -124,7 +124,7 @@ const DAY_SHORT: Record<string, Record<string, string>> = {
 };
 
 function SchedulePicker({ items, onUpdate, t }: { items: string[]; onUpdate: (items: string[]) => void; t: (key: string) => string }) {
-  const { language } = useLanguage();
+  const { lang } = useLanguage();
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [selectMode, setSelectMode] = useState(true);
   const itemSet = useMemo(() => new Set(items), [items]);
