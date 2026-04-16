@@ -254,13 +254,6 @@ export default function DashboardStatistics() {
     else { setSortKey("impressions"); setSortDir("desc"); }
   }, [appliedGroupBy]);
 
-  // Auto-apply filters when they change
-  useEffect(() => {
-    setAppliedFilterCountry(filterCountry);
-    setAppliedFilterBrowser(filterBrowser);
-    setAppliedFilterDevice(filterDevice);
-    setAppliedFilterOS(filterOS);
-  }, [filterCountry, filterBrowser, filterDevice, filterOS]);
 
    const handleRefresh = useCallback(() => {
     // For "all" campaigns, add all active campaign ids
@@ -506,35 +499,29 @@ export default function DashboardStatistics() {
               <CardContent>
                 <div className="h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    {appliedGroupBy === "hours" ? (
-                      <BarChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis
-                          dataKey="label"
-                          stroke="hsl(var(--muted-foreground))"
-                          fontSize={10}
-                          tickFormatter={(val: string) => val.split(" ")[1] || val}
-                          interval="preserveStartEnd"
-                        />
-                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="grad-metric" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis
+                        dataKey="label"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={appliedGroupBy === "hours" ? 10 : 12}
+                        tickFormatter={appliedGroupBy === "hours" ? (val: string) => val.split(" ")[1] || val : undefined}
+                        interval={appliedGroupBy === "hours" ? "preserveStartEnd" : undefined}
+                      />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      {appliedGroupBy === "hours" ? (
                         <Tooltip content={<HoursTooltip />} />
-                        <Bar dataKey={chartMetric} fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
-                      </BarChart>
-                    ) : (
-                      <AreaChart data={chartData}>
-                        <defs>
-                          <linearGradient id="grad-metric" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      ) : (
                         <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }} />
-                        <Area type="monotone" dataKey={chartMetric} stroke="hsl(var(--primary))" fill="url(#grad-metric)" strokeWidth={2} />
-                      </AreaChart>
-                    )}
+                      )}
+                      <Area type="monotone" dataKey={chartMetric} stroke="hsl(var(--primary))" fill="url(#grad-metric)" strokeWidth={2} />
+                    </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
