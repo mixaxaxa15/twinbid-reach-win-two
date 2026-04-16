@@ -65,6 +65,11 @@ export default function CreateCampaign() {
     return next;
   });
 
+  // Reactively clear budget/date errors
+  useEffect(() => { if (totalBudget && parseNum(totalBudget) >= 1) clearError("totalBudget"); }, [totalBudget]);
+  useEffect(() => { if (startDate) clearError("startDate", "dates"); }, [startDate]);
+  useEffect(() => { if (endDate) { const today = new Date(); today.setHours(0,0,0,0); if (new Date(endDate) >= today) clearError("endDate", "dates"); } }, [endDate]);
+
   const updateList = (key: string, updates: Partial<TargetingState>) => {
     setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
   };
