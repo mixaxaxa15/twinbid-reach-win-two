@@ -345,6 +345,8 @@ const translations: Record<string, Record<Lang, string>> = {
   "create.next": { ru: "Далее", en: "Next" },
   "create.createBtn": { ru: "Создать кампанию", en: "Create campaign" },
   "create.created": { ru: "Кампания создана и отправлена на модерацию!", en: "Campaign created and sent for moderation!" },
+  "create.draftSaved": { ru: "Кампания сохранена в черновики", en: "Campaign saved as draft" },
+  "create.draftSavedDesc": { ru: "Создание кампании не завершено. Вы можете продолжить редактирование в любое время.", en: "Campaign creation is not finished. You can continue editing at any time." },
   "create.uploadImage": { ru: "Загрузить изображение", en: "Upload image" },
   "create.imageUploaded": { ru: "Изображение загружено", en: "Image uploaded" },
   "create.imageFormatError": { ru: "Неверный формат. Поддерживаются: PNG, JPG, JPEG", en: "Invalid format. Supported: PNG, JPG, JPEG" },
