@@ -88,7 +88,7 @@ export default function CreateCampaign() {
   const validateStep3 = () => {
     const e: Record<string, string> = {};
     const tb = parseNum(totalBudget);
-    if (!totalBudget || isNaN(tb) || tb < 100) e.totalBudget = t("edit.errorBudgetMin");
+    if (!totalBudget || isNaN(tb) || tb < 1) e.totalBudget = t("edit.errorBudgetMin");
     const pv = parseNum(priceValue);
     const { min } = getMinPrice();
     if (!priceValue || isNaN(pv) || pv < min) e.priceValue = `${t("budget.belowMin")} ($${min})`;

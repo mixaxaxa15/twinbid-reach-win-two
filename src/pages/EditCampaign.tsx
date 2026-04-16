@@ -72,6 +72,7 @@ export default function EditCampaign() {
       setTrafficType(campaign.trafficType || "mainstream");
       setInitialTrafficType(campaign.trafficType || "mainstream");
       setVerticals(campaign.verticals || []);
+      setInitialBannerSize(campaign.bannerSize || "");
     }
   }, [campaign]);
 
@@ -79,8 +80,10 @@ export default function EditCampaign() {
     return JSON.stringify(creatives) !== JSON.stringify(initialCreatives);
   }, [creatives, initialCreatives]);
 
+  const [initialBannerSize, setInitialBannerSize] = useState("");
+  const hasBannerSizeChanged = showBannerSize && bannerSize !== initialBannerSize;
   const hasTrafficTypeChanged = trafficType !== initialTrafficType;
-  const needsModeration = hasCreativeChanged || hasTrafficTypeChanged;
+  const needsModeration = hasCreativeChanged || hasTrafficTypeChanged || hasBannerSizeChanged;
 
   const isRestart = campaign?.status === "completed";
   const showBannerSize = campaign?.formatKey === "banner";
@@ -104,7 +107,7 @@ export default function EditCampaign() {
   const handleSave = () => {
     const e: Record<string, string> = {};
     const tb = parseNum(totalBudget);
-    if (!totalBudget || isNaN(tb) || tb < 100) e.totalBudget = t("edit.errorBudgetMin");
+    if (!totalBudget || isNaN(tb) || tb < 1) e.totalBudget = t("edit.errorBudgetMin");
 
     const formatMins: Record<string, Record<TrafficQuality, number>> = {
       banner: { common: 0.01, high: 0.01, ultra: 0.01 },
