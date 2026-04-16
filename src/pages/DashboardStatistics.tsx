@@ -520,7 +520,7 @@ export default function DashboardStatistics() {
                       ) : (
                         <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }} />
                       )}
-                      <Area type="monotone" dataKey={chartMetric} stroke="hsl(var(--primary))" fill="url(#grad-metric)" strokeWidth={2} />
+                      <Area type="monotone" dataKey={chartMetric} stroke="hsl(var(--primary))" fill="url(#grad-metric)" strokeWidth={2} animationBegin={0} animationDuration={1500} animationEasing="ease-out" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
