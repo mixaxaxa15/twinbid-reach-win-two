@@ -188,7 +188,7 @@ export default function CreateCampaign() {
             <>
               <div className="space-y-2">
                 <Label>{t("create.trafficType")} *</Label>
-                <Select value={trafficType} onValueChange={(v) => setTrafficType(v as TrafficType)}>
+                <Select value={trafficType} onValueChange={(v) => { setTrafficType(v as TrafficType); if (v === "mainstream") setVerticals(prev => prev.filter(x => x !== "Adult")); }}>
                   <SelectTrigger className="bg-background border-border">
                     <SelectValue />
                   </SelectTrigger>
