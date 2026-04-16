@@ -81,13 +81,12 @@ export default function EditCampaign() {
   }, [creatives, initialCreatives]);
 
   const [initialBannerSize, setInitialBannerSize] = useState("");
-  const hasBannerSizeChanged = showBannerSize && bannerSize !== initialBannerSize;
-  const hasTrafficTypeChanged = trafficType !== initialTrafficType;
-  const needsModeration = hasCreativeChanged || hasTrafficTypeChanged || hasBannerSizeChanged;
-
   const isRestart = campaign?.status === "completed";
   const showBannerSize = campaign?.formatKey === "banner";
   const showBrandName = campaign?.formatKey === "native" || campaign?.formatKey === "push";
+  const hasBannerSizeChanged = showBannerSize && bannerSize !== initialBannerSize;
+  const hasTrafficTypeChanged = trafficType !== initialTrafficType;
+  const needsModeration = hasCreativeChanged || hasTrafficTypeChanged || hasBannerSizeChanged;
 
   if (!campaign) {
     return (
