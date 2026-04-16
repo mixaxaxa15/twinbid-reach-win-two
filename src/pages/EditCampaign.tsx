@@ -239,7 +239,7 @@ export default function EditCampaign() {
               </div>
               <div className="space-y-2">
                 <Label>{t("edit.name")} *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)}
+                <Input value={name} onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
                   className={`bg-background border-border ${errors.name ? "border-destructive" : ""}`} />
                 {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
               </div>
@@ -252,7 +252,7 @@ export default function EditCampaign() {
               {showBannerSize && (
                 <div className="space-y-2">
                   <Label>{t("create.bannerSize")} *</Label>
-                  <Select value={bannerSize} onValueChange={setBannerSize}>
+                  <Select value={bannerSize} onValueChange={(v) => { setBannerSize(v); clearError("bannerSize"); }}>
                     <SelectTrigger className={`bg-background border-border ${errors.bannerSize ? "border-destructive" : ""}`}>
                       <SelectValue placeholder={t("create.selectBannerSize")} />
                     </SelectTrigger>
@@ -274,7 +274,7 @@ export default function EditCampaign() {
 
               <div className="pt-2">
                 <p className="text-sm font-medium text-muted-foreground mb-3">{t("create.creatives")}</p>
-                <CreativesEditor formatKey={campaign.formatKey} creatives={creatives} onChange={setCreatives} errors={errors} />
+                <CreativesEditor formatKey={campaign.formatKey} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
               </div>
             </CardContent>
           </Card>
