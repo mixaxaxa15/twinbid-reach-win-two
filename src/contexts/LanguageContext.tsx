@@ -499,6 +499,10 @@ const translations: Record<string, Record<Lang, string>> = {
   // Settings - campaign budget alert
   "settings.campaignBudgetAlert": { ru: "Бюджет кампании", en: "Campaign budget" },
   "settings.campaignBudgetAlertDesc": { ru: "Уведомление при остатке менее 10% бюджета кампании", en: "Notification when less than 10% of campaign budget remains" },
+
+  // Budget notification
+  "notif.campaignBudgetLow": { ru: "Бюджет кампании заканчивается", en: "Campaign budget running low" },
+  "notif.budgetRemaining": { ru: "бюджета осталось", en: "budget remaining" },
 };
 
 interface LanguageContextType {
