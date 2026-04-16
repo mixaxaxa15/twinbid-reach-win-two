@@ -44,9 +44,18 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
     onChange(creatives.filter(c => c.id !== id));
   };
 
+  const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg"];
+  const ALLOWED_EXTENSIONS = [".png", ".jpg", ".jpeg"];
+
   const handleImageUpload = (creativeId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+      if (!ALLOWED_EXTENSIONS.includes(ext) && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        toast.error(t("create.imageFormatError"));
+        e.target.value = "";
+        return;
+      }
       const url = URL.createObjectURL(file);
       updateCreative(creativeId, { imageUrl: url, imageFileName: file.name });
       toast.success(t("create.imageUploaded"));
@@ -95,7 +104,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
             </div>
 
             <div className="space-y-2">
-              <Label>{t("create.creativeName")} *</Label>
+              <Label>{t("create.creativeName")}</Label>
               <Input value={creative.name || ""} onChange={e => updateCreative(creative.id, { name: e.target.value })}
                 placeholder={t("create.creativeNamePlaceholder")}
                 className={`bg-background border-border ${errors[`creative_${creative.id}_name`] ? "border-destructive" : ""}`} />
@@ -105,7 +114,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
 
             {showTitle && (
               <div className="space-y-2">
-                <Label>Title *</Label>
+                <Label>{t("create.creativeTitle")} *</Label>
                 <Input value={creative.title || ""} onChange={e => updateCreative(creative.id, { title: e.target.value })}
                   placeholder={t("create.titlePlaceholder")}
                   className={`bg-background border-border ${errors[`creative_${creative.id}_title`] ? "border-destructive" : ""}`} />
@@ -115,20 +124,20 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
 
             {showDescription && (
               <div className="space-y-2">
-                <Label>Description ({t("create.optional")})</Label>
+                <Label>{t("create.creativeDescription")}</Label>
                 <Textarea value={creative.description || ""} onChange={e => updateCreative(creative.id, { description: e.target.value })}
                   placeholder={t("create.descriptionPlaceholder")} className="bg-background border-border resize-none" rows={2} />
               </div>
             )}
 
             <div className="space-y-2">
-              <Label>URL *</Label>
+              <Label>{t("create.creativeUrl")} *</Label>
               <Input value={creative.url} onChange={e => updateCreative(creative.id, { url: e.target.value })}
                 placeholder="https://example.com/landing"
                 className={`bg-background border-border ${errors[`creative_${creative.id}_url`] ? "border-destructive" : ""}`} />
               {errors[`creative_${creative.id}_url`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_url`]}</p>}
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">{t("create.urlMacrosHint") || "Click to add tracking macros:"}</p>
+                <p className="text-xs text-muted-foreground">{t("create.urlMacrosHint")}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {URL_MACROS.map(macro => {
                     const isActive = activeMacros.has(macro);
@@ -156,8 +165,9 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
                 <Label>{t("create.uploadImage")} *</Label>
                 <input
                   ref={el => { fileInputRefs.current[creative.id] = el; }}
-                  type="file" accept="image/*" className="hidden"
+                  type="file" accept=".png,.jpg,.jpeg" className="hidden"
                   onChange={e => handleImageUpload(creative.id, e)} />
+                <p className="text-xs text-muted-foreground">{t("create.imageFormatHint")}</p>
                 <div className="flex items-center gap-3">
                   <Button type="button" variant="outline" onClick={() => fileInputRefs.current[creative.id]?.click()} className="border-border gap-2">
                     <Upload className="h-4 w-4" /> {t("create.uploadImage")}

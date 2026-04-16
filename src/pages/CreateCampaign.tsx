@@ -188,7 +188,7 @@ export default function CreateCampaign() {
             <>
               <div className="space-y-2">
                 <Label>{t("create.trafficType")} *</Label>
-                <Select value={trafficType} onValueChange={(v) => setTrafficType(v as TrafficType)}>
+                <Select value={trafficType} onValueChange={(v) => { setTrafficType(v as TrafficType); if (v === "mainstream") setVerticals(prev => prev.filter(x => x !== "Adult")); }}>
                   <SelectTrigger className="bg-background border-border">
                     <SelectValue />
                   </SelectTrigger>
@@ -201,9 +201,9 @@ export default function CreateCampaign() {
                 <p className="text-xs text-muted-foreground">{t("create.trafficTypeHint")}</p>
               </div>
               <div className="space-y-2">
-                <Label>{t("create.vertical")} ({t("create.optional")})</Label>
+                <Label>{t("create.vertical")}</Label>
                 <div className="flex flex-wrap gap-2">
-                  {VERTICALS.map(v => {
+                  {VERTICALS.filter(v => trafficType === "mainstream" ? v !== "Adult" : true).map(v => {
                     const isChecked = verticals.includes(v);
                     return (
                       <button
@@ -261,7 +261,7 @@ export default function CreateCampaign() {
 
               {showBrandName && (
                 <div className="space-y-2">
-                  <Label>{t("create.brandName")} ({t("create.optional")})</Label>
+                  <Label>{t("create.brandName")}</Label>
                   <Input value={brandName} onChange={(e) => setBrandName(e.target.value)}
                     placeholder={t("create.brandNamePlaceholder")} className="bg-background border-border" />
                 </div>

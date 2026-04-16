@@ -295,7 +295,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "settings.security": { ru: "Безопасность", en: "Security" },
   "settings.name": { ru: "Имя", en: "Name" },
   "settings.email": { ru: "Email", en: "Email" },
-  "settings.telegram": { ru: "Telegram (опционально)", en: "Telegram (optional)" },
+  "settings.telegram": { ru: "Telegram", en: "Telegram" },
   "settings.timezone": { ru: "Часовой пояс", en: "Timezone" },
   "settings.save": { ru: "Сохранить", en: "Save" },
   "settings.saved": { ru: "Настройки сохранены", en: "Settings saved" },
@@ -347,6 +347,12 @@ const translations: Record<string, Record<Lang, string>> = {
   "create.created": { ru: "Кампания создана и отправлена на модерацию!", en: "Campaign created and sent for moderation!" },
   "create.uploadImage": { ru: "Загрузить изображение", en: "Upload image" },
   "create.imageUploaded": { ru: "Изображение загружено", en: "Image uploaded" },
+  "create.imageFormatError": { ru: "Неверный формат. Поддерживаются: PNG, JPG, JPEG", en: "Invalid format. Supported: PNG, JPG, JPEG" },
+  "create.imageFormatHint": { ru: "Поддерживаемые форматы: PNG, JPG, JPEG", en: "Supported formats: PNG, JPG, JPEG" },
+  "create.creativeTitle": { ru: "Заголовок", en: "Title" },
+  "create.creativeDescription": { ru: "Описание", en: "Description" },
+  "create.creativeUrl": { ru: "Ссылка", en: "URL" },
+  "create.urlMacrosHint": { ru: "Нажмите для добавления макросов отслеживания:", en: "Click to add tracking macros:" },
   "create.endDateError": { ru: "Дата окончания не может быть раньше сегодняшнего дня", en: "End date cannot be earlier than today" },
   "create.endDateRequired": { ru: "Укажите корректные даты для завершения создания", en: "Specify valid dates to complete creation" },
 
@@ -384,8 +390,8 @@ const translations: Record<string, Record<Lang, string>> = {
   "targeting.scheduleHint": { ru: "Кликните или протяните мышью для выбора часов. Кликните на день/час для выделения целого ряда/столбца", en: "Click or drag to select hours. Click a day/hour header to toggle an entire row/column" },
   "targeting.selectAll": { ru: "Все", en: "All" },
   "targeting.deselectAll": { ru: "Снять", en: "Clear" },
-  "targeting.ipHint": { ru: "Введите IPv4 или IPv6 адреса через запятую", en: "Enter IPv4 or IPv6 addresses, comma-separated" },
-  "targeting.ipFormatError": { ru: "Неверный формат IP. Допускаются только IPv4 и IPv6 адреса", en: "Invalid IP format. Only IPv4 and IPv6 addresses are allowed" },
+  "targeting.ipHint": { ru: "Введите IPv4 адреса через запятую", en: "Enter IPv4 addresses, comma-separated" },
+  "targeting.ipFormatError": { ru: "Неверный формат IP. Допускаются только IPv4 адреса", en: "Invalid IP format. Only IPv4 addresses are allowed" },
 
   // Days of week
   "day.monday": { ru: "Понедельник", en: "Monday" },
@@ -399,7 +405,7 @@ const translations: Record<string, Record<Lang, string>> = {
   // Budget Section
   "budget.totalBudget": { ru: "Общий бюджет *", en: "Total budget *" },
   "budget.totalBudgetHint": { ru: "Обязательное поле. Минимум $1", en: "Required field. Minimum $1" },
-  "budget.dailyBudget": { ru: "Дневной бюджет (опционально)", en: "Daily budget (optional)" },
+  "budget.dailyBudget": { ru: "Дневной бюджет", en: "Daily budget" },
   "budget.dailyBudgetPlaceholder": { ru: "Без ограничений", en: "No limit" },
   "budget.trafficType": { ru: "Тип трафика *", en: "Traffic type *" },
   "budget.trafficCommon": { ru: "Фильтрация на стороне партнёра + фильтрация TwinBid. Базовый сегмент: хорошие объёмы при контроле качества.", en: "Partner-side filtering + TwinBid filtering. Base segment: good volumes with quality control." },
