@@ -106,7 +106,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
 
             <div className="space-y-2">
               <Label>{t("create.creativeName")} *</Label>
-              <Input value={creative.name || ""} onChange={e => updateCreative(creative.id, { name: e.target.value })}
+              <Input value={creative.name || ""} onChange={e => { updateCreative(creative.id, { name: e.target.value }); if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_name`); }}
                 placeholder={t("create.creativeNamePlaceholder")}
                 className={`bg-background border-border ${errors[`creative_${creative.id}_name`] ? "border-destructive" : ""}`} />
               <p className="text-xs text-muted-foreground">{t("create.creativeNameHint")}</p>
@@ -116,7 +116,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
             {showTitle && (
               <div className="space-y-2">
                 <Label>{t("create.creativeTitle")} *</Label>
-                <Input value={creative.title || ""} onChange={e => updateCreative(creative.id, { title: e.target.value })}
+                <Input value={creative.title || ""} onChange={e => { updateCreative(creative.id, { title: e.target.value }); if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_title`); }}
                   placeholder={t("create.titlePlaceholder")}
                   className={`bg-background border-border ${errors[`creative_${creative.id}_title`] ? "border-destructive" : ""}`} />
                 {errors[`creative_${creative.id}_title`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_title`]}</p>}
@@ -133,7 +133,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
 
             <div className="space-y-2">
               <Label>{t("create.creativeUrl")} *</Label>
-              <Input value={creative.url} onChange={e => updateCreative(creative.id, { url: e.target.value })}
+              <Input value={creative.url} onChange={e => { updateCreative(creative.id, { url: e.target.value }); if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_url`); }}
                 placeholder="https://example.com/landing"
                 className={`bg-background border-border ${errors[`creative_${creative.id}_url`] ? "border-destructive" : ""}`} />
               {errors[`creative_${creative.id}_url`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_url`]}</p>}
