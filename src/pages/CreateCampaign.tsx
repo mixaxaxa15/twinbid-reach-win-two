@@ -71,7 +71,21 @@ export default function CreateCampaign() {
   useEffect(() => { if (totalBudget && parseNum(totalBudget) >= 1) clearError("totalBudget"); }, [totalBudget]);
   useEffect(() => { if (startDate) clearError("startDate", "dates"); }, [startDate]);
   useEffect(() => { if (endDate) { const today = new Date(); today.setHours(0,0,0,0); if (new Date(endDate) >= today) clearError("endDate", "dates"); } }, [endDate]);
-  useEffect(() => { if (priceValue) { const pv = parseNum(priceValue); const { min } = getMinPrice(); if (pv >= min) clearError("priceValue"); } }, [priceValue, pricingModel, trafficQuality, adFormat]);
+  useEffect(() => {
+    if (priceValue) {
+      const pv = parseNum(priceValue);
+      const formatMins: Record<string, Record<TrafficQuality, number>> = {
+        banner: { common: 0.01, high: 0.01, ultra: 0.01 },
+        native: { common: 0.01, high: 0.01, ultra: 0.01 },
+        push: { common: 0.005, high: 0.005, ultra: 0.005 },
+        popunder: { common: 0.3, high: 0.7, ultra: 0.9 },
+      };
+      const mins = formatMins[adFormat] || formatMins.banner;
+      const minCpm = mins[trafficQuality];
+      const min = pricingModel === "cpc" ? +(minCpm * 1.7 / 1000).toFixed(5) : minCpm;
+      if (pv >= min) clearError("priceValue");
+    }
+  }, [priceValue, pricingModel, trafficQuality, adFormat]);
 
   const updateList = (key: string, updates: Partial<TargetingState>) => {
     setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
