@@ -19,11 +19,12 @@ interface CreativesEditorProps {
   creatives: Creative[];
   onChange: (creatives: Creative[]) => void;
   errors?: Record<string, string>;
+  onClearError?: (...keys: string[]) => void;
 }
 
 const generateId = () => String(Date.now()) + Math.random().toString(36).slice(2, 6);
 
-export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }: CreativesEditorProps) {
+export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, onClearError }: CreativesEditorProps) {
   const { t } = useLanguage();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
