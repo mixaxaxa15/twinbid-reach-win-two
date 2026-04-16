@@ -19,11 +19,12 @@ interface CreativesEditorProps {
   creatives: Creative[];
   onChange: (creatives: Creative[]) => void;
   errors?: Record<string, string>;
+  onClearError?: (...keys: string[]) => void;
 }
 
 const generateId = () => String(Date.now()) + Math.random().toString(36).slice(2, 6);
 
-export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }: CreativesEditorProps) {
+export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, onClearError }: CreativesEditorProps) {
   const { t } = useLanguage();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -58,6 +59,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
       }
       const url = URL.createObjectURL(file);
       updateCreative(creativeId, { imageUrl: url, imageFileName: file.name });
+      onClearError?.(`creative_${creativeId}_image`);
       toast.success(t("create.imageUploaded"));
     }
   };
@@ -104,8 +106,8 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
             </div>
 
             <div className="space-y-2">
-              <Label>{t("create.creativeName")}</Label>
-              <Input value={creative.name || ""} onChange={e => updateCreative(creative.id, { name: e.target.value })}
+              <Label>{t("create.creativeName")} *</Label>
+              <Input value={creative.name || ""} onChange={e => { updateCreative(creative.id, { name: e.target.value }); if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_name`); }}
                 placeholder={t("create.creativeNamePlaceholder")}
                 className={`bg-background border-border ${errors[`creative_${creative.id}_name`] ? "border-destructive" : ""}`} />
               <p className="text-xs text-muted-foreground">{t("create.creativeNameHint")}</p>
@@ -115,7 +117,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
             {showTitle && (
               <div className="space-y-2">
                 <Label>{t("create.creativeTitle")} *</Label>
-                <Input value={creative.title || ""} onChange={e => updateCreative(creative.id, { title: e.target.value })}
+                <Input value={creative.title || ""} onChange={e => { updateCreative(creative.id, { title: e.target.value }); if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_title`); }}
                   placeholder={t("create.titlePlaceholder")}
                   className={`bg-background border-border ${errors[`creative_${creative.id}_title`] ? "border-destructive" : ""}`} />
                 {errors[`creative_${creative.id}_title`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_title`]}</p>}
@@ -132,7 +134,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {} }:
 
             <div className="space-y-2">
               <Label>{t("create.creativeUrl")} *</Label>
-              <Input value={creative.url} onChange={e => updateCreative(creative.id, { url: e.target.value })}
+              <Input value={creative.url} onChange={e => { updateCreative(creative.id, { url: e.target.value }); if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_url`); }}
                 placeholder="https://example.com/landing"
                 className={`bg-background border-border ${errors[`creative_${creative.id}_url`] ? "border-destructive" : ""}`} />
               {errors[`creative_${creative.id}_url`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_url`]}</p>}
