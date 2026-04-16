@@ -497,7 +497,13 @@ export default function DashboardStatistics() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="h-[280px]">
+                <div className="h-[280px] animate-[reveal-chart_1.2s_ease-out_forwards]" style={{ clipPath: 'inset(0 0 0 0)' }}>
+                  <style>{`
+                    @keyframes reveal-chart {
+                      from { clip-path: inset(0 100% 0 0); }
+                      to { clip-path: inset(0 0 0 0); }
+                    }
+                  `}</style>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
@@ -520,7 +526,7 @@ export default function DashboardStatistics() {
                       ) : (
                         <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }} />
                       )}
-                      <Area type="monotone" dataKey={chartMetric} stroke="hsl(var(--primary))" fill="url(#grad-metric)" strokeWidth={2} />
+                      <Area type="monotone" dataKey={chartMetric} stroke="hsl(var(--primary))" fill="url(#grad-metric)" strokeWidth={2} isAnimationActive={false} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
