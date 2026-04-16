@@ -59,6 +59,12 @@ export default function CreateCampaign() {
   const [evenSpend, setEvenSpend] = useState(false);
   const savedAsDraft = useRef(false);
 
+  const clearError = (...keys: string[]) => setErrors(prev => {
+    const next = { ...prev };
+    keys.forEach(k => delete next[k]);
+    return next;
+  });
+
   const updateList = (key: string, updates: Partial<TargetingState>) => {
     setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
   };
@@ -225,14 +231,14 @@ export default function CreateCampaign() {
               </div>
               <div className="space-y-2">
                 <Label>{t("create.campaignName")}</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)}
+                <Input value={name} onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
                   placeholder={t("create.campaignNamePlaceholder")}
                   className={`bg-background border-border ${errors.name ? "border-destructive" : ""}`} />
                 {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
               </div>
               <div className="space-y-2">
                 <Label>{t("create.adFormat")}</Label>
-                <Select value={adFormat} onValueChange={(v) => { setAdFormat(v); setCreatives([{ id: generateId(), url: "" }]); }}>
+                <Select value={adFormat} onValueChange={(v) => { setAdFormat(v); clearError("adFormat"); setCreatives([{ id: generateId(), url: "" }]); }}>
                   <SelectTrigger className={`bg-background border-border ${errors.adFormat ? "border-destructive" : ""}`}>
                     <SelectValue placeholder={t("create.selectFormat")} />
                   </SelectTrigger>
@@ -248,7 +254,7 @@ export default function CreateCampaign() {
               {showBannerSize && (
                 <div className="space-y-2">
                   <Label>{t("create.bannerSize")} *</Label>
-                  <Select value={bannerSize} onValueChange={setBannerSize}>
+                  <Select value={bannerSize} onValueChange={(v) => { setBannerSize(v); clearError("bannerSize"); }}>
                     <SelectTrigger className={`bg-background border-border ${errors.bannerSize ? "border-destructive" : ""}`}>
                       <SelectValue placeholder={t("create.selectBannerSize")} />
                     </SelectTrigger>
@@ -272,7 +278,7 @@ export default function CreateCampaign() {
                 <>
                   <div className="pt-2">
                     <p className="text-sm font-medium text-muted-foreground mb-3">{t("create.creatives")}</p>
-                    <CreativesEditor formatKey={adFormat} creatives={creatives} onChange={setCreatives} errors={errors} />
+                    <CreativesEditor formatKey={adFormat} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
                   </div>
                 </>
               )}
