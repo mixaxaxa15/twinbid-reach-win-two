@@ -59,6 +59,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
       }
       const url = URL.createObjectURL(file);
       updateCreative(creativeId, { imageUrl: url, imageFileName: file.name });
+      onClearError?.(`creative_${creativeId}_image`);
       toast.success(t("create.imageUploaded"));
     }
   };
