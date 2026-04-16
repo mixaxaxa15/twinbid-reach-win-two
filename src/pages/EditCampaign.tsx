@@ -88,15 +88,6 @@ export default function EditCampaign() {
   const hasTrafficTypeChanged = trafficType !== initialTrafficType;
   const needsModeration = hasCreativeChanged || hasTrafficTypeChanged || hasBannerSizeChanged;
 
-  if (!campaign) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">{t("edit.notFound")}</p>
-        <Button variant="outline" onClick={() => navigate("/dashboard/campaigns")} className="mt-4">{t("create.back")}</Button>
-      </div>
-    );
-  }
-
   const clearError = (...keys: string[]) => setErrors(prev => {
     const next = { ...prev };
     keys.forEach(k => delete next[k]);
@@ -112,6 +103,15 @@ export default function EditCampaign() {
   const updateList = (key: string, updates: Partial<TargetingState>) => {
     setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
   };
+
+  if (!campaign) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">{t("edit.notFound")}</p>
+        <Button variant="outline" onClick={() => navigate("/dashboard/campaigns")} className="mt-4">{t("create.back")}</Button>
+      </div>
+    );
+  }
 
   const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
