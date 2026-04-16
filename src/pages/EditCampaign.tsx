@@ -97,6 +97,12 @@ export default function EditCampaign() {
     );
   }
 
+  const clearError = (...keys: string[]) => setErrors(prev => {
+    const next = { ...prev };
+    keys.forEach(k => delete next[k]);
+    return next;
+  });
+
   const updateList = (key: string, updates: Partial<TargetingState>) => {
     setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
   };
