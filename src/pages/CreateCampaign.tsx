@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type ListMode, type Creative, type Vertical, VERTICALS } from "@/contexts/CampaignContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import { TargetingSection, targetingConfigs } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
@@ -39,6 +40,7 @@ export default function CreateCampaign() {
   const navigate = useNavigate();
   const { addCampaign } = useCampaigns();
   const { t } = useLanguage();
+  const { addNotification } = useNotifications();
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [trafficType, setTrafficType] = useState<TrafficType>("mainstream");
@@ -65,10 +67,11 @@ export default function CreateCampaign() {
     return next;
   });
 
-  // Reactively clear budget/date errors
+  // Reactively clear budget/date/price errors
   useEffect(() => { if (totalBudget && parseNum(totalBudget) >= 1) clearError("totalBudget"); }, [totalBudget]);
   useEffect(() => { if (startDate) clearError("startDate", "dates"); }, [startDate]);
   useEffect(() => { if (endDate) { const today = new Date(); today.setHours(0,0,0,0); if (new Date(endDate) >= today) clearError("endDate", "dates"); } }, [endDate]);
+  useEffect(() => { if (priceValue) { const pv = parseNum(priceValue); const { min } = getMinPrice(); if (pv >= min) clearError("priceValue"); } }, [priceValue, pricingModel, trafficQuality, adFormat]);
 
   const updateList = (key: string, updates: Partial<TargetingState>) => {
     setLists(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
@@ -167,7 +170,14 @@ export default function CreateCampaign() {
     });
   };
 
-  const handleBack = () => { saveDraft(); navigate("/dashboard/campaigns"); };
+  const handleBack = () => {
+    const wasSaved = !savedAsDraft.current && (name.trim() || adFormat);
+    saveDraft();
+    if (wasSaved) {
+      addNotification({ title: t("create.draftSaved"), description: t("create.draftSavedDesc"), type: "warning" });
+    }
+    navigate("/dashboard/campaigns");
+  };
 
   useEffect(() => { return () => {}; }, []);
 
