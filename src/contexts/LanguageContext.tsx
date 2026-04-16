@@ -398,7 +398,7 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // Budget Section
   "budget.totalBudget": { ru: "Общий бюджет *", en: "Total budget *" },
-  "budget.totalBudgetHint": { ru: "Обязательное поле. Минимум $100", en: "Required field. Minimum $100" },
+  "budget.totalBudgetHint": { ru: "Обязательное поле. Минимум $1", en: "Required field. Minimum $1" },
   "budget.dailyBudget": { ru: "Дневной бюджет (опционально)", en: "Daily budget (optional)" },
   "budget.dailyBudgetPlaceholder": { ru: "Без ограничений", en: "No limit" },
   "budget.trafficType": { ru: "Тип трафика *", en: "Traffic type *" },
@@ -490,8 +490,19 @@ const translations: Record<string, Record<Lang, string>> = {
   "budget.selectDate": { ru: "Выберите дату", en: "Select date" },
 
   // Edit campaign errors
-  "edit.errorBudgetMin": { ru: "Бюджет кампании должен быть не менее $100", en: "Campaign budget must be at least $100" },
+  "edit.errorBudgetMin": { ru: "Бюджет кампании должен быть не менее $1", en: "Campaign budget must be at least $1" },
   "edit.restartedActive": { ru: "Кампания перезапущена", en: "Campaign restarted" },
+
+  // Payment
+  "balance.paymentMethod": { ru: "Способ оплаты", en: "Payment method" },
+
+  // Settings - campaign budget alert
+  "settings.campaignBudgetAlert": { ru: "Бюджет кампании", en: "Campaign budget" },
+  "settings.campaignBudgetAlertDesc": { ru: "Уведомление при остатке менее 10% бюджета кампании", en: "Notification when less than 10% of campaign budget remains" },
+
+  // Budget notification
+  "notif.campaignBudgetLow": { ru: "Бюджет кампании заканчивается", en: "Campaign budget running low" },
+  "notif.budgetRemaining": { ru: "бюджета осталось", en: "budget remaining" },
 };
 
 interface LanguageContextType {

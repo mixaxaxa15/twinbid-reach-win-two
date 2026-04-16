@@ -105,10 +105,11 @@ export default function DashboardBalance() {
 
   const handleTopUp = () => {
     if (!finalAmount || finalAmount < 100) return;
-    if (hasPendingRequest || pendingPayment) {
+    if (hasPendingRequest && !pendingPayment) {
       toast.error(t("balance.toast.pendingExists"));
       return;
     }
+    if (pendingPayment) return;
     setPendingPayment({ amount: finalAmount, method: selectedMethod, promo: appliedPromo?.code, bonus: appliedPromo?.bonus });
     setTxHash("");
     setShowTxDialog(true);
@@ -288,7 +289,7 @@ export default function DashboardBalance() {
             </div>
 
             <div className="space-y-2">
-              <Label>{t("balance.network")}</Label>
+              <Label>{t("balance.paymentMethod")}</Label>
               <div className="grid sm:grid-cols-2 gap-3">
                 {usdtMethods.map((m) => (
                   <button key={m.id} onClick={() => setSelectedMethod(m.id)}
@@ -333,7 +334,7 @@ export default function DashboardBalance() {
             </div>
 
             <Button onClick={handleTopUp} className="bg-accent hover:bg-accent/90 text-accent-foreground"
-              disabled={!finalAmount || finalAmount < 100 || hasPendingRequest}>
+              disabled={!finalAmount || finalAmount < 100 || (hasPendingRequest && !pendingPayment)}>
               {t("balance.topUpBtn")} {finalAmount ? `$${finalAmount.toLocaleString()}` : ""}
               {appliedPromo && finalAmount ? ` (+${Math.floor(finalAmount * appliedPromo.bonus / 100)}$ ${t("balance.promo.bonusShort")})` : ""}
             </Button>
