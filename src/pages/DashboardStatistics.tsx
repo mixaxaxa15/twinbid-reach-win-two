@@ -464,7 +464,7 @@ export default function DashboardStatistics() {
             )}
           </div>
           <div className="flex flex-wrap gap-4">
-            <MultiSelectFilter label={t("stats.filterCountry")} options={DIMENSION_MAP.country} selected={filterCountry} onChange={setFilterCountry} />
+            <MultiSelectFilter label={t("stats.filterCountry")} options={countryOptions} selected={filterCountry} onChange={setFilterCountry} />
             <MultiSelectFilter label={t("stats.filterBrowser")} options={DIMENSION_MAP.browsers} selected={filterBrowser} onChange={setFilterBrowser} />
             <MultiSelectFilter label={t("stats.filterDevice")} options={DIMENSION_MAP.devices} selected={filterDevice} onChange={setFilterDevice} />
             <MultiSelectFilter label={t("stats.filterOS")} options={DIMENSION_MAP.os} selected={filterOS} onChange={setFilterOS} />
