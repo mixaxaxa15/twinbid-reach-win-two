@@ -109,12 +109,14 @@ function applyFilters(
   return filtered;
 }
 
-// Multi-select filter component
+// Multi-select filter component (supports plain string options or {value,label} pairs)
+type FilterOption = string | { value: string; label: string };
 function MultiSelectFilter({ label, options, selected, onChange }: {
-  label: string; options: string[]; selected: Set<string>;
+  label: string; options: FilterOption[]; selected: Set<string>;
   onChange: React.Dispatch<React.SetStateAction<Set<string>>>;
 }) {
   const { t } = useLanguage();
+  const normalized = options.map(o => typeof o === "string" ? { value: o, label: o } : o);
   const toggle = (val: string) => {
     onChange(prev => {
       const next = new Set(prev);
@@ -129,20 +131,20 @@ function MultiSelectFilter({ label, options, selected, onChange }: {
       <Label className="text-xs text-muted-foreground">{label}</Label>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-[160px] justify-start bg-background border-border h-8 text-sm font-normal text-left">
+          <Button variant="outline" className="w-[220px] justify-start bg-background border-border h-8 text-sm font-normal text-left truncate">
             {displayText}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-2" align="start">
+        <PopoverContent className="w-[260px] p-2" align="start">
           <div className="space-y-1 max-h-56 overflow-y-auto">
             <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm font-medium border-b border-border pb-2 mb-1">
               <Checkbox checked={selected.size === 0} onCheckedChange={(checked) => { if (checked) onChange(new Set()); }} />
               {t("stats.allValues")}
             </label>
-            {options.map(opt => (
-              <label key={opt} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
-                <Checkbox checked={selected.has(opt)} onCheckedChange={() => toggle(opt)} />
-                {opt}
+            {normalized.map(opt => (
+              <label key={opt.value} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                <Checkbox checked={selected.has(opt.value)} onCheckedChange={() => toggle(opt.value)} />
+                <span className="truncate">{opt.label}</span>
               </label>
             ))}
           </div>
