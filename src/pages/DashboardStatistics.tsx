@@ -594,7 +594,9 @@ export default function DashboardStatistics() {
                     <tbody>
                       {sortedData.map((row) => (
                         <tr key={row.label} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                          <td className="py-3 px-4 font-medium truncate">{row.label}</td>
+                          <td className="py-3 px-4 font-medium truncate">
+                            {appliedGroupBy === "country" ? formatCountryLabel(row.label, lang) : row.label}
+                          </td>
                           <td className="py-3 px-4">{row.impressions.toLocaleString()}</td>
                           <td className="py-3 px-4">{row.clicks.toLocaleString()}</td>
                           <td className="py-3 px-4">{row.impressions > 0 ? ((row.clicks / row.impressions) * 100).toFixed(2) : "0.00"}%</td>
