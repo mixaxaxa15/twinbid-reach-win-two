@@ -105,11 +105,10 @@ export default function DashboardBalance() {
 
   const handleTopUp = () => {
     if (!finalAmount || finalAmount < 100) return;
-    if (hasPendingRequest && !pendingPayment) {
-      toast.error(t("balance.toast.pendingExists"));
+    if (pendingPayment) {
+      toast.error(t("balance.disabledReason"));
       return;
     }
-    if (pendingPayment) return;
     setPendingPayment({ amount: finalAmount, method: selectedMethod, promo: appliedPromo?.code, bonus: appliedPromo?.bonus });
     setTxHash("");
     setShowTxDialog(true);
