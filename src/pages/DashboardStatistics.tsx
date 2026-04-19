@@ -212,6 +212,24 @@ export default function DashboardStatistics() {
     return result;
   }, [selectedCampaignId, campaigns]);
 
+  // Country filter options with localized name + ISO code
+  const countryOptions = useMemo(
+    () => DIMENSION_MAP.country.map(code => ({ value: code, label: formatCountryLabel(code, lang) })),
+    [lang]
+  );
+
+  // On mount: if nothing applied yet, auto-apply "all active campaigns" + last 7 days.
+  useEffect(() => {
+    if (appliedCampaignIds.size === 0 && activeCampaigns.length > 0) {
+      const defaultRange: DateRange = { from: subDays(new Date(), 6), to: new Date() };
+      setAppliedCampaignIds(new Set(activeCampaigns.map(c => c.id)));
+      // Reflect defaults in the UI controls so the user sees what's applied
+      if (!dateRange?.from) setDateRange(defaultRange);
+      setAppliedDateRange(appliedDateRange ?? defaultRange);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCampaigns]);
+
   const hasSelection = appliedCampaignIds.size > 0 && appliedDateRange?.from;
 
   const data = useMemo(() => {
