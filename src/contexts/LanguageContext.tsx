@@ -190,6 +190,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "balance.notif.notCompleted": { ru: "Оплата не завершена", en: "Payment not completed" },
   "balance.notif.noHash": { ru: "Вы не отправили хэш транзакции на", en: "You did not submit the transaction hash for" },
   "balance.notif.completePayment": { ru: "Завершить оплату", en: "Complete payment" },
+  "balance.disabledReason": { ru: "У вас есть незавершённая оплата — завершите её или отмените, чтобы создать новую.", en: "You have an unfinished payment — complete or cancel it to start a new one." },
   "balance.notif.cancelConfirmTitle": { ru: "Отменить транзакцию?", en: "Cancel transaction?" },
   "balance.notif.cancelConfirmDesc": { ru: "Вы уверены, что хотите отменить незавершённую транзакцию? Это действие нельзя будет отменить.", en: "Are you sure you want to cancel the pending transaction? This action cannot be undone." },
   "balance.notif.cancelConfirmYes": { ru: "Да, отменить", en: "Yes, cancel" },
