@@ -156,7 +156,7 @@ function MultiSelectFilter({ label, options, selected, onChange }: {
 
 export default function DashboardStatistics() {
   const { campaigns } = useCampaigns();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   
   const {
     selectedCampaignIds, setSelectedCampaignIds,
