@@ -183,7 +183,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "balance.toast.pendingExists": { ru: "У вас есть незавершённая оплата. Завершите или отмените её.", en: "You have a pending payment. Complete or cancel it." },
   "balance.toast.enterHash": { ru: "Введите хэш транзакции", en: "Enter transaction hash" },
   "balance.toast.paymentSent": { ru: "Платёж отправлен на проверку. Средства появятся на балансе в ближайшее время.", en: "Payment sent for review. Funds will appear on your balance shortly." },
-  "balance.toast.paymentSupport": { ru: "По вопросам оплаты обращайтесь: @GregTwinbid в Telegram", en: "For payment inquiries contact: @GregTwinbid on Telegram" },
+  "balance.toast.paymentSupport": { ru: "По вопросам оплаты обращайтесь к вашему персональному менеджеру", en: "For payment inquiries please contact your personal manager" },
   "balance.toast.paymentCanceled": { ru: "Оплата отменена", en: "Payment cancelled" },
   "balance.toast.addressCopied": { ru: "Адрес скопирован", en: "Address copied" },
   "balance.toast.notCompleted": { ru: "Оплата не завершена. Проверьте уведомления.", en: "Payment not completed. Check notifications." },
@@ -200,7 +200,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "balance.notif.recommend": { ru: "Рекомендуем пополнить счёт.", en: "We recommend topping up." },
   "balance.notif.topUp": { ru: "Пополнить", en: "Top up" },
   "balance.notif.paymentSuccess": { ru: "Платёж отправлен", en: "Payment submitted" },
-  "balance.notif.paymentSuccessDesc": { ru: "Платёж на сумму ${amount} отправлен на проверку. По вопросам: @GregTwinbid в Telegram", en: "Payment of ${amount} sent for review. For inquiries: @GregTwinbid on Telegram" },
+  "balance.notif.paymentSuccessDesc": { ru: "Платёж на сумму ${amount} отправлен на проверку. По вопросам обратитесь к вашему менеджеру.", en: "Payment of ${amount} sent for review. For any questions please contact your manager." },
 
   // Statistics
   "stats.title": { ru: "Статистика", en: "Statistics" },
