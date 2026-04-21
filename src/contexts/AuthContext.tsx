@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { DEFAULT_MANAGER_TELEGRAM } from "@/lib/constants";
 
 interface AuthContextType {
   user: User | null;
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        data: { full_name: fullName || "" },
+        data: { full_name: fullName || "", manager_telegram: DEFAULT_MANAGER_TELEGRAM },
         emailRedirectTo: window.location.origin,
       },
     });
