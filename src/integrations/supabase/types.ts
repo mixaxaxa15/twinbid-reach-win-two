@@ -170,7 +170,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
-          manager_telegram?: string
+          manager_telegram: string
           notify_campaign_status?: boolean
           notify_low_balance?: boolean
           telegram?: string | null
