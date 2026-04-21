@@ -35,7 +35,7 @@ function mapProfileFromDb(row: any): Profile {
     balanceThreshold: Number(row.balance_threshold) || 100,
     notifyCampaignStatus: row.notify_campaign_status ?? true,
     notifyLowBalance: row.notify_low_balance ?? true,
-    managerTelegram: row.manager_telegram || "GregTwinbid",
+    managerTelegram: row.manager_telegram || "",
   };
 }
 
