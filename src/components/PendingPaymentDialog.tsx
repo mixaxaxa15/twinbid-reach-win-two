@@ -9,6 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { usePendingPayment } from "@/contexts/PendingPaymentContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const usdtMethods = [
@@ -22,6 +23,8 @@ let pendingNotifId: string | null = null;
 export function PendingPaymentDialog() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { profile } = useProfile();
+  const managerTg = profile?.managerTelegram || "GregTwinbid";
   const { addNotification, removeNotification } = useNotifications();
   const {
     pendingPayment, setPendingPayment,
@@ -84,10 +87,6 @@ export function PendingPaymentDialog() {
     toast.success(t("balance.toast.paymentSent"), {
       duration: 8000,
       description: t("balance.toast.paymentSupport"),
-      action: {
-        label: "@GregTwinbid",
-        onClick: () => window.open("https://t.me/GregTwinbid", "_blank"),
-      },
     });
 
     addNotification({
@@ -95,10 +94,6 @@ export function PendingPaymentDialog() {
       description: t("balance.notif.paymentSuccessDesc").replace("${amount}", `$${pendingPayment.amount.toLocaleString()}`),
       type: "info",
       persistent: false,
-      action: {
-        label: "@GregTwinbid",
-        onClick: () => window.open("https://t.me/GregTwinbid", "_blank"),
-      },
     });
 
     closeDialog();
@@ -193,7 +188,7 @@ export function PendingPaymentDialog() {
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
             <p className="text-xs text-muted-foreground">
               {t("balance.supportText")}{" "}
-              <a href="https://t.me/GregTwinbid" target="_blank" rel="noopener" className="text-primary hover:underline">@GregTwinbid</a>{" "}
+              <a href={`https://t.me/${managerTg}`} target="_blank" rel="noopener" className="text-primary hover:underline">@{managerTg}</a>{" "}
               {t("balance.inTelegram")}
             </p>
           </div>
