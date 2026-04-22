@@ -11,7 +11,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePendingPayment } from "@/contexts/PendingPaymentContext";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/api";
+import type { ApiUserTransaction } from "@/api/types";
 
 const amounts = [100, 250, 500, 1000, 5000];
 
@@ -20,15 +21,7 @@ const usdtMethods = [
   { id: "usdt_erc20", label: "USDT (ERC-20)", desc: "Tether on Ethereum" },
 ];
 
-interface TopupRequest {
-  id: string;
-  amount: number;
-  created_at: string;
-  payment_method: string;
-  status: "pending" | "approved" | "rejected";
-  promo_code: string | null;
-  bonus_percent: number | null;
-}
+type TopupRequest = ApiUserTransaction;
 
 export default function DashboardBalance() {
   const { t } = useLanguage();
@@ -52,13 +45,14 @@ export default function DashboardBalance() {
   const fetchTopupRequests = async () => {
     if (!user) return;
     setLoadingRequests(true);
-    const { data, error } = await supabase
-      .from("topup_requests")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    if (!error && data) setTopupRequests(data as TopupRequest[]);
-    setLoadingRequests(false);
+    try {
+      const { items } = await api.listTopups();
+      setTopupRequests(items);
+    } catch (e) {
+      console.error("Topups fetch error:", e);
+    } finally {
+      setLoadingRequests(false);
+    }
   };
 
   useEffect(() => { fetchTopupRequests(); }, [user]);
@@ -73,27 +67,22 @@ export default function DashboardBalance() {
   const handleApplyPromo = async () => {
     const code = promoCode.trim().toUpperCase();
     if (!code) return;
-    const { data, error } = await supabase
-      .from("promo_codes")
-      .select("*")
-      .eq("code", code)
-      .eq("is_active", true)
-      .single();
-    if (error || !data) {
+    try {
+      const promo = await api.getPromocode(code);
+      if (promo.valid_to && new Date(promo.valid_to) < new Date()) {
+        toast.error(t("balance.promo.invalid"));
+        return;
+      }
+      if (promo.usage_limit != null && promo.usage_count >= promo.usage_limit) {
+        toast.error(t("balance.promo.invalid"));
+        return;
+      }
+      setAppliedPromo({ code, bonus: Number(promo.bonus_percent) });
+      toast.success(t("balance.promo.applied").replace("{percent}", `${promo.bonus_percent}`));
+    } catch {
       setAppliedPromo(null);
       toast.error(t("balance.promo.invalid"));
-      return;
     }
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
-      toast.error(t("balance.promo.invalid"));
-      return;
-    }
-    if (data.max_uses && data.current_uses >= data.max_uses) {
-      toast.error(t("balance.promo.invalid"));
-      return;
-    }
-    setAppliedPromo({ code, bonus: Number(data.bonus_percent) });
-    toast.success(t("balance.promo.applied").replace("{percent}", `${data.bonus_percent}`));
   };
 
   const handleRemovePromo = () => {
