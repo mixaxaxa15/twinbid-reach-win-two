@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { usePendingPayment } from "@/contexts/PendingPaymentContext";
-import { useProfile } from "@/contexts/ProfileContext";
+
 import { api } from "@/api";
 
 const usdtMethods = [
