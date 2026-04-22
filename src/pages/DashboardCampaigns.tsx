@@ -273,22 +273,25 @@ export default function DashboardCampaigns() {
       <Dialog open={!!viewCampaign} onOpenChange={() => setViewCampaign(null)}>
         <DialogContent className="sm:max-w-[600px] bg-card border-border">
           <DialogHeader><DialogTitle>{viewCampaign?.name}</DialogTitle><DialogDescription>ID: {viewCampaign?.id}</DialogDescription></DialogHeader>
-          {viewCampaign && (
+          {viewCampaign && (() => {
+            const vs = statOf(statsById, viewCampaign.id);
+            return (
             <div className="grid grid-cols-2 gap-4 mt-4">
               {[
                 [t("overview.status"), <Badge variant="outline" className={cn("font-normal", statusConfig[viewCampaign.status]?.className)}>{statusConfig[viewCampaign.status]?.label}</Badge>],
                 [t("campaigns.format"), viewCampaign.format],
                 [t("campaigns.budget"), `$${viewCampaign.budget.toLocaleString()}`],
-                [t("overview.spent"), `$${viewCampaign.spent.toLocaleString()}`],
-                [t("overview.impressions"), viewCampaign.impressions.toLocaleString()],
-                [t("stats.clicks"), viewCampaign.clicks.toLocaleString()],
-                ["CTR", `${viewCampaign.ctr}%`],
+                [t("overview.spent"), `$${vs.spent.toLocaleString()}`],
+                [t("overview.impressions"), vs.impressions.toLocaleString()],
+                [t("stats.clicks"), vs.clicks.toLocaleString()],
+                ["CTR", `${vs.ctr}%`],
                 [t("stats.spent"), `$${viewCampaign.priceValue} (${viewCampaign.pricingModel.toUpperCase()})`],
               ].map(([label, val], i) => (
                 <div key={i} className="space-y-1"><p className="text-sm text-muted-foreground">{label as string}</p><div className="font-medium">{val}</div></div>
               ))}
             </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </>
