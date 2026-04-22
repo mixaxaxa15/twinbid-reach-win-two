@@ -187,7 +187,7 @@ export default function CreateCampaign() {
     const wasSaved = !savedAsDraft.current && (name.trim() || adFormat);
     saveDraft();
     if (wasSaved) {
-      addNotification({ title: t("create.draftSaved"), description: t("create.draftSavedDesc"), type: "warning" });
+      void addNotification({ title: t("create.draftSaved"), description: t("create.draftSavedDesc"), type: "warning" });
     }
     navigate("/dashboard/campaigns");
   };

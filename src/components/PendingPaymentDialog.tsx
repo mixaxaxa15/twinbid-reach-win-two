@@ -3,11 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy, ExternalLink, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { usePendingPayment } from "@/contexts/PendingPaymentContext";
 
 import { api } from "@/api";
@@ -23,7 +24,8 @@ let pendingNotifId: string | null = null;
 export function PendingPaymentDialog() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { addNotification, removeNotification } = useNotifications();
+  const { profile } = useProfile();
+  const { notifications, addNotification, removeNotification, attachHandlers } = useNotifications();
   const {
     pendingPayment, setPendingPayment,
     isDialogOpen, openDialog, closeDialog,
@@ -35,6 +37,32 @@ export function PendingPaymentDialog() {
   useEffect(() => {
     if (isDialogOpen) setTxHash("");
   }, [isDialogOpen]);
+
+  // Re-bind UI handlers to the persisted "incomplete_topup" notification on reload,
+  // and rehydrate pendingPayment from it so the user can resume.
+  useEffect(() => {
+    const persisted = notifications.find(n => n.apiType === "incomplete_topup");
+    if (!persisted) return;
+
+    pendingNotifId = persisted.id;
+
+    if (!pendingPayment && persisted.apiPayload?.deposit_amount) {
+      setPendingPayment({
+        amount: Number(persisted.apiPayload.deposit_amount) || 0,
+        method: "usdt_trc20",
+      });
+    }
+    attachHandlers(persisted.id, {
+      action: { label: t("balance.notif.completePayment"), onClick: () => openDialog() },
+      onDismiss: () => {
+        setPendingPayment(null);
+        setTxHash("");
+        pendingNotifId = null;
+        toast.info(t("balance.toast.paymentCanceled"));
+      },
+    });
+    // We intentionally depend only on the notifications list snapshot
+  }, [notifications]);
 
   const currentMethod = usdtMethods.find(m => m.id === pendingPayment?.method);
 
@@ -84,7 +112,7 @@ export function PendingPaymentDialog() {
       description: t("balance.toast.paymentSupport"),
     });
 
-    addNotification({
+    await addNotification({
       title: t("balance.notif.paymentSuccess"),
       description: t("balance.notif.paymentSuccessDesc").replace("${amount}", `$${pendingPayment.amount.toLocaleString()}`),
       type: "info",
@@ -106,7 +134,7 @@ export function PendingPaymentDialog() {
     toast.info(t("balance.toast.paymentCanceled"));
   };
 
-  const handleOpenChange = (open: boolean) => {
+  const handleOpenChange = async (open: boolean) => {
     if (open) {
       openDialog();
       return;
@@ -116,11 +144,13 @@ export function PendingPaymentDialog() {
       closeDialog();
       // Avoid duplicating the notification
       clearPendingNotif();
-      const id = addNotification({
+      const id = await addNotification({
         title: t("balance.notif.notCompleted"),
         description: `${t("balance.notif.noHash")} $${pendingPayment.amount}`,
         type: "warning",
         persistent: true,
+        apiType: "incomplete_topup",
+        apiPayload: { deposit_amount: pendingPayment.amount },
         action: { label: t("balance.notif.completePayment"), onClick: () => openDialog() },
         onDismiss: () => {
           setPendingPayment(null);
@@ -179,11 +209,22 @@ export function PendingPaymentDialog() {
             {t("balance.cancelPayment")}
           </Button>
 
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
-            <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
-            <p className="text-xs text-muted-foreground">
-              {t("balance.supportText")}
-            </p>
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+            <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p>{t("balance.supportText")}</p>
+              {profile?.managerTelegram && (
+                <a
+                  href={`https://t.me/${profile.managerTelegram}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 transition-colors font-medium"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  @{profile.managerTelegram}
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>

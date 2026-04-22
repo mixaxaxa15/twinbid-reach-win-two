@@ -37,7 +37,7 @@ export function DashboardHeader() {
       .forEach(c => {
         const spent = statOf(statsById, c.id).spent;
         if (spent < c.budget * 0.9) return;
-        addNotification({
+        void addNotification({
           title: t("notif.campaignBudgetLow"),
           description: `${c.name}: ${Math.round((1 - spent / c.budget) * 100)}% ${t("notif.budgetRemaining")}`,
           type: "warning",
