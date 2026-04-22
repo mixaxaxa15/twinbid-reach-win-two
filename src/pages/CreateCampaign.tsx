@@ -52,7 +52,6 @@ export default function CreateCampaign() {
   const [creatives, setCreatives] = useState<Creative[]>([{ id: generateId(), url: "" }]);
   const [lists, setLists] = useState<Record<string, TargetingState>>(defaultTargeting());
   const [totalBudget, setTotalBudget] = useState("");
-  const [dailyBudget, setDailyBudget] = useState("");
   const [priceValue, setPriceValue] = useState("");
   const [pricingModel, setPricingModel] = useState<PricingModel>("cpm");
   const [trafficQuality, setTrafficQuality] = useState<TrafficQuality>("common");
@@ -155,7 +154,7 @@ export default function CreateCampaign() {
   const handleCreate = () => {
     addCampaign({
       name: name.trim(), status: "moderation", format: formatLabels[adFormat] || adFormat,
-      formatKey: adFormat, trafficType, verticals, budget: parseNum(totalBudget), dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
+      formatKey: adFormat, trafficType, verticals, budget: parseNum(totalBudget), dailyBudget: null,
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: parseNum(priceValue),
       trafficQuality, startDate, endDate, creatives,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
@@ -175,7 +174,7 @@ export default function CreateCampaign() {
       name: name.trim() || "Draft", status: "draft",
       format: formatLabels[adFormat] || adFormat || "",
       formatKey: adFormat || "", trafficType, verticals, budget: totalBudget ? parseNum(totalBudget) : 0,
-      dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
+      dailyBudget: null,
       spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: priceValue ? parseNum(priceValue) : 0,
       trafficQuality, startDate, endDate, creatives,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
@@ -320,7 +319,6 @@ export default function CreateCampaign() {
             <BudgetSection
               formatKey={adFormat}
               totalBudget={totalBudget} setTotalBudget={setTotalBudget}
-              dailyBudget={dailyBudget} setDailyBudget={setDailyBudget}
               priceValue={priceValue} setPriceValue={setPriceValue}
               pricingModel={pricingModel} setPricingModel={setPricingModel}
               trafficQuality={trafficQuality} setTrafficQuality={setTrafficQuality}

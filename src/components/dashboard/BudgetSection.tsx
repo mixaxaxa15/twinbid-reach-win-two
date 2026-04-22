@@ -59,8 +59,6 @@ interface BudgetSectionProps {
   formatKey: string;
   totalBudget: string;
   setTotalBudget: (v: string) => void;
-  dailyBudget: string;
-  setDailyBudget: (v: string) => void;
   priceValue: string;
   setPriceValue: (v: string) => void;
   pricingModel: PricingModel;
@@ -77,7 +75,7 @@ interface BudgetSectionProps {
 }
 
 export function BudgetSection({
-  formatKey, totalBudget, setTotalBudget, dailyBudget, setDailyBudget,
+  formatKey, totalBudget, setTotalBudget,
   priceValue, setPriceValue, pricingModel, setPricingModel,
   trafficQuality, setTrafficQuality, startDate, setStartDate, endDate, setEndDate,
   evenSpend, setEvenSpend,
@@ -123,15 +121,6 @@ export function BudgetSection({
         </div>
         {errors.totalBudget && <p className="text-xs text-destructive">{errors.totalBudget}</p>}
         <p className="text-xs text-muted-foreground">{t("budget.totalBudgetHint")}</p>
-      </div>
-
-      <div className="space-y-2">
-        <Label>{t("budget.dailyBudget")}</Label>
-        <div className="relative max-w-xs">
-          <Input value={dailyBudget} onChange={(e) => setDailyBudget(e.target.value)}
-            placeholder={t("budget.dailyBudgetPlaceholder")} className="bg-background border-border pr-8" />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-        </div>
       </div>
 
       <div className="space-y-2">
