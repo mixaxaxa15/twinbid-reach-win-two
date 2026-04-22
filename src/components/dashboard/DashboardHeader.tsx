@@ -8,6 +8,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCampaigns } from "@/contexts/CampaignContext";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useCampaignStats, statOf } from "@/hooks/use-campaign-stats";
+import { useMemo } from "react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -22,20 +24,27 @@ export function DashboardHeader() {
   const navigate = useNavigate();
   const [confirmDismiss, setConfirmDismiss] = useState<Notification | null>(null);
 
-  // Campaign budget alerts - notify when <10% budget remaining
+  // Campaign budget alerts - notify when <10% budget remaining (spend from stats)
+  const activeIds = useMemo(
+    () => campaigns.filter(c => c.status === "active" && c.budget > 0).map(c => c.id),
+    [campaigns]
+  );
+  const { byId: statsById } = useCampaignStats(activeIds);
   useEffect(() => {
     if (!profile?.notifyCampaignStatus) return;
     campaigns
-      .filter(c => c.status === "active" && c.budget > 0 && c.spent >= c.budget * 0.9)
+      .filter(c => c.status === "active" && c.budget > 0)
       .forEach(c => {
+        const spent = statOf(statsById, c.id).spent;
+        if (spent < c.budget * 0.9) return;
         addNotification({
           title: t("notif.campaignBudgetLow"),
-          description: `${c.name}: ${Math.round((1 - c.spent / c.budget) * 100)}% ${t("notif.budgetRemaining")}`,
+          description: `${c.name}: ${Math.round((1 - spent / c.budget) * 100)}% ${t("notif.budgetRemaining")}`,
           type: "warning",
           persistent: false,
         });
       });
-  }, [campaigns]);
+  }, [campaigns, statsById]);
 
   const handleDismissClick = (n: Notification) => {
     if (n.onDismiss) {

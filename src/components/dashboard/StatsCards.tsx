@@ -1,19 +1,21 @@
-import { TrendingUp, Eye, MousePointer, Target } from "lucide-react";
+import { useMemo } from "react";
+import { Eye, MousePointer, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCampaigns } from "@/contexts/CampaignContext";
+import { useCampaignStats } from "@/hooks/use-campaign-stats";
 
 export function StatsCards() {
   const { t } = useLanguage();
   const { campaigns } = useCampaigns();
+  const ids = useMemo(() => campaigns.map(c => c.id), [campaigns]);
+  const { totals } = useCampaignStats(ids);
 
-  const totalImpressions = campaigns.reduce((s, c) => s + c.impressions, 0);
-  const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0);
-  const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
+  const ctr = totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00";
 
   const stats = [
-    { label: t("statsCards.impressions"), value: totalImpressions.toLocaleString(), icon: Eye, color: "text-primary" },
-    { label: t("statsCards.clicks"), value: totalClicks.toLocaleString(), icon: MousePointer, color: "text-primary" },
+    { label: t("statsCards.impressions"), value: totals.impressions.toLocaleString(), icon: Eye, color: "text-primary" },
+    { label: t("statsCards.clicks"), value: totals.clicks.toLocaleString(), icon: MousePointer, color: "text-primary" },
     { label: t("statsCards.ctr"), value: `${ctr}%`, icon: Target, color: "text-primary" },
   ];
 
