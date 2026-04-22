@@ -33,7 +33,7 @@ export function AuthDialog({ trigger, defaultTab = "login" }: AuthDialogProps) {
     const { error } = await signIn(loginEmail, loginPassword);
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(error);
       return;
     }
     setOpen(false);
@@ -54,7 +54,7 @@ export function AuthDialog({ trigger, defaultTab = "login" }: AuthDialogProps) {
     const { error } = await signUp(regEmail, regPassword, regName);
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(error);
       return;
     }
     toast.success(t("auth.checkEmail") || "Check your email to confirm your account");

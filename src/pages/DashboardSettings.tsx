@@ -11,7 +11,7 @@ import { User, Bell, Shield, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProfile } from "@/contexts/ProfileContext";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/api";
 
 export default function DashboardSettings() {
   const { t } = useLanguage();
@@ -81,14 +81,14 @@ export default function DashboardSettings() {
       toast.error(t("settings.passwordTooShort") || "Password must be at least 6 characters");
       return;
     }
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      toast.error(error.message);
-    } else {
+    try {
+      await api.changePassword({ new_password: newPassword });
       toast.success(t("settings.passwordUpdated"));
       setCurrentPassword("");
       setNewPassword("");
       setRepeatPassword("");
+    } catch (e: any) {
+      toast.error(e?.message || "Error updating password");
     }
   };
 

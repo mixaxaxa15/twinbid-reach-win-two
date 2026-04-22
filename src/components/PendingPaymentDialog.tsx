@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { usePendingPayment } from "@/contexts/PendingPaymentContext";
 import { useProfile } from "@/contexts/ProfileContext";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/api";
 
 const usdtMethods = [
   { id: "usdt_trc20", label: "USDT (TRC-20)", desc: "Tether on Tron", address: "TXkRh4pKz7w9Yb2mN5vQx8Gp3jL6fD0eW" },
@@ -55,33 +55,30 @@ export function PendingPaymentDialog() {
   const handleSubmitTx = async () => {
     if (!txHash.trim() || !user || !pendingPayment) return;
 
-    const { error } = await supabase.from("topup_requests").insert({
-      user_id: user.id,
-      amount: pendingPayment.amount,
-      payment_method: pendingPayment.method,
-      tx_hash: txHash.trim(),
-      promo_code: pendingPayment.promo || null,
-      bonus_percent: pendingPayment.bonus || 0,
-    });
-
-    if (error) {
-      toast.error("Error submitting payment");
-      console.error(error);
-      return;
+    let promocodeId: string | null = null;
+    if (pendingPayment.promo) {
+      try {
+        const promo = await api.getPromocode(pendingPayment.promo);
+        promocodeId = promo.id;
+      } catch {
+        // Promo unknown to backend — submit without it.
+      }
     }
 
-    if (pendingPayment.promo) {
-      const { data: promoData } = await supabase
-        .from("promo_codes")
-        .select("id")
-        .eq("code", pendingPayment.promo)
-        .single();
-      if (promoData) {
-        await supabase.from("promo_usage").insert({
-          user_id: user.id,
-          promo_code_id: promoData.id,
-        });
-      }
+    try {
+      await api.createTopup({
+        payment_method: pendingPayment.method,
+        deposit_amount: pendingPayment.amount,
+        currency: "USDT",
+        promocode_id: promocodeId,
+        bonus_amount: pendingPayment.bonus || 0,
+        transaction_hash: txHash.trim(),
+        status: "pending",
+      });
+    } catch (e) {
+      toast.error("Error submitting payment");
+      console.error(e);
+      return;
     }
 
     toast.success(t("balance.toast.paymentSent"), {
