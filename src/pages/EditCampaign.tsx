@@ -32,7 +32,6 @@ export default function EditCampaign() {
   const [initialCreatives, setInitialCreatives] = useState<Creative[]>([]);
   const [lists, setLists] = useState<Record<string, TargetingState>>({});
   const [totalBudget, setTotalBudget] = useState("");
-  const [dailyBudget, setDailyBudget] = useState("");
   const [priceValue, setPriceValue] = useState("");
   const [pricingModel, setPricingModel] = useState<PricingModel>("cpm");
   const [trafficQuality, setTrafficQuality] = useState<TrafficQuality>("common");
@@ -62,7 +61,6 @@ export default function EditCampaign() {
       }
       setLists(targeting);
       setTotalBudget(String(campaign.budget));
-      setDailyBudget(campaign.dailyBudget ? String(campaign.dailyBudget) : "");
       setPriceValue(String(campaign.priceValue));
       setPricingModel(campaign.pricingModel);
       setTrafficQuality(campaign.trafficQuality);
@@ -180,7 +178,7 @@ export default function EditCampaign() {
     updateCampaign(campaign.id, {
       name: name.trim(), creatives, trafficType, verticals,
       targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
-      budget: tb, dailyBudget: dailyBudget ? parseNum(dailyBudget) : null,
+      budget: tb, dailyBudget: null,
       priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
       bannerSize: showBannerSize ? bannerSize : undefined,
       brandName: showBrandName ? brandName : undefined,
@@ -314,7 +312,6 @@ export default function EditCampaign() {
               <BudgetSection
                 formatKey={campaign.formatKey}
                 totalBudget={totalBudget} setTotalBudget={setTotalBudget}
-                dailyBudget={dailyBudget} setDailyBudget={setDailyBudget}
                 priceValue={priceValue} setPriceValue={setPriceValue}
                 pricingModel={pricingModel} setPricingModel={setPricingModel}
                 trafficQuality={trafficQuality} setTrafficQuality={setTrafficQuality}
