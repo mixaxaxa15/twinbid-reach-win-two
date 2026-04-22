@@ -1,11 +1,11 @@
-import { useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Eye, MousePointer, Target, TrendingUp, ArrowUpDown, CalendarIcon, RefreshCw, Filter } from "lucide-react";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { format, parse, isWithinInterval, startOfDay, subDays } from "date-fns";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { format, subDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,10 +16,36 @@ import { useCampaigns } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useStatistics } from "@/contexts/StatisticsContext";
 import { formatCountryLabel } from "@/lib/countries";
+import { api } from "@/api";
+import type { StatsGroupBy } from "@/api/types";
 
 type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "country";
 type SortKey = "label" | "impressions" | "clicks" | "spent";
 type SortDir = "asc" | "desc";
+
+interface UiRow { label: string; impressions: number; clicks: number; spent: number; }
+
+// UI groupBy → ClickHouse group_by + bucket key in the response row.
+const GROUP_MAP: Record<GroupBy, { api: StatsGroupBy }> = {
+  dates:    { api: "date" },
+  hours:    { api: "hour" },
+  browsers: { api: "browser" },
+  siteid:   { api: "site_id" },
+  devices:  { api: "device_type" },
+  os:       { api: "os" },
+  country:  { api: "country" },
+};
+
+function formatDateLabel(iso: string): string {
+  // YYYY-MM-DD → dd.MM.yyyy
+  const [y, m, d] = iso.split("-");
+  return `${d}.${m}.${y}`;
+}
+function formatHourLabel(raw: string): string {
+  // "YYYY-MM-DD HH:00" → "dd.MM.yyyy HH:00"
+  const [day, hour] = raw.split(" ");
+  return `${formatDateLabel(day)} ${hour}`;
+}
 
 function seedRandom(seed: string) {
   let h = 0;
