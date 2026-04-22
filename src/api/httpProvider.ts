@@ -13,6 +13,8 @@ export const httpProvider: ApiProvider = {
   login:  (body) => http<AuthResponse>("/api/auth/login",  { method: "POST", body, auth: false }),
   refresh:(body) => http<AuthTokens>  ("/api/auth/refresh",{ method: "POST", body, auth: false }),
   logout: ()     => http<void>        ("/api/auth/logout", { method: "POST" }),
+  getSession:    () => http<{ user_id: string; email: string; full_name: string } | null>("/api/auth/session"),
+  changePassword:(body) => http<void>("/api/auth/password", { method: "POST", body }),
 
   // profile
   getProfile:   ()     => http<ApiUser>("/api/profile"),
