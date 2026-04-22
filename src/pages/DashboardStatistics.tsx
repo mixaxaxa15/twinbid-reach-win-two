@@ -308,7 +308,7 @@ export default function DashboardStatistics() {
   const canSortByLabel = appliedGroupBy === "dates" || appliedGroupBy === "hours";
 
   // Custom tooltip for hours chart
-  const HoursTooltip = ({ active, payload, label }: any) => {
+  const HoursTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value?: number }>; label?: string }) => {
     if (!active || !payload?.length) return null;
     const metricLabel = chartMetric === "impressions" ? t("stats.impressions") : chartMetric === "clicks" ? t("stats.clicks") : t("stats.spent");
     const value = payload[0]?.value;
