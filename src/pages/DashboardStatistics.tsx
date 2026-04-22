@@ -258,28 +258,42 @@ export default function DashboardStatistics() {
 
   const hasSelection = appliedCampaignIds.size > 0 && appliedDateRange?.from;
 
-  const data = useMemo(() => {
-    if (!hasSelection) return [];
-    const ids = Array.from(appliedCampaignIds);
-    const datasets = ids.map(id => getCampaignData(id, appliedGroupBy));
-    let merged = mergeData(datasets);
-    if ((appliedGroupBy === "dates" || appliedGroupBy === "hours") && appliedDateRange?.from) {
-      const from = startOfDay(appliedDateRange.from);
-      const to = appliedDateRange.to ? startOfDay(appliedDateRange.to) : from;
-      merged = merged.filter(row => {
-        const dateStr = appliedGroupBy === "hours" ? row.label.split(" ")[0] : row.label;
-        const d = parse(dateStr, "dd.MM.yyyy", new Date());
-        return isWithinInterval(d, { start: from, end: to });
+  const [data, setData] = useState<UiRow[]>([]);
+
+  useEffect(() => {
+    if (!hasSelection) { setData([]); return; }
+    let cancelled = false;
+    const apiGroup = GROUP_MAP[appliedGroupBy].api;
+    const from = appliedDateRange?.from ? appliedDateRange.from.toISOString().slice(0, 10) : "";
+    const to = appliedDateRange?.to ? appliedDateRange.to.toISOString().slice(0, 10) : from;
+    const filters: Partial<Record<StatsGroupBy, string[]>> = {};
+    if (appliedFilterCountry.size) filters.country = Array.from(appliedFilterCountry);
+    if (appliedFilterBrowser.size) filters.browser = Array.from(appliedFilterBrowser);
+    if (appliedFilterDevice.size)  filters.device_type = Array.from(appliedFilterDevice);
+    if (appliedFilterOS.size)      filters.os = Array.from(appliedFilterOS);
+
+    api.statsQuery({
+      from, to,
+      campaign_ids: Array.from(appliedCampaignIds),
+      group_by: [apiGroup],
+      filters,
+    }).then(res => {
+      if (cancelled) return;
+      const rows: UiRow[] = res.rows.map(r => {
+        const raw = String(r[apiGroup] ?? "");
+        const label = apiGroup === "date" ? formatDateLabel(raw)
+                    : apiGroup === "hour" ? formatHourLabel(raw)
+                    : raw;
+        return {
+          label,
+          impressions: Number(r.impressions) || 0,
+          clicks: Number(r.clicks) || 0,
+          spent: Number(r.spent) || 0,
+        };
       });
-    }
-    // Apply dimension filters
-    merged = applyFilters(merged, appliedGroupBy, {
-      country: appliedFilterCountry,
-      browsers: appliedFilterBrowser,
-      devices: appliedFilterDevice,
-      os: appliedFilterOS,
-    });
-    return merged;
+      setData(rows);
+    }).catch(e => { if (!cancelled) console.error("Stats query error:", e); });
+    return () => { cancelled = true; };
   }, [appliedCampaignIds, appliedGroupBy, appliedDateRange, appliedFilterCountry, appliedFilterBrowser, appliedFilterDevice, appliedFilterOS, hasSelection]);
 
   const metricCards = useMemo(() => {
