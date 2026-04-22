@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCampaigns, type Campaign } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCampaignStats, statOf } from "@/hooks/use-campaign-stats";
 
 function isDraftComplete(c: Campaign): boolean {
   if (!c.name.trim()) return false;
@@ -55,22 +56,28 @@ export default function DashboardCampaigns() {
     return s && st;
   });
 
+  // Per-campaign stats from ClickHouse layer
+  const allIds = useMemo(() => campaigns.map(c => c.id), [campaigns]);
+  const { byId: statsById } = useCampaignStats(allIds);
+
   const sorted = useMemo(() => {
     if (!sortKey) return filtered;
     return [...filtered].sort((a, b) => {
+      const sa = statOf(statsById, a.id);
+      const sb = statOf(statsById, b.id);
       let cmp = 0;
       switch (sortKey) {
         case "name": cmp = a.name.localeCompare(b.name); break;
         case "status": cmp = a.status.localeCompare(b.status); break;
         case "format": cmp = a.format.localeCompare(b.format); break;
         case "budget": cmp = a.budget - b.budget; break;
-        case "spent": cmp = a.spent - b.spent; break;
-        case "impressions": cmp = a.impressions - b.impressions; break;
-        case "ctr": cmp = a.ctr - b.ctr; break;
+        case "spent": cmp = sa.spent - sb.spent; break;
+        case "impressions": cmp = sa.impressions - sb.impressions; break;
+        case "ctr": cmp = sa.ctr - sb.ctr; break;
       }
       return sortDir === "asc" ? cmp : -cmp;
     });
-  }, [filtered, sortKey, sortDir]);
+  }, [filtered, sortKey, sortDir, statsById]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -90,7 +97,7 @@ export default function DashboardCampaigns() {
   const totalCount = filtered.length;
   const activeCount = filtered.filter(c => c.status === "active").length;
   const totalBudget = filtered.reduce((s, c) => s + c.budget, 0);
-  const totalSpent = filtered.reduce((s, c) => s + c.spent, 0);
+  const totalSpent = filtered.reduce((s, c) => s + statOf(statsById, c.id).spent, 0);
 
   const toggleStatus = (id: string) => {
     const c = campaigns.find(x => x.id === id);
