@@ -262,10 +262,10 @@ export default function DashboardBalance() {
                         <td className="py-3 px-4 text-sm">{formatDate(req.created_at)}</td>
                         <td className="py-3 px-4 text-sm">
                           {t("balance.topUpVia")} · {methodLabel}
-                          {req.promo_code && <span className="text-primary ml-1">({req.promo_code})</span>}
+                          {req.promocode_id && <span className="text-primary ml-1">({req.promocode_id})</span>}
                         </td>
                         <td className="py-3 px-4 text-sm text-left font-medium text-green-500">
-                          +${req.amount.toLocaleString()}
+                          +${req.deposit_amount.toLocaleString()}
                         </td>
                         <td className="py-3 px-4 text-left">
                           <Badge variant="outline" className={cn("font-normal", st.className)}>
