@@ -236,14 +236,37 @@ export const mockProvider = {
   },
 
   // -- ClickHouse stats ---------------------------------------------------
-  async statsQuery(_req: StatsQueryRequest): Promise<StatsQueryResponse> {
-    return delay({ rows: [], totals: { impressions: 0, clicks: 0, spent: 0, ctr: 0 } });
+  // Deterministic per-campaign synthetic stats so the UI shows lifelike numbers
+  // in mock mode. Real backend will replace these with ClickHouse queries.
+  async statsQuery(req: StatsQueryRequest): Promise<StatsQueryResponse> {
+    const ids = req.campaign_ids?.length ? req.campaign_ids : state.campaigns.map(c => c.campaing_id);
+    let totalImp = 0, totalClicks = 0, totalSpent = 0;
+    const rng = (seed: string) => {
+      let h = 0;
+      for (let i = 0; i < seed.length; i++) h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0;
+      return () => { h = Math.imul(h ^ (h >>> 16), 0x45d9f3b); h = Math.imul(h ^ (h >>> 13), 0x45d9f3b); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+    };
+    const rows = ids.map(id => {
+      const r = rng(id + (req.group_by?.[0] || "campaign"));
+      const impressions = Math.floor(r() * 80000) + 5000;
+      const clicks = Math.floor(impressions * (0.005 + r() * 0.03));
+      const spent = Math.round((impressions / 1000) * (0.5 + r() * 2.5) * 100) / 100;
+      const ctr = impressions > 0 ? Number(((clicks / impressions) * 100).toFixed(2)) : 0;
+      totalImp += impressions; totalClicks += clicks; totalSpent += spent;
+      return { campaign: id, impressions, clicks, spent, ctr };
+    });
+    const totalCtr = totalImp > 0 ? Number(((totalClicks / totalImp) * 100).toFixed(2)) : 0;
+    return delay({ rows, totals: { impressions: totalImp, clicks: totalClicks, spent: totalSpent, ctr: totalCtr } });
   },
-  async statsCampaignSummary(_id: string): Promise<StatsSummary> {
-    return delay({ impressions: 0, clicks: 0, spent: 0, ctr: 0 });
+  async statsCampaignSummary(id: string): Promise<StatsSummary> {
+    const res = await this.statsQuery({ from: "", to: "", campaign_ids: [id], group_by: ["campaign"] });
+    const r = res.rows[0];
+    return r ? { impressions: Number(r.impressions), clicks: Number(r.clicks), spent: Number(r.spent), ctr: Number(r.ctr) }
+             : { impressions: 0, clicks: 0, spent: 0, ctr: 0 };
   },
   async statsOverview(): Promise<StatsSummary> {
-    return delay({ impressions: 0, clicks: 0, spent: 0, ctr: 0 });
+    const res = await this.statsQuery({ from: "", to: "", group_by: ["campaign"] });
+    return res.totals;
   },
 };
 
