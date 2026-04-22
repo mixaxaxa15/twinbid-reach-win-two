@@ -133,8 +133,8 @@ export interface ApiNotification {
 
 // ---- ClickHouse statistics ----
 export type StatsGroupBy =
-  | "date" | "campaign" | "country" | "format"
-  | "creative" | "os" | "browser" | "device_type" | "language";
+  | "date" | "hour" | "campaign" | "country" | "format"
+  | "creative" | "os" | "browser" | "device_type" | "language" | "site_id";
 
 export interface StatsQueryRequest {
   from: string; // YYYY-MM-DD

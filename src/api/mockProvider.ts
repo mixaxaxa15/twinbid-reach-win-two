@@ -260,12 +260,24 @@ export const mockProvider = {
           }
           return out;
         }
+        case "hour": {
+          // 14 days × 24 hours, label "YYYY-MM-DD HH:00"
+          const out: string[] = [];
+          const today = new Date();
+          for (let i = 13; i >= 0; i--) {
+            const d = new Date(today); d.setDate(d.getDate() - i);
+            const day = d.toISOString().slice(0, 10);
+            for (let h = 0; h < 24; h++) out.push(`${day} ${String(h).padStart(2, "0")}:00`);
+          }
+          return out;
+        }
         case "country":     return ["US","GB","DE","FR","BR","IN","JP","RU","AU","CA","ES","IT","KR","TR","PL"];
         case "browser":     return ["Chrome","Safari","Firefox","Edge","Opera","Samsung Internet"];
         case "device_type": return ["Mobile","Desktop","Tablet","Smart TV"];
         case "os":          return ["Android","iOS","Windows","macOS","Linux","ChromeOS"];
         case "language":    return ["en","ru","de","fr","es","pt","it","ja","ko"];
         case "format":      return ["banner","push","popunder","native"];
+        case "site_id":     return ["site_landing_1","site_banner_top","site_video_pre","site_native_feed","site_push_main","site_pop_exit"];
         case "creative":    return state.creatives.filter(c => ids.includes(c.campaign_id)).map(c => c.id);
         case "campaign":
         default:            return ids;
