@@ -1,12 +1,17 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/api";
+import type {
+  ApiCampaign, ApiCreative, TargetingMap,
+  PricingModel as ApiPricing, TrafficType as ApiTraffic,
+  CampaignStatus as ApiStatus, FormatType,
+} from "@/api/types";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type CampaignStatus = "active" | "paused" | "draft" | "completed" | "moderation";
-export type PricingModel = "cpm" | "cpc";
+export type CampaignStatus = ApiStatus;
+export type PricingModel = ApiPricing;
 export type TrafficQuality = "common" | "high" | "ultra";
 export type ListMode = "none" | "white" | "black";
-export type TrafficType = "mainstream" | "adult" | "mixed";
+export type TrafficType = ApiTraffic;
 
 export interface TargetingState {
   mode: ListMode;
@@ -37,6 +42,7 @@ export interface Campaign {
   format: string;
   formatKey: string;
   budget: number;
+  /** Removed from UI but kept on the type for backwards compatibility. Always null. */
   dailyBudget: number | null;
   spent: number;
   impressions: number;
@@ -57,45 +63,99 @@ export interface Campaign {
   description?: string;
 }
 
-function mapCampaignFromDb(row: any, creatives: Creative[]): Campaign {
+// ---- Targeting <-> TargetingMap conversion --------------------------------
+function targetingStateToMap(t: TargetingState): TargetingMap {
+  if (t.mode === "none" || t.items.length === 0) return {};
+  const flag: 0 | 1 = t.mode === "white" ? 1 : 0;
+  return Object.fromEntries(t.items.map(v => [v, flag])) as TargetingMap;
+}
+function targetingMapToState(m: TargetingMap | undefined): TargetingState {
+  if (!m || Object.keys(m).length === 0) return { mode: "none", items: [] };
+  const entries = Object.entries(m);
+  const allWhite = entries.every(([, v]) => v === 1);
+  return { mode: allWhite ? "white" : "black", items: entries.map(([k]) => k) };
+}
+
+const TARGET_KEYS = ["country", "language", "device_type", "os", "browser", "site_id", "ip"] as const;
+type TargetKey = typeof TARGET_KEYS[number];
+
+function buildApiTargeting(targeting: Record<string, TargetingState>): Pick<ApiCampaign, TargetKey> {
+  const out = {} as Pick<ApiCampaign, TargetKey>;
+  for (const k of TARGET_KEYS) out[k] = targetingStateToMap(targeting[k] || { mode: "none", items: [] });
+  return out;
+}
+function readApiTargeting(c: ApiCampaign): Record<string, TargetingState> {
+  return Object.fromEntries(TARGET_KEYS.map(k => [k, targetingMapToState(c[k])]));
+}
+
+// ---- Mapping --------------------------------------------------------------
+function mapApiCampaignToUi(c: ApiCampaign, creatives: Creative[]): Campaign {
+  const priceValue = c.pricing_model === "cpc" ? c.base_price_cpc : c.base_price_cpm;
   return {
-    id: row.id,
-    name: row.name,
-    status: row.status,
-    format: row.format,
-    formatKey: row.format_key,
-    budget: Number(row.budget) || 0,
-    dailyBudget: row.daily_budget != null ? Number(row.daily_budget) : null,
-    spent: Number(row.spent) || 0,
-    impressions: Number(row.impressions) || 0,
-    clicks: Number(row.clicks) || 0,
-    ctr: Number(row.ctr) || 0,
-    pricingModel: row.pricing_model,
-    priceValue: Number(row.price_value) || 0,
-    trafficQuality: row.traffic_quality,
-    startDate: row.start_date || "",
-    endDate: row.end_date || "",
+    id: c.campaing_id,
+    name: c.campaign_name,
+    status: c.status,
+    format: c.format_type, // human label = key for now
+    formatKey: c.format_type,
+    budget: Number(c.goal_total_dollars) || 0,
+    dailyBudget: null,
+    spent: Number(c.cum_done_dollars) || 0,
+    impressions: 0,
+    clicks: 0,
+    ctr: 0,
+    pricingModel: c.pricing_model,
+    priceValue: Number(priceValue) || 0,
+    trafficQuality: "common",
+    startDate: c.start_ts ? c.start_ts.slice(0, 10) : "",
+    endDate: c.end_ts ? c.end_ts.slice(0, 10) : "",
     creatives,
-    targeting: (row.targeting && typeof row.targeting === "object") ? row.targeting : {},
-    evenSpend: row.even_spend ?? false,
-    bannerSize: row.banner_size || undefined,
-    brandName: row.brand_name || undefined,
-    trafficType: row.traffic_type || "mainstream",
-    verticals: Array.isArray(row.verticals) ? row.verticals : [],
-    description: row.description || undefined,
+    targeting: readApiTargeting(c),
+    evenSpend: !!c.evenness_by_slot_mode,
+    bannerSize: c.w && c.h ? `${c.w}x${c.h}` : undefined,
+    brandName: c.brand_name || undefined,
+    trafficType: c.traffic_type,
+    verticals: (c.vertical || []) as Vertical[],
+    description: undefined,
   };
 }
 
-function mapCreativeFromDb(row: any): Creative {
+function mapApiCreativeToUi(cr: ApiCreative): Creative {
+  const anyCr = cr as any;
   return {
-    id: row.id,
-    name: row.name || undefined,
-    url: row.url,
-    imageUrl: row.image_url || undefined,
-    imageFileName: row.image_file_name || undefined,
-    storagePath: row.storage_path || undefined,
-    title: row.title || undefined,
-    description: row.description || undefined,
+    id: cr.id,
+    name: cr.creative_name || undefined,
+    url: cr.link,
+    imageUrl: anyCr.s3_file_path || undefined,
+    imageFileName: undefined,
+    storagePath: anyCr.s3_file_path || undefined,
+    title: anyCr.title || undefined,
+    description: anyCr.description || undefined,
+  };
+}
+
+function buildApiCampaignBody(c: Omit<Campaign, "id">): Omit<ApiCampaign, "campaing_id" | "user_id" | "cum_done_dollars"> {
+  let w: number | null = null, h: number | null = null;
+  if (c.bannerSize && /^\d+x\d+$/.test(c.bannerSize)) {
+    const [ws, hs] = c.bannerSize.split("x");
+    w = Number(ws); h = Number(hs);
+  }
+  return {
+    campaign_name: c.name,
+    format_type: (c.formatKey || c.format) as FormatType,
+    brand_name: c.brandName ?? null,
+    h, w,
+    status: c.status,
+    traffic_type: c.trafficType,
+    vertical: c.verticals,
+    pricing_model: c.pricingModel,
+    base_price_cpm: c.pricingModel === "cpm" ? c.priceValue : 0,
+    base_price_cpc: c.pricingModel === "cpc" ? c.priceValue : 0,
+    evenness_by_slot_mode: c.evenSpend,
+    goal_total_dollars: c.budget,
+    start_ts: c.startDate || "",
+    end_ts: c.endDate || "",
+    active_intervals: [],
+    ...buildApiTargeting(c.targeting),
   };
 }
 
@@ -119,157 +179,88 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const fetchCampaigns = useCallback(async () => {
     if (!user) { setCampaigns([]); setLoading(false); return; }
     setLoading(true);
-    const { data: rows, error } = await supabase
-      .from("campaigns")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    if (error) { console.error("Campaigns fetch error:", error); setLoading(false); return; }
-
-    const ids = (rows || []).map(r => r.id);
-    let creativesMap = new Map<string, Creative[]>();
-
-    if (ids.length > 0) {
-      const { data: crRows } = await supabase
-        .from("creatives")
-        .select("*")
-        .in("campaign_id", ids);
-      (crRows || []).forEach(cr => {
-        const list = creativesMap.get(cr.campaign_id) || [];
-        list.push(mapCreativeFromDb(cr));
-        creativesMap.set(cr.campaign_id, list);
-      });
+    try {
+      const { items } = await api.listCampaigns();
+      const withCreatives = await Promise.all(items.map(async c => {
+        const crs = await api.listCreatives(c.campaing_id);
+        return mapApiCampaignToUi(c, crs.map(mapApiCreativeToUi));
+      }));
+      setCampaigns(withCreatives);
+    } catch (e) {
+      console.error("Campaigns fetch error:", e);
+    } finally {
+      setLoading(false);
     }
-
-    setCampaigns((rows || []).map(r => mapCampaignFromDb(r, creativesMap.get(r.id) || [])));
-    setLoading(false);
   }, [user]);
 
   useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
 
   const addCampaign = useCallback(async (c: Omit<Campaign, "id">): Promise<string | undefined> => {
     if (!user) return undefined;
-    const { data, error } = await supabase
-      .from("campaigns")
-      .insert({
-        user_id: user.id,
-        name: c.name,
-        status: c.status,
-        format: c.format,
-        format_key: c.formatKey,
-        budget: c.budget,
-        daily_budget: c.dailyBudget,
-        spent: c.spent,
-        impressions: c.impressions,
-        clicks: c.clicks,
-        ctr: c.ctr,
-        pricing_model: c.pricingModel,
-        price_value: c.priceValue,
-        traffic_quality: c.trafficQuality,
-        traffic_type: c.trafficType,
-        start_date: c.startDate || null,
-        end_date: c.endDate || null,
-        targeting: c.targeting as any,
-        even_spend: c.evenSpend,
-        banner_size: c.bannerSize || null,
-        brand_name: c.brandName || null,
-        verticals: c.verticals,
-        description: c.description || null,
-      })
-      .select("id")
-      .single();
-
-    if (error) { console.error("Add campaign error:", error); return undefined; }
-
-    const campaignId = data.id;
-
-    // Insert creatives
-    if (c.creatives.length > 0) {
-      const { error: crError } = await supabase
-        .from("creatives")
-        .insert(c.creatives.map(cr => ({
-          campaign_id: campaignId,
-          url: cr.url,
-          name: cr.name || null,
-          image_url: cr.imageUrl || null,
-          image_file_name: cr.imageFileName || null,
-          storage_path: cr.storagePath || null,
-          title: cr.title || null,
-          description: cr.description || null,
-        })));
-      if (crError) console.error("Add creatives error:", crError);
+    try {
+      const created = await api.createCampaign(buildApiCampaignBody(c));
+      // Insert creatives. The API contract distinguishes shapes per format; here
+      // we send the lowest common denominator that the mock accepts.
+      for (const cr of c.creatives) {
+        await api.createCreative(created.campaing_id, {
+          creative_name: cr.name || "",
+          link: cr.url,
+          trackers_macros: {},
+          ...(cr.imageUrl ? { s3_file_path: cr.imageUrl, file_format: "image/png" } : {}),
+          ...(cr.title ? { title: cr.title } : {}),
+          ...(cr.description ? { description: cr.description } : {}),
+        } as any);
+      }
+      await fetchCampaigns();
+      return created.campaing_id;
+    } catch (e) {
+      console.error("Add campaign error:", e);
+      return undefined;
     }
-
-    await fetchCampaigns();
-    return campaignId;
   }, [user, fetchCampaigns]);
 
   const updateCampaign = useCallback(async (id: string, updates: Partial<Campaign>) => {
     if (!user) return;
-    const dbUpdates: any = {};
-    if (updates.name !== undefined) dbUpdates.name = updates.name;
-    if (updates.status !== undefined) dbUpdates.status = updates.status;
-    if (updates.format !== undefined) dbUpdates.format = updates.format;
-    if (updates.formatKey !== undefined) dbUpdates.format_key = updates.formatKey;
-    if (updates.budget !== undefined) dbUpdates.budget = updates.budget;
-    if (updates.dailyBudget !== undefined) dbUpdates.daily_budget = updates.dailyBudget;
-    if (updates.spent !== undefined) dbUpdates.spent = updates.spent;
-    if (updates.impressions !== undefined) dbUpdates.impressions = updates.impressions;
-    if (updates.clicks !== undefined) dbUpdates.clicks = updates.clicks;
-    if (updates.ctr !== undefined) dbUpdates.ctr = updates.ctr;
-    if (updates.pricingModel !== undefined) dbUpdates.pricing_model = updates.pricingModel;
-    if (updates.priceValue !== undefined) dbUpdates.price_value = updates.priceValue;
-    if (updates.trafficQuality !== undefined) dbUpdates.traffic_quality = updates.trafficQuality;
-    if (updates.trafficType !== undefined) dbUpdates.traffic_type = updates.trafficType;
-    if (updates.startDate !== undefined) dbUpdates.start_date = updates.startDate || null;
-    if (updates.endDate !== undefined) dbUpdates.end_date = updates.endDate || null;
-    if (updates.targeting !== undefined) dbUpdates.targeting = updates.targeting;
-    if (updates.evenSpend !== undefined) dbUpdates.even_spend = updates.evenSpend;
-    if (updates.bannerSize !== undefined) dbUpdates.banner_size = updates.bannerSize;
-    if (updates.brandName !== undefined) dbUpdates.brand_name = updates.brandName;
-    if (updates.verticals !== undefined) dbUpdates.verticals = updates.verticals;
-    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    try {
+      const current = campaigns.find(c => c.id === id);
+      if (!current) return;
+      const merged: Campaign = { ...current, ...updates };
+      // Patch the campaign itself (full re-build keeps it simple).
+      const body = buildApiCampaignBody(merged);
+      await api.patchCampaign(id, body as Partial<ApiCampaign>);
 
-    if (Object.keys(dbUpdates).length > 0) {
-      const { error } = await supabase.from("campaigns").update(dbUpdates).eq("id", id);
-      if (error) { console.error("Update campaign error:", error); return; }
-    }
-
-    // Update creatives if provided
-    if (updates.creatives !== undefined) {
-      // Delete old creatives and insert new ones
-      await supabase.from("creatives").delete().eq("campaign_id", id);
-      if (updates.creatives.length > 0) {
-        await supabase.from("creatives").insert(
-          updates.creatives.map(cr => ({
-            campaign_id: id,
-            url: cr.url,
-            name: cr.name || null,
-            image_url: cr.imageUrl || null,
-            image_file_name: cr.imageFileName || null,
-            storage_path: cr.storagePath || null,
-            title: cr.title || null,
-            description: cr.description || null,
-          }))
-        );
+      // Replace creatives wholesale if provided.
+      if (updates.creatives !== undefined) {
+        const existing = await api.listCreatives(id);
+        await Promise.all(existing.map(cr => api.deleteCreative(cr.id)));
+        for (const cr of updates.creatives) {
+          await api.createCreative(id, {
+            creative_name: cr.name || "",
+            link: cr.url,
+            trackers_macros: {},
+            ...(cr.imageUrl ? { s3_file_path: cr.imageUrl, file_format: "image/png" } : {}),
+            ...(cr.title ? { title: cr.title } : {}),
+            ...(cr.description ? { description: cr.description } : {}),
+          } as any);
+        }
       }
+      await fetchCampaigns();
+    } catch (e) {
+      console.error("Update campaign error:", e);
     }
-
-    await fetchCampaigns();
-  }, [user, fetchCampaigns]);
+  }, [user, fetchCampaigns, campaigns]);
 
   const deleteCampaign = useCallback(async (id: string) => {
     if (!user) return;
-    // Creatives will be cascade-deleted via FK
-    const { error } = await supabase.from("campaigns").delete().eq("id", id);
-    if (error) { console.error("Delete campaign error:", error); return; }
-    await fetchCampaigns();
+    try {
+      await api.deleteCampaign(id);
+      await fetchCampaigns();
+    } catch (e) {
+      console.error("Delete campaign error:", e);
+    }
   }, [user, fetchCampaigns]);
 
-  const getCampaign = useCallback((id: string) => {
-    return campaigns.find(c => c.id === id);
-  }, [campaigns]);
+  const getCampaign = useCallback((id: string) => campaigns.find(c => c.id === id), [campaigns]);
 
   return (
     <CampaignContext.Provider value={{ campaigns, loading, addCampaign, updateCampaign, deleteCampaign, getCampaign, refetch: fetchCampaigns }}>
