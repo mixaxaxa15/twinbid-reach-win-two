@@ -23,8 +23,6 @@ let pendingNotifId: string | null = null;
 export function PendingPaymentDialog() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { profile } = useProfile();
-  const managerTg = profile?.managerTelegram || "GregTwinbid";
   const { addNotification, removeNotification } = useNotifications();
   const {
     pendingPayment, setPendingPayment,
