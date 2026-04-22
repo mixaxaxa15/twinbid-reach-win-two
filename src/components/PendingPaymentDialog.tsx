@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { usePendingPayment } from "@/contexts/PendingPaymentContext";
-import { useProfile } from "@/contexts/ProfileContext";
+
 import { api } from "@/api";
 
 const usdtMethods = [
@@ -23,8 +23,6 @@ let pendingNotifId: string | null = null;
 export function PendingPaymentDialog() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { profile } = useProfile();
-  const managerTg = profile?.managerTelegram || "GregTwinbid";
   const { addNotification, removeNotification } = useNotifications();
   const {
     pendingPayment, setPendingPayment,
@@ -184,9 +182,7 @@ export function PendingPaymentDialog() {
           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
             <p className="text-xs text-muted-foreground">
-              {t("balance.supportText")}{" "}
-              <a href={`https://t.me/${managerTg}`} target="_blank" rel="noopener" className="text-primary hover:underline">@{managerTg}</a>{" "}
-              {t("balance.inTelegram")}
+              {t("balance.supportText")}
             </p>
           </div>
         </div>
