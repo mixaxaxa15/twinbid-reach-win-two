@@ -53,87 +53,13 @@ function seedRandom(seed: string) {
   return () => { h = Math.imul(h ^ (h >>> 16), 0x45d9f3b); h = Math.imul(h ^ (h >>> 13), 0x45d9f3b); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
 }
 
+// Dictionaries used purely for filter UI options.
 const DIMENSION_MAP: Record<string, string[]> = {
   country: ["US","GB","DE","FR","BR","IN","JP","RU","AU","CA","ES","IT","KR","TR","PL"],
   browsers: ["Chrome","Safari","Firefox","Edge","Opera","Samsung Internet"],
   devices: ["Mobile","Desktop","Tablet","Smart TV"],
   os: ["Android","iOS","Windows","macOS","Linux","ChromeOS"],
 };
-
-function getCampaignData(campaignId: string, groupBy: GroupBy): { label: string; impressions: number; clicks: number; spent: number }[] {
-  const rng = seedRandom(campaignId + groupBy);
-  const r = (min: number, max: number) => Math.floor(rng() * (max - min)) + min;
-
-  if (groupBy === "dates") {
-    const now = new Date();
-    return Array.from({ length: 30 }, (_, i) => {
-      const d = new Date(now); d.setDate(d.getDate() - 29 + i);
-      return { label: `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}.${d.getFullYear()}`, impressions: r(1000,8000), clicks: r(50,500), spent: r(500,4000) };
-    });
-  }
-  if (groupBy === "hours") {
-    const now = new Date();
-    const days = Array.from({ length: 14 }, (_, i) => {
-      const d = new Date(now); d.setDate(d.getDate() - 13 + i);
-      return `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}.${d.getFullYear()}`;
-    });
-    return days.flatMap(day =>
-      Array.from({ length: 24 }, (_, h) => ({
-        label: `${day} ${String(h).padStart(2,"0")}:00`,
-        impressions: r(100,1500), clicks: r(5,120), spent: r(50,800),
-      }))
-    );
-  }
-  if (groupBy === "browsers") return DIMENSION_MAP.browsers.map(b => ({ label: b, impressions: r(2000,50000), clicks: r(100,3500), spent: r(800,18000) }));
-  if (groupBy === "siteid") return ["site_landing_1","site_banner_top","site_video_pre","site_native_feed","site_push_main","site_pop_exit"].map(s => ({ label: s, impressions: r(5000,25000), clicks: r(300,1500), spent: r(1500,8000) }));
-  if (groupBy === "os") return DIMENSION_MAP.os.map(o => ({ label: o, impressions: r(1000,40000), clicks: r(50,2500), spent: r(400,14000) }));
-  if (groupBy === "country") return DIMENSION_MAP.country.map(c => ({ label: c, impressions: r(2000,60000), clicks: r(100,4000), spent: r(600,20000) }));
-  return DIMENSION_MAP.devices.map(d => ({ label: d, impressions: r(1000,40000), clicks: r(50,2500), spent: r(400,14000) }));
-}
-
-function mergeData(datasets: { label: string; impressions: number; clicks: number; spent: number }[][]) {
-  const map = new Map<string, { label: string; impressions: number; clicks: number; spent: number }>();
-  for (const ds of datasets) for (const row of ds) {
-    const existing = map.get(row.label);
-    if (existing) { existing.impressions += row.impressions; existing.clicks += row.clicks; existing.spent += row.spent; }
-    else map.set(row.label, { ...row });
-  }
-  return Array.from(map.values());
-}
-
-// Apply dimension filters: when groupBy matches a filter dimension, keep only selected labels.
-// When groupBy is different, apply a deterministic reduction factor based on how many items are filtered.
-function applyFilters(
-  data: { label: string; impressions: number; clicks: number; spent: number }[],
-  groupBy: GroupBy,
-  filters: { country: Set<string>; browsers: Set<string>; devices: Set<string>; os: Set<string> }
-) {
-  let filtered = data;
-  const dimensionFilters: { key: GroupBy; selected: Set<string>; total: number }[] = [
-    { key: "country", selected: filters.country, total: DIMENSION_MAP.country.length },
-    { key: "browsers", selected: filters.browsers, total: DIMENSION_MAP.browsers.length },
-    { key: "devices", selected: filters.devices, total: DIMENSION_MAP.devices.length },
-    { key: "os", selected: filters.os, total: DIMENSION_MAP.os.length },
-  ];
-
-  for (const dim of dimensionFilters) {
-    if (dim.selected.size === 0) continue; // no filter = all
-    if (groupBy === dim.key) {
-      // Direct filter: keep only matching labels
-      filtered = filtered.filter(row => dim.selected.has(row.label));
-    } else {
-      // Cross-dimension: scale values proportionally
-      const ratio = dim.selected.size / dim.total;
-      filtered = filtered.map(row => ({
-        ...row,
-        impressions: Math.round(row.impressions * ratio),
-        clicks: Math.round(row.clicks * ratio),
-        spent: Math.round(row.spent * ratio),
-      }));
-    }
-  }
-  return filtered;
-}
 
 // Multi-select filter component (supports plain string options or {value,label} pairs)
 type FilterOption = string | { value: string; label: string };
