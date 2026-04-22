@@ -240,21 +240,51 @@ export const mockProvider = {
   // in mock mode. Real backend will replace these with ClickHouse queries.
   async statsQuery(req: StatsQueryRequest): Promise<StatsQueryResponse> {
     const ids = req.campaign_ids?.length ? req.campaign_ids : state.campaigns.map(c => c.campaing_id);
-    let totalImp = 0, totalClicks = 0, totalSpent = 0;
+    const groupBy = req.group_by?.[0] || "campaign";
+
     const rng = (seed: string) => {
       let h = 0;
       for (let i = 0; i < seed.length; i++) h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0;
       return () => { h = Math.imul(h ^ (h >>> 16), 0x45d9f3b); h = Math.imul(h ^ (h >>> 13), 0x45d9f3b); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
     };
-    const rows = ids.map(id => {
-      const r = rng(id + (req.group_by?.[0] || "campaign"));
-      const impressions = Math.floor(r() * 80000) + 5000;
+
+    // Bucket labels per group_by dimension (mock dictionaries).
+    const buckets = (() => {
+      switch (groupBy) {
+        case "date": {
+          const out: string[] = [];
+          const today = new Date();
+          for (let i = 29; i >= 0; i--) {
+            const d = new Date(today); d.setDate(d.getDate() - i);
+            out.push(d.toISOString().slice(0, 10));
+          }
+          return out;
+        }
+        case "country":     return ["US","GB","DE","FR","BR","IN","JP","RU","AU","CA","ES","IT","KR","TR","PL"];
+        case "browser":     return ["Chrome","Safari","Firefox","Edge","Opera","Samsung Internet"];
+        case "device_type": return ["Mobile","Desktop","Tablet","Smart TV"];
+        case "os":          return ["Android","iOS","Windows","macOS","Linux","ChromeOS"];
+        case "language":    return ["en","ru","de","fr","es","pt","it","ja","ko"];
+        case "format":      return ["banner","push","popunder","native"];
+        case "creative":    return state.creatives.filter(c => ids.includes(c.campaign_id)).map(c => c.id);
+        case "campaign":
+        default:            return ids;
+      }
+    })();
+
+    let totalImp = 0, totalClicks = 0, totalSpent = 0;
+    const rows = buckets.map(bucket => {
+      // Mix the bucket label with the campaign ids so swapping the campaign
+      // selection actually changes the numbers.
+      const r = rng(`${groupBy}|${bucket}|${ids.join(",")}`);
+      const impressions = Math.floor(r() * 80000) + 1000;
       const clicks = Math.floor(impressions * (0.005 + r() * 0.03));
       const spent = Math.round((impressions / 1000) * (0.5 + r() * 2.5) * 100) / 100;
       const ctr = impressions > 0 ? Number(((clicks / impressions) * 100).toFixed(2)) : 0;
       totalImp += impressions; totalClicks += clicks; totalSpent += spent;
-      return { campaign: id, impressions, clicks, spent, ctr };
+      return { [groupBy]: bucket, impressions, clicks, spent, ctr };
     });
+
     const totalCtr = totalImp > 0 ? Number(((totalClicks / totalImp) * 100).toFixed(2)) : 0;
     return delay({ rows, totals: { impressions: totalImp, clicks: totalClicks, spent: totalSpent, ctr: totalCtr } });
   },
