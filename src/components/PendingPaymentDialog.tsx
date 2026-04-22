@@ -184,9 +184,7 @@ export function PendingPaymentDialog() {
           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
             <p className="text-xs text-muted-foreground">
-              {t("balance.supportText")}{" "}
-              <a href={`https://t.me/${managerTg}`} target="_blank" rel="noopener" className="text-primary hover:underline">@{managerTg}</a>{" "}
-              {t("balance.inTelegram")}
+              {t("balance.supportText")}
             </p>
           </div>
         </div>
