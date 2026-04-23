@@ -209,20 +209,16 @@ export const mockProvider = {
     return delay({ items: state.transactions, total: state.transactions.length });
   },
   /**
-   * Accepts the full `ApiUserTransaction` body minus fields the backend owns
-   * (`id`, `user_id`, `transaction_time`, `total_balance_increase`,
-   * `created_at`, `updated_at`). All other fields are forwarded as-is so the
-   * mock mirrors what the real backend will receive.
+   * Front-end sends every field it can compute (`user_id`, `transaction_time`,
+   * `total_balance_increase`, etc.). Backend only assigns the primary `id` and
+   * stamps `created_at` / `updated_at`.
    */
   async createTransaction(
-    body: Omit<ApiUserTransaction, "id" | "user_id" | "transaction_time" | "total_balance_increase" | "created_at" | "updated_at">,
+    body: Omit<ApiUserTransaction, "id" | "created_at" | "updated_at">,
   ): Promise<ApiUserTransaction> {
     const t: ApiUserTransaction = {
       ...body,
       id: uid(),
-      user_id: "mock-user",
-      transaction_time: now(),
-      total_balance_increase: body.deposit_amount * (1 + (body.bonus_amount ?? 0) / 100),
       created_at: now(),
       updated_at: now(),
     };

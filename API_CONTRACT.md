@@ -188,15 +188,18 @@ Resp: `User`.
 ```
 
 ### Поток пополнения
-1. `POST /api/transactions` — создаёт транзакцию. Body содержит **все** поля `UserTransaction`, кроме тех, что заполняет бэк (`id`, `user_id`, `transaction_time`, `total_balance_increase`, `created_at`, `updated_at`):
+1. `POST /api/transactions` — создаёт транзакцию. Фронт присылает **все** поля `UserTransaction`, которые может посчитать сам (`user_id`, `transaction_time`, `transaction_id`, `payment_method`, `bonus_amount`, `promocode_id`, `transaction_hash`, `deposit_amount`, `total_balance_increase`, `status`, `currency`). Бэк присваивает только PK `id` и проставляет `created_at` / `updated_at`:
    ```json
    {
+     "user_id": "uuid",
+     "transaction_time": "iso",
      "transaction_id": "string",
      "payment_method": "usdt_trc20",
      "bonus_amount": 25,
      "promocode_id": "uuid?",
      "transaction_hash": "string?",
      "deposit_amount": 100,
+     "total_balance_increase": 125,
      "status": "draft | pending",
      "currency": "usdt"
    }
