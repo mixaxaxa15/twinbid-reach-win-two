@@ -161,17 +161,25 @@ export const mockProvider = {
     saveState();
     return delay(undefined);
   },
-  async uploadCreativeFile(file: File): Promise<{ s3_file_path: string; file_format: string }> {
-    // In mock mode we don't really store the file. The caller (CreativesEditor)
-    // takes the data-URL path itself, so this is rarely hit. Still implement it
-    // for parity: read the file as a data URL and pretend it's an S3 path.
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve(String(r.result));
-      r.onerror = () => reject(r.error);
-      r.readAsDataURL(file);
-    });
-    return delay({ s3_file_path: dataUrl, file_format: file.type || "image/png" });
+  async uploadCreativeFile(file: File, meta?: { campaign_id?: string; creative_id?: string }): Promise<{ ok: true }> {
+    // Mock-only: simulate the backend writing s3_file_path on the creative row.
+    // We store a base64 data URL so reload still shows the image.
+    if (meta?.creative_id) {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result));
+        r.onerror = () => reject(r.error);
+        r.readAsDataURL(file);
+      });
+      const i = state.creatives.findIndex(c => c.id === meta.creative_id);
+      if (i >= 0) {
+        (state.creatives[i] as any).s3_file_path = dataUrl;
+        (state.creatives[i] as any).presigned_s3_url = dataUrl;
+        (state.creatives[i] as any).file_format = file.type || "image/png";
+        saveState();
+      }
+    }
+    return delay({ ok: true });
   },
 
   // -- topups -------------------------------------------------------------
