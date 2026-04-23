@@ -92,16 +92,24 @@ export function PendingPaymentDialog() {
     }
 
     try {
-      // Send the full UserTransaction body. Backend-owned fields (id, user_id,
-      // transaction_time, total_balance_increase, created_at, updated_at) are
-      // omitted; everything else is forwarded explicitly so nothing is lost.
+      // Send the full UserTransaction body. Front-end fills in everything it
+      // can compute locally (user_id, transaction_time, total_balance_increase,
+      // etc.). Backend only assigns the primary `id` and `created_at` /
+      // `updated_at` timestamps on persistence.
+      const depositAmount = pendingPayment.amount;
+      const bonusPercent = pendingPayment.bonus || 0;
+      const bonusAmount = Math.floor((depositAmount * bonusPercent) / 100);
+      const nowIso = new Date().toISOString();
       await api.createTransaction({
+        user_id: user.id,
+        transaction_time: nowIso,
         transaction_id: txHash.trim(),
         payment_method: pendingPayment.method,
-        bonus_amount: pendingPayment.bonus || 0,
+        bonus_amount: bonusAmount,
         promocode_id: promocodeId,
         transaction_hash: txHash.trim(),
-        deposit_amount: pendingPayment.amount,
+        deposit_amount: depositAmount,
+        total_balance_increase: depositAmount + bonusAmount,
         status: "pending",
         currency: "USDT",
       });
