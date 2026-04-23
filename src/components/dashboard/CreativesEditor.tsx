@@ -20,19 +20,10 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-// Upload a File to the backend-issued signed URL and return the stored S3 path.
-async function uploadViaSignedUrl(file: File): Promise<string> {
-  const { upload_url, s3_file_path } = await api.getUploadUrl({
-    filename: file.name,
-    content_type: file.type || "application/octet-stream",
-    size: file.size,
-  });
-  const res = await fetch(upload_url, {
-    method: "PUT",
-    headers: { "Content-Type": file.type || "application/octet-stream" },
-    body: file,
-  });
-  if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+// Upload a File to the backend (multipart). Backend stores it (e.g. in S3) and
+// returns the public/internal path that we then save on the creative record.
+async function uploadCreativeImage(file: File): Promise<string> {
+  const { s3_file_path } = await api.uploadCreativeFile(file);
   return s3_file_path;
 }
 
@@ -92,7 +83,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
       // HTTP: upload to backend-issued signed URL and store the S3 path.
       const stored = USE_MOCK
         ? await readFileAsDataUrl(file)
-        : await uploadViaSignedUrl(file);
+        : await uploadCreativeImage(file);
       updateCreative(creativeId, {
         imageUrl: stored,
         storagePath: stored,
