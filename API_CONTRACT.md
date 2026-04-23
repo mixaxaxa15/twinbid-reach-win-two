@@ -165,7 +165,7 @@ Resp: `User`.
 
 ---
 
-## 5. Top-ups & promo (Postgres `user_transactions`, `promocodes`)
+## 5. Transactions & promo (Postgres `user_transactions`, `promocodes`)
 
 ### `UserTransaction`
 ```json
@@ -188,10 +188,25 @@ Resp: `User`.
 ```
 
 ### Поток пополнения
-1. POST `/api/topups` body `{ payment_method, deposit_amount, currency, promocode_id? }` → создаёт транзакцию со статусом `draft`. Resp: `UserTransaction`.
-2. PATCH `/api/topups/:id` body `{ transaction_hash }` → переводит в `pending`. Resp: `UserTransaction`.
-3. POST `/api/topups/:id/cancel` → `cancelled`. Resp: `UserTransaction`.
-4. GET `/api/topups?status=&limit=&offset=` → история.
+1. `POST /api/transactions` — создаёт транзакцию. Body содержит **все** поля `UserTransaction`, кроме тех, что заполняет бэк (`id`, `user_id`, `transaction_time`, `total_balance_increase`, `created_at`, `updated_at`):
+   ```json
+   {
+     "transaction_id": "string",
+     "payment_method": "usdt_trc20",
+     "bonus_amount": 25,
+     "promocode_id": "uuid?",
+     "transaction_hash": "string?",
+     "deposit_amount": 100,
+     "status": "draft | pending",
+     "currency": "usdt"
+   }
+   ```
+   Resp: `UserTransaction`.
+2. `PATCH /api/transactions/:id` — частичное обновление (например `{ transaction_hash, status: "pending" }`). Resp: `UserTransaction`.
+3. `POST /api/transactions/:id/cancel` → `cancelled`. Resp: `UserTransaction`.
+4. `GET /api/transactions?status=&limit=&offset=` → история.
+
+> Внутренние клиентские методы фронта: `listTransactions`, `createTransaction`, `patchTransaction`, `cancelTransaction`.
 
 ### Promo
 - GET `/api/promocodes/:code` → `{ id, promocode_text, bonus_percent, usage_count, usage_limit, valid_from, valid_to }`.
