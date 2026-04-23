@@ -32,8 +32,24 @@ export const httpProvider: ApiProvider = {
   createCreative:  (cid, body)   => http<ApiCreative>(`/api/campaigns/${cid}/creatives`, { method: "POST", body }),
   patchCreative:   (id,  p)      => http<ApiCreative>(`/api/creatives/${id}`, { method: "PATCH", body: p }),
   deleteCreative:  (id)          => http<void>(`/api/creatives/${id}`, { method: "DELETE" }),
-  getUploadUrl:    (body)        => http<{ upload_url: string; s3_file_path: string; expires_in: number }>(
-    "/api/creatives/upload-url", { method: "POST", body }),
+  uploadCreativeFile: (file)     => {
+    const fd = new FormData();
+    fd.append("file", file, file.name);
+    fd.append("filename", file.name);
+    return fetch(`${import.meta.env.VITE_API_BASE_URL ?? ""}/api/creatives/upload`, {
+      method: "POST",
+      headers: (() => {
+        const h: Record<string, string> = {};
+        const tok = localStorage.getItem("twinbid_access_token");
+        if (tok) h.Authorization = `Bearer ${tok}`;
+        return h;
+      })(),
+      body: fd,
+    }).then(async r => {
+      if (!r.ok) throw new Error(`Upload failed: ${r.status}`);
+      return r.json() as Promise<{ s3_file_path: string; file_format: string }>;
+    });
+  },
 
   // topups
   listTopups:   ()        => http<{ items: ApiUserTransaction[]; total: number }>("/api/topups"),
