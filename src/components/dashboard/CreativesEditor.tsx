@@ -8,9 +8,8 @@ import { Upload, Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Creative } from "@/contexts/CampaignContext";
-import { api, USE_MOCK } from "@/api";
-
-// Read a File as a base64 data URL (used in mock mode so images survive reloads).
+// Read a File as a base64 data URL — used as a local preview until the next
+// reload, when the backend will return a presigned read URL.
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -18,14 +17,6 @@ function readFileAsDataUrl(file: File): Promise<string> {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
-}
-
-// Upload a File to the backend (multipart). Backend stores it in S3 and
-// returns the storage path. The displayable image URL comes back as
-// `presigned_s3_url` when fetching the creative later.
-async function uploadCreativeImage(file: File): Promise<string> {
-  const { s3_file_path } = await api.uploadCreativeFile(file);
-  return s3_file_path;
 }
 
 const URL_MACROS = [
@@ -79,16 +70,13 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
     }
     setUploadingId(creativeId);
     try {
-      // Local data-URL preview shown immediately (works in mock + HTTP).
+      // Local preview only. The actual file is uploaded by CampaignContext to
+      // the backend AFTER the creative row is created — backend then writes
+      // s3_file_path itself. Frontend never touches s3_file_path.
       const previewUrl = await readFileAsDataUrl(file);
-      // HTTP: also upload to backend so it's persisted in S3 and we get a
-      // storage path to save on the creative record. Mock: keep data URL.
-      const storagePath = USE_MOCK
-        ? previewUrl
-        : await uploadCreativeImage(file);
       updateCreative(creativeId, {
         imageUrl: previewUrl,
-        storagePath,
+        pendingFile: file,
         imageFileName: file.name,
       });
       onClearError?.(`creative_${creativeId}_image`);
