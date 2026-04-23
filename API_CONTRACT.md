@@ -135,35 +135,33 @@ Resp: `User`.
   // banner only:
   "w": 300, "h": 250,
   // banner / push / native (заполняются БЭКОМ после загрузки файла):
-  "s3_file_path": "s3://twinbid/creatives/...",
+  "name": "banner_300x250.png",
   "presigned_s3_url": "https://s3.amazonaws.com/...&X-Amz-Signature=...",
-  "file_format": "png | jpg | gif | mp4",
   // push / native:
   "title": "string",
   "description": "string"
 }
 ```
 
-> **Фронт никогда не пишет `s3_file_path`.** Это поле (как и `file_format`) полностью на стороне бэка: бэк сам присваивает его, когда фронт загружает файл через `POST /api/creatives/upload`.
+> Поле `name` — это имя файла загруженной картинки. Его выставляет бэк при загрузке; фронт отображает его в кабинете как подпись к картинке.
 > `presigned_s3_url` — временный signed URL для чтения, который бэк добавляет в ответы GET. Фронт использует его в `<img src>`.
+> Фронт никогда не пишет ни `name`, ни `presigned_s3_url`. Никаких `s3_file_path` / `file_format` в контракте больше нет.
 
-### GET `/api/campaigns/:id/creatives` → `Creative[]` (с `presigned_s3_url`)
+### GET `/api/campaigns/:id/creatives` → `Creative[]` (с `presigned_s3_url`, `name`)
+Внутренний клиентский метод фронта, который вызывает эту ручку, называется **`readCreatives`**.
+
 ### POST `/api/campaigns/:id/creatives`
-Body — БЕЗ `s3_file_path`, `presigned_s3_url`, `file_format`:
-`{ creative_name, link, trackers_macros, w?, h?, title?, description? }`.
-Resp: `Creative` (s3-поля пустые до момента загрузки файла).
-### PATCH `/api/creatives/:id` — то же ограничение, БЕЗ s3-полей.
+**Multipart form-data** (фронт всегда шлёт multipart, даже если файла нет):
+- JSON-поля: `creative_name`, `link`, `trackers_macros`, `w?`, `h?`, `title?`, `description?`;
+- `file` *(опционально)* — бинарь картинки;
+- `filename` *(опционально, обязательно если есть `file`)* — имя файла.
+
+Бэк сам кладёт файл в S3 **и записывает имя файла в поле `name` строки креатива.** Resp: `Creative` (с `presigned_s3_url` и `name`, если файл был).
+
+### PATCH `/api/creatives/:id`
+То же самое: multipart form-data с любым подмножеством JSON-полей и опциональными `file` + `filename`. Если `file` пришёл — бэк перезаписывает картинку и обновляет `name`.
+
 ### DELETE `/api/creatives/:id` → 204
-
-### POST `/api/creatives/upload`
-Multipart form-data:
-- `file` — бинарь картинки;
-- `filename` — имя файла;
-- `creative_id` — id креатива, к которому привязать файл;
-- `campaign_id` — id кампании (для проверки прав/путей в S3).
-
-Бэк сам кладёт файл в S3 **и записывает `s3_file_path` + `file_format` в БД на нужную строку креатива.**
-Resp: `{ ok: true }` (или 204). Фронт после успеха просто перечитывает кампанию — картинка приедет в `presigned_s3_url`.
 
 ---
 
