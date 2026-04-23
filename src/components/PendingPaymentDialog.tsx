@@ -92,14 +92,18 @@ export function PendingPaymentDialog() {
     }
 
     try {
-      await api.createTopup({
+      // Send the full UserTransaction body. Backend-owned fields (id, user_id,
+      // transaction_time, total_balance_increase, created_at, updated_at) are
+      // omitted; everything else is forwarded explicitly so nothing is lost.
+      await api.createTransaction({
+        transaction_id: txHash.trim(),
         payment_method: pendingPayment.method,
-        deposit_amount: pendingPayment.amount,
-        currency: "USDT",
-        promocode_id: promocodeId,
         bonus_amount: pendingPayment.bonus || 0,
+        promocode_id: promocodeId,
         transaction_hash: txHash.trim(),
+        deposit_amount: pendingPayment.amount,
         status: "pending",
+        currency: "USDT",
       });
     } catch (e) {
       toast.error("Error submitting payment");

@@ -46,7 +46,7 @@ export default function DashboardBalance() {
     if (!user) return;
     setLoadingRequests(true);
     try {
-      const { items } = await api.listTopups();
+      const { items } = await api.listTransactions();
       setTopupRequests(items);
     } catch (e) {
       console.error("Topups fetch error:", e);
