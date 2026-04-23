@@ -6,6 +6,33 @@ import type {
 } from "./types";
 import type { ApiProvider } from "./mockProvider";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+
+/** Build a multipart body that carries JSON fields plus an optional file+filename. */
+function buildCreativeForm(body: Record<string, unknown>, file?: File, filename?: string): FormData {
+  const fd = new FormData();
+  for (const [k, v] of Object.entries(body)) {
+    if (v === undefined || v === null) continue;
+    fd.append(k, typeof v === "string" ? v : JSON.stringify(v));
+  }
+  if (file) {
+    fd.append("file", file, filename || file.name);
+    fd.append("filename", filename || file.name);
+  }
+  return fd;
+}
+
+function authHeaders(): Record<string, string> {
+  const tok = localStorage.getItem("twinbid_access_token");
+  return tok ? { Authorization: `Bearer ${tok}` } : {};
+}
+
+async function multipart<T>(url: string, method: "POST" | "PATCH", fd: FormData): Promise<T> {
+  const r = await fetch(`${API_BASE}${url}`, { method, headers: authHeaders(), body: fd });
+  if (!r.ok) throw new Error(`${method} ${url} failed: ${r.status}`);
+  return r.json() as Promise<T>;
+}
+
 // HTTP implementation. Hits the real backend described in API_CONTRACT.md.
 export const httpProvider: ApiProvider = {
   // auth
@@ -27,31 +54,16 @@ export const httpProvider: ApiProvider = {
   patchCampaign:   (id,p)  => http<ApiCampaign>(`/api/campaigns/${id}`, { method: "PATCH", body: p }),
   deleteCampaign:  (id)    => http<void>(`/api/campaigns/${id}`, { method: "DELETE" }),
 
-  // creatives
-  listCreatives:   (cid)         => http<ApiCreative[]>(`/api/campaigns/${cid}/creatives`),
-  createCreative:  (cid, body)   => http<ApiCreative>(`/api/campaigns/${cid}/creatives`, { method: "POST", body }),
-  patchCreative:   (id,  p)      => http<ApiCreative>(`/api/creatives/${id}`, { method: "PATCH", body: p }),
+  // creatives — read uses the renamed endpoint, writes go as multipart so the
+  // backend receives `file` + `filename` together with the rest of the fields.
+  readCreatives:   (cid)         => http<ApiCreative[]>(`/api/campaigns/${cid}/creatives`),
+  createCreative:  (cid, body, file, filename) =>
+    multipart<ApiCreative>(`/api/campaigns/${cid}/creatives`, "POST",
+      buildCreativeForm(body as Record<string, unknown>, file, filename)),
+  patchCreative:   (id, p, file, filename) =>
+    multipart<ApiCreative>(`/api/creatives/${id}`, "PATCH",
+      buildCreativeForm(p as Record<string, unknown>, file, filename)),
   deleteCreative:  (id)          => http<void>(`/api/creatives/${id}`, { method: "DELETE" }),
-  uploadCreativeFile: (file, meta) => {
-    const fd = new FormData();
-    fd.append("file", file, file.name);
-    fd.append("filename", file.name);
-    if (meta?.campaign_id) fd.append("campaign_id", meta.campaign_id);
-    if (meta?.creative_id) fd.append("creative_id", meta.creative_id);
-    return fetch(`${import.meta.env.VITE_API_BASE_URL ?? ""}/api/creatives/upload`, {
-      method: "POST",
-      headers: (() => {
-        const h: Record<string, string> = {};
-        const tok = localStorage.getItem("twinbid_access_token");
-        if (tok) h.Authorization = `Bearer ${tok}`;
-        return h;
-      })(),
-      body: fd,
-    }).then(async r => {
-      if (!r.ok) throw new Error(`Upload failed: ${r.status}`);
-      return r.json() as Promise<{ ok: true }>;
-    });
-  },
 
   // topups
   listTopups:   ()        => http<{ items: ApiUserTransaction[]; total: number }>("/api/topups"),
