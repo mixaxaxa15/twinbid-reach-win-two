@@ -235,7 +235,7 @@ Resp: `User`.
 ### POST `/api/notifications` body `{ type, text, transaction_id?, campaign_id?, deposit_amount? }` → `Notification` (создание с фронта, например для незавершённой транзакции).
 ### PATCH `/api/notifications/:id` body `{ status }` → `Notification` (отметка как `inactive`).
 
-> Уведомление о незавершённой транзакции переводится в `inactive` ТОЛЬКО при отмене транзакции (POST /api/topups/:id/cancel) или при её успешном завершении (статус `pending`/`approved`).
+> Уведомление о незавершённой транзакции переводится в `inactive` ТОЛЬКО при отмене транзакции (`POST /api/transactions/:id/cancel`) или при её успешном завершении (статус `pending`/`approved`).
 
 ---
 
@@ -280,7 +280,7 @@ Resp:
 | `/dashboard` overview cards | `GET /api/stats/overview` (ClickHouse) + `GET /api/profile` |
 | Список кампаний на overview/campaigns | `GET /api/campaigns` (Postgres) + `GET /api/stats/campaign/:id/summary` (ClickHouse) на каждую строку (или батч `POST /api/stats/query` с `group_by:["campaign"]`) |
 | `/dashboard/statistics` | `POST /api/stats/query` (ClickHouse) |
-| `/dashboard/balance` баланс/история | `GET /api/profile`, `GET /api/topups`, `POST /api/topups`, `PATCH /api/topups/:id`, `POST /api/topups/:id/cancel` |
+| `/dashboard/balance` баланс/история | `GET /api/profile`, `GET /api/transactions`, `POST /api/transactions`, `PATCH /api/transactions/:id`, `POST /api/transactions/:id/cancel` |
 | Создание/редактирование кампании | `POST/PATCH /api/campaigns`, `POST /api/creatives/upload-url`, CRUD `/api/creatives` |
 | Уведомления (колокольчик) | `GET/POST/PATCH /api/notifications` |
 | Настройки | `GET/PATCH /api/profile` |
