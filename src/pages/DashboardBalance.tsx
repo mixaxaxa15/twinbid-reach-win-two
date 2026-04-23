@@ -77,6 +77,14 @@ export default function DashboardBalance() {
         toast.error(t("balance.promo.invalid"));
         return;
       }
+      // Reject if this user already has a transaction tied to this promocode.
+      const alreadyUsed = topupRequests.some(
+        (tx) => tx.promocode_id === promo.id && (!user || tx.user_id === user.id)
+      );
+      if (alreadyUsed) {
+        toast.error(t("balance.promo.alreadyUsed"));
+        return;
+      }
       setAppliedPromo({ code, bonus: Number(promo.bonus_percent) });
       toast.success(t("balance.promo.applied").replace("{percent}", `${promo.bonus_percent}`));
     } catch {
