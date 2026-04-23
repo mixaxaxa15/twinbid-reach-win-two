@@ -123,7 +123,7 @@ Resp: `User`.
 - `push` → `ipp_creatives` (in-page push)
 - `native` → `nat_creatives`
 
-### Общая `Creative` форма
+### Общая `Creative` форма (ответ бэка)
 ```json
 {
   "id": "uuid",
@@ -134,7 +134,7 @@ Resp: `User`.
 
   // banner only:
   "w": 300, "h": 250,
-  // banner / push / native:
+  // banner / push / native (заполняются БЭКОМ после загрузки файла):
   "s3_file_path": "s3://twinbid/creatives/...",
   "presigned_s3_url": "https://s3.amazonaws.com/...&X-Amz-Signature=...",
   "file_format": "png | jpg | gif | mp4",
@@ -144,19 +144,26 @@ Resp: `User`.
 }
 ```
 
-> `s3_file_path` — постоянный идентификатор объекта в S3. Фронт сохраняет его при создании/обновлении креатива.
-> `presigned_s3_url` — временный signed URL для чтения, бэк добавляет его в ответы GET. Фронт использует именно его в `<img src>`. На запись (POST/PATCH) фронт это поле не шлёт.
+> **Фронт никогда не пишет `s3_file_path`.** Это поле (как и `file_format`) полностью на стороне бэка: бэк сам присваивает его, когда фронт загружает файл через `POST /api/creatives/upload`.
+> `presigned_s3_url` — временный signed URL для чтения, который бэк добавляет в ответы GET. Фронт использует его в `<img src>`.
 
 ### GET `/api/campaigns/:id/creatives` → `Creative[]` (с `presigned_s3_url`)
-### POST `/api/campaigns/:id/creatives` body `Creative` (без `presigned_s3_url`) → `Creative` (с `presigned_s3_url`)
-### PATCH `/api/creatives/:id` → `Creative`
+### POST `/api/campaigns/:id/creatives`
+Body — БЕЗ `s3_file_path`, `presigned_s3_url`, `file_format`:
+`{ creative_name, link, trackers_macros, w?, h?, title?, description? }`.
+Resp: `Creative` (s3-поля пустые до момента загрузки файла).
+### PATCH `/api/creatives/:id` — то же ограничение, БЕЗ s3-полей.
 ### DELETE `/api/creatives/:id` → 204
 
 ### POST `/api/creatives/upload`
-Multipart form-data: поле `file` (бинарь картинки), поле `filename` (имя файла).
-Бэк сам кладёт файл в S3 и возвращает идентификатор хранения.
-Resp: `{ s3_file_path: "s3://...", file_format: "image/png" }`.
-Фронт сохраняет `s3_file_path` на креативе. Для отображения при следующей загрузке используется `presigned_s3_url` из ответа GET креатива.
+Multipart form-data:
+- `file` — бинарь картинки;
+- `filename` — имя файла;
+- `creative_id` — id креатива, к которому привязать файл;
+- `campaign_id` — id кампании (для проверки прав/путей в S3).
+
+Бэк сам кладёт файл в S3 **и записывает `s3_file_path` + `file_format` в БД на нужную строку креатива.**
+Resp: `{ ok: true }` (или 204). Фронт после успеха просто перечитывает кампанию — картинка приедет в `presigned_s3_url`.
 
 ---
 

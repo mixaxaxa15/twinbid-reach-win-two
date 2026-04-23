@@ -22,9 +22,11 @@ export interface Creative {
   id: string;
   name?: string;
   url: string;
+  /** Display URL: presigned read URL from backend, or local data URL preview after a fresh upload. */
   imageUrl?: string;
   imageFileName?: string;
-  storagePath?: string;
+  /** New file picked by the user. Uploaded to the backend after the creative row is created/updated. */
+  pendingFile?: File;
   title?: string;
   description?: string;
 }
@@ -133,17 +135,15 @@ function fileNameFromPath(p?: string): string | undefined {
 
 function mapApiCreativeToUi(cr: ApiCreative): Creative {
   const anyCr = cr as any;
-  const storagePath: string | undefined = anyCr.s3_file_path || undefined;
-  // Display URL = presigned read URL from the backend. Falls back to the raw
-  // path only if the backend forgot it (e.g. mock mode that stores data URLs).
-  const displayUrl: string | undefined = anyCr.presigned_s3_url || storagePath;
+  // Display URL = presigned read URL from the backend. Mock providers may put
+  // a data URL into `s3_file_path` directly; use it as a fallback.
+  const displayUrl: string | undefined = anyCr.presigned_s3_url || anyCr.s3_file_path || undefined;
   return {
     id: cr.id,
     name: cr.creative_name || undefined,
     url: cr.link,
     imageUrl: displayUrl,
-    imageFileName: fileNameFromPath(storagePath),
-    storagePath,
+    imageFileName: fileNameFromPath(anyCr.s3_file_path),
     title: anyCr.title || undefined,
     description: anyCr.description || undefined,
   };
@@ -215,17 +215,22 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     if (!user) return undefined;
     try {
       const created = await api.createCampaign(buildApiCampaignBody(c));
-      // Insert creatives. The API contract distinguishes shapes per format; here
-      // we send the lowest common denominator that the mock accepts.
+      // For each creative: create the row first (no s3_file_path — backend owns it),
+      // then upload the file separately so backend writes s3_file_path itself.
       for (const cr of c.creatives) {
-        await api.createCreative(created.campaing_id, {
+        const createdCr = await api.createCreative(created.campaing_id, {
           creative_name: cr.name || "",
           link: cr.url,
           trackers_macros: {},
-          ...(cr.storagePath ? { s3_file_path: cr.storagePath, file_format: "image/png" } : {}),
           ...(cr.title ? { title: cr.title } : {}),
           ...(cr.description ? { description: cr.description } : {}),
         } as any);
+        if (cr.pendingFile) {
+          await api.uploadCreativeFile(cr.pendingFile, {
+            campaign_id: created.campaing_id,
+            creative_id: createdCr.id,
+          });
+        }
       }
       await fetchCampaigns();
       return created.campaing_id;
@@ -250,14 +255,19 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         const existing = await api.listCreatives(id);
         await Promise.all(existing.map(cr => api.deleteCreative(cr.id)));
         for (const cr of updates.creatives) {
-          await api.createCreative(id, {
+          const createdCr = await api.createCreative(id, {
             creative_name: cr.name || "",
             link: cr.url,
             trackers_macros: {},
-            ...(cr.storagePath ? { s3_file_path: cr.storagePath, file_format: "image/png" } : {}),
             ...(cr.title ? { title: cr.title } : {}),
             ...(cr.description ? { description: cr.description } : {}),
           } as any);
+          if (cr.pendingFile) {
+            await api.uploadCreativeFile(cr.pendingFile, {
+              campaign_id: id,
+              creative_id: createdCr.id,
+            });
+          }
         }
       }
       await fetchCampaigns();

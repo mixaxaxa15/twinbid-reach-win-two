@@ -32,10 +32,12 @@ export const httpProvider: ApiProvider = {
   createCreative:  (cid, body)   => http<ApiCreative>(`/api/campaigns/${cid}/creatives`, { method: "POST", body }),
   patchCreative:   (id,  p)      => http<ApiCreative>(`/api/creatives/${id}`, { method: "PATCH", body: p }),
   deleteCreative:  (id)          => http<void>(`/api/creatives/${id}`, { method: "DELETE" }),
-  uploadCreativeFile: (file)     => {
+  uploadCreativeFile: (file, meta) => {
     const fd = new FormData();
     fd.append("file", file, file.name);
     fd.append("filename", file.name);
+    if (meta?.campaign_id) fd.append("campaign_id", meta.campaign_id);
+    if (meta?.creative_id) fd.append("creative_id", meta.creative_id);
     return fetch(`${import.meta.env.VITE_API_BASE_URL ?? ""}/api/creatives/upload`, {
       method: "POST",
       headers: (() => {
@@ -47,7 +49,7 @@ export const httpProvider: ApiProvider = {
       body: fd,
     }).then(async r => {
       if (!r.ok) throw new Error(`Upload failed: ${r.status}`);
-      return r.json() as Promise<{ s3_file_path: string; file_format: string }>;
+      return r.json() as Promise<{ ok: true }>;
     });
   },
 
