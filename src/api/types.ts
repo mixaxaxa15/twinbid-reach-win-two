@@ -73,18 +73,22 @@ export interface ApiBanCreative extends ApiCreativeBase {
   w: number;
   h: number;
   s3_file_path: string;
+  /** Presigned read URL returned by the backend (GET creative). Not sent on write. */
+  presigned_s3_url?: string;
   file_format: string;
 }
 export interface ApiIppCreative extends ApiCreativeBase {
   title: string;
   description: string;
   s3_file_path: string;
+  presigned_s3_url?: string;
   file_format: string;
 }
 export interface ApiNatCreative extends ApiCreativeBase {
   title: string;
   description: string;
   s3_file_path: string;
+  presigned_s3_url?: string;
   file_format: string;
 }
 export type ApiCreative =
