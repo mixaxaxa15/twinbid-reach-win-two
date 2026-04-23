@@ -133,14 +133,17 @@ function fileNameFromPath(p?: string): string | undefined {
 
 function mapApiCreativeToUi(cr: ApiCreative): Creative {
   const anyCr = cr as any;
-  const path: string | undefined = anyCr.s3_file_path || undefined;
+  const storagePath: string | undefined = anyCr.s3_file_path || undefined;
+  // Display URL = presigned read URL from the backend. Falls back to the raw
+  // path only if the backend forgot it (e.g. mock mode that stores data URLs).
+  const displayUrl: string | undefined = anyCr.presigned_s3_url || storagePath;
   return {
     id: cr.id,
     name: cr.creative_name || undefined,
     url: cr.link,
-    imageUrl: path,
-    imageFileName: fileNameFromPath(path),
-    storagePath: path,
+    imageUrl: displayUrl,
+    imageFileName: fileNameFromPath(storagePath),
+    storagePath,
     title: anyCr.title || undefined,
     description: anyCr.description || undefined,
   };
@@ -219,7 +222,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
           creative_name: cr.name || "",
           link: cr.url,
           trackers_macros: {},
-          ...(cr.imageUrl ? { s3_file_path: cr.imageUrl, file_format: "image/png" } : {}),
+          ...(cr.storagePath ? { s3_file_path: cr.storagePath, file_format: "image/png" } : {}),
           ...(cr.title ? { title: cr.title } : {}),
           ...(cr.description ? { description: cr.description } : {}),
         } as any);
@@ -251,7 +254,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
             creative_name: cr.name || "",
             link: cr.url,
             trackers_macros: {},
-            ...(cr.imageUrl ? { s3_file_path: cr.imageUrl, file_format: "image/png" } : {}),
+            ...(cr.storagePath ? { s3_file_path: cr.storagePath, file_format: "image/png" } : {}),
             ...(cr.title ? { title: cr.title } : {}),
             ...(cr.description ? { description: cr.description } : {}),
           } as any);
