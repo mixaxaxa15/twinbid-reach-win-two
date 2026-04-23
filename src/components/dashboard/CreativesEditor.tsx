@@ -216,8 +216,12 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
                   onChange={e => handleImageUpload(creative.id, e)} />
                 <p className="text-xs text-muted-foreground">{t("create.imageFormatHint")}</p>
                 <div className="flex items-center gap-3">
-                  <Button type="button" variant="outline" onClick={() => fileInputRefs.current[creative.id]?.click()} className="border-border gap-2">
-                    <Upload className="h-4 w-4" /> {t("create.uploadImage")}
+                  <Button type="button" variant="outline" disabled={uploadingId === creative.id}
+                    onClick={() => fileInputRefs.current[creative.id]?.click()} className="border-border gap-2">
+                    {uploadingId === creative.id
+                      ? <Loader2 className="h-4 w-4 animate-spin" />
+                      : <Upload className="h-4 w-4" />}
+                    {t("create.uploadImage")}
                   </Button>
                   {creative.imageFileName && <span className="text-sm text-muted-foreground">{creative.imageFileName}</span>}
                 </div>
