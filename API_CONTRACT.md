@@ -136,6 +136,7 @@ Resp: `User`.
   "w": 300, "h": 250,
   // banner / push / native:
   "s3_file_path": "s3://twinbid/creatives/...",
+  "presigned_s3_url": "https://s3.amazonaws.com/...&X-Amz-Signature=...",
   "file_format": "png | jpg | gif | mp4",
   // push / native:
   "title": "string",
@@ -143,16 +144,19 @@ Resp: `User`.
 }
 ```
 
-### GET `/api/campaigns/:id/creatives` → `Creative[]`
-### POST `/api/campaigns/:id/creatives` body `Creative` → `Creative`
+> `s3_file_path` — постоянный идентификатор объекта в S3. Фронт сохраняет его при создании/обновлении креатива.
+> `presigned_s3_url` — временный signed URL для чтения, бэк добавляет его в ответы GET. Фронт использует именно его в `<img src>`. На запись (POST/PATCH) фронт это поле не шлёт.
+
+### GET `/api/campaigns/:id/creatives` → `Creative[]` (с `presigned_s3_url`)
+### POST `/api/campaigns/:id/creatives` body `Creative` (без `presigned_s3_url`) → `Creative` (с `presigned_s3_url`)
 ### PATCH `/api/creatives/:id` → `Creative`
 ### DELETE `/api/creatives/:id` → 204
 
 ### POST `/api/creatives/upload`
 Multipart form-data: поле `file` (бинарь картинки), поле `filename` (имя файла).
-Бэк сам решает, куда положить файл (S3/локально/что угодно).
+Бэк сам кладёт файл в S3 и возвращает идентификатор хранения.
 Resp: `{ s3_file_path: "s3://...", file_format: "image/png" }`.
-Фронт затем передаёт `s3_file_path` при создании/обновлении креатива и при последующей загрузке кампании отображает картинку прямо по этой ссылке.
+Фронт сохраняет `s3_file_path` на креативе. Для отображения при следующей загрузке используется `presigned_s3_url` из ответа GET креатива.
 
 ---
 

@@ -20,8 +20,9 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-// Upload a File to the backend (multipart). Backend stores it (e.g. in S3) and
-// returns the public/internal path that we then save on the creative record.
+// Upload a File to the backend (multipart). Backend stores it in S3 and
+// returns the storage path. The displayable image URL comes back as
+// `presigned_s3_url` when fetching the creative later.
 async function uploadCreativeImage(file: File): Promise<string> {
   const { s3_file_path } = await api.uploadCreativeFile(file);
   return s3_file_path;
@@ -78,15 +79,16 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
     }
     setUploadingId(creativeId);
     try {
-      // Persist the actual image bytes so reloads don't lose the preview.
-      // Mock: base64 data URL stored in localStorage.
-      // HTTP: upload to backend-issued signed URL and store the S3 path.
-      const stored = USE_MOCK
-        ? await readFileAsDataUrl(file)
+      // Local data-URL preview shown immediately (works in mock + HTTP).
+      const previewUrl = await readFileAsDataUrl(file);
+      // HTTP: also upload to backend so it's persisted in S3 and we get a
+      // storage path to save on the creative record. Mock: keep data URL.
+      const storagePath = USE_MOCK
+        ? previewUrl
         : await uploadCreativeImage(file);
       updateCreative(creativeId, {
-        imageUrl: stored,
-        storagePath: stored,
+        imageUrl: previewUrl,
+        storagePath,
         imageFileName: file.name,
       });
       onClearError?.(`creative_${creativeId}_image`);
