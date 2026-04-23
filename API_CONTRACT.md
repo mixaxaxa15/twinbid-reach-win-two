@@ -148,10 +148,11 @@ Resp: `User`.
 ### PATCH `/api/creatives/:id` → `Creative`
 ### DELETE `/api/creatives/:id` → 204
 
-### POST `/api/creatives/upload-url`
-Body: `{ filename, content_type, size }`.
-Resp: `{ upload_url: "https://s3...", s3_file_path: "s3://...", expires_in: 900 }`.
-Фронт делает PUT файла напрямую в `upload_url`, потом передаёт `s3_file_path` при создании креатива.
+### POST `/api/creatives/upload`
+Multipart form-data: поле `file` (бинарь картинки), поле `filename` (имя файла).
+Бэк сам решает, куда положить файл (S3/локально/что угодно).
+Resp: `{ s3_file_path: "s3://...", file_format: "image/png" }`.
+Фронт затем передаёт `s3_file_path` при создании/обновлении креатива и при последующей загрузке кампании отображает картинку прямо по этой ссылке.
 
 ---
 

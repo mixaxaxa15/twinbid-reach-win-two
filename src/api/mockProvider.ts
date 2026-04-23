@@ -161,12 +161,17 @@ export const mockProvider = {
     saveState();
     return delay(undefined);
   },
-  async getUploadUrl(body: { filename: string; content_type: string; size: number }) {
-    return delay({
-      upload_url: `https://mock-s3/upload/${body.filename}`,
-      s3_file_path: `s3://twinbid/creatives/${uid()}-${body.filename}`,
-      expires_in: 900,
+  async uploadCreativeFile(file: File): Promise<{ s3_file_path: string; file_format: string }> {
+    // In mock mode we don't really store the file. The caller (CreativesEditor)
+    // takes the data-URL path itself, so this is rarely hit. Still implement it
+    // for parity: read the file as a data URL and pretend it's an S3 path.
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(file);
     });
+    return delay({ s3_file_path: dataUrl, file_format: file.type || "image/png" });
   },
 
   // -- topups -------------------------------------------------------------
