@@ -119,15 +119,28 @@ function mapApiCampaignToUi(c: ApiCampaign, creatives: Creative[]): Campaign {
   };
 }
 
+function fileNameFromPath(p?: string): string | undefined {
+  if (!p) return undefined;
+  // For data URLs we can't derive a file name; show a generic label.
+  if (p.startsWith("data:")) return "image";
+  try {
+    // Strip query string and take last path segment.
+    const clean = p.split("?")[0];
+    const tail = clean.substring(clean.lastIndexOf("/") + 1);
+    return tail || undefined;
+  } catch { return undefined; }
+}
+
 function mapApiCreativeToUi(cr: ApiCreative): Creative {
   const anyCr = cr as any;
+  const path: string | undefined = anyCr.s3_file_path || undefined;
   return {
     id: cr.id,
     name: cr.creative_name || undefined,
     url: cr.link,
-    imageUrl: anyCr.s3_file_path || undefined,
-    imageFileName: undefined,
-    storagePath: anyCr.s3_file_path || undefined,
+    imageUrl: path,
+    imageFileName: fileNameFromPath(path),
+    storagePath: path,
     title: anyCr.title || undefined,
     description: anyCr.description || undefined,
   };

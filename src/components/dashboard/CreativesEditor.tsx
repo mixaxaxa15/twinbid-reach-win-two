@@ -1,13 +1,40 @@
-import { useRef, useMemo } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Plus, Trash2 } from "lucide-react";
+import { Upload, Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Creative } from "@/contexts/CampaignContext";
+import { api, USE_MOCK } from "@/api";
+
+// Read a File as a base64 data URL (used in mock mode so images survive reloads).
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// Upload a File to the backend-issued signed URL and return the stored S3 path.
+async function uploadViaSignedUrl(file: File): Promise<string> {
+  const { upload_url, s3_file_path } = await api.getUploadUrl({
+    filename: file.name,
+    content_type: file.type || "application/octet-stream",
+    size: file.size,
+  });
+  const res = await fetch(upload_url, {
+    method: "PUT",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  });
+  if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+  return s3_file_path;
+}
 
 const URL_MACROS = [
   "click_id", "site_id", "country_code", "creative_id",
@@ -27,6 +54,7 @@ const generateId = () => String(Date.now()) + Math.random().toString(36).slice(2
 export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, onClearError }: CreativesEditorProps) {
   const { t } = useLanguage();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
 
   const showTitle = formatKey === "native" || formatKey === "push";
   const showDescription = formatKey === "native" || formatKey === "push";
@@ -48,19 +76,36 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
   const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg"];
   const ALLOWED_EXTENSIONS = [".png", ".jpg", ".jpeg"];
 
-  const handleImageUpload = (creativeId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (creativeId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
-      if (!ALLOWED_EXTENSIONS.includes(ext) && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        toast.error(t("create.imageFormatError"));
-        e.target.value = "";
-        return;
-      }
-      const url = URL.createObjectURL(file);
-      updateCreative(creativeId, { imageUrl: url, imageFileName: file.name });
+    if (!file) return;
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+    if (!ALLOWED_EXTENSIONS.includes(ext) && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error(t("create.imageFormatError"));
+      e.target.value = "";
+      return;
+    }
+    setUploadingId(creativeId);
+    try {
+      // Persist the actual image bytes so reloads don't lose the preview.
+      // Mock: base64 data URL stored in localStorage.
+      // HTTP: upload to backend-issued signed URL and store the S3 path.
+      const stored = USE_MOCK
+        ? await readFileAsDataUrl(file)
+        : await uploadViaSignedUrl(file);
+      updateCreative(creativeId, {
+        imageUrl: stored,
+        storagePath: stored,
+        imageFileName: file.name,
+      });
       onClearError?.(`creative_${creativeId}_image`);
       toast.success(t("create.imageUploaded"));
+    } catch (err) {
+      console.error("Image upload error:", err);
+      toast.error(t("create.imageFormatError"));
+    } finally {
+      setUploadingId(null);
+      e.target.value = "";
     }
   };
 
