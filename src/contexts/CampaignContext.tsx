@@ -254,8 +254,16 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const { items } = await api.listCampaigns();
+      // Isolate creative loading per-campaign: a single failure must not
+      // break the whole list. Failed reads degrade to an empty creatives
+      // array so the rest of the campaign still shows up.
       const withCreatives = await Promise.all(items.map(async c => {
-        const crs = await api.readCreatives(c.campaing_id);
+        let crs: ApiCreative[] = [];
+        try {
+          crs = await api.readCreatives(c.campaing_id);
+        } catch (e) {
+          console.error(`readCreatives failed for ${c.campaing_id}:`, e);
+        }
         return mapApiCampaignToUi(c, crs.map(mapApiCreativeToUi));
       }));
       setCampaigns(withCreatives);
@@ -269,14 +277,43 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
 
   const addCampaign = useCallback(async (c: Omit<Campaign, "id">): Promise<string | undefined> => {
-    if (!user) return undefined;
-    try {
-      const created = await api.createCampaign(buildApiCampaignBody(c));
-      // Send file + filename together with the rest of the creative fields.
-      // Backend handles S3 storage and presigned URL generation on read.
-      for (const cr of c.creatives) {
+    if (!user) throw new Error("Not authenticated");
+    // Errors here propagate to the caller so the UI can show the real
+    // backend message instead of a fake success toast.
+    const created = await api.createCampaign(buildApiCampaignBody(c));
+    for (const cr of c.creatives) {
+      await api.createCreative(
+        created.campaing_id,
+        {
+          creative_name: cr.name || "",
+          link: cr.url,
+          trackers_macros: {},
+          ...(cr.title ? { title: cr.title } : {}),
+          ...(cr.description ? { description: cr.description } : {}),
+        } as any,
+        cr.pendingFile,
+        cr.pendingFile ? (cr.imageFileName || cr.pendingFile.name) : undefined,
+      );
+    }
+    await fetchCampaigns();
+    return created.campaing_id;
+  }, [user, fetchCampaigns]);
+
+  const updateCampaign = useCallback(async (id: string, updates: Partial<Campaign>) => {
+    if (!user) throw new Error("Not authenticated");
+    // Build a *partial* patch so toggling a single field (status, budget,
+    // ...) does not rewrite unrelated fields.
+    const patch = buildApiCampaignPatch(updates);
+    if (Object.keys(patch).length > 0) {
+      await api.patchCampaign(id, patch);
+    }
+
+    if (updates.creatives !== undefined) {
+      const existing = await api.readCreatives(id).catch(() => [] as ApiCreative[]);
+      await Promise.all(existing.map(cr => api.deleteCreative(cr.id)));
+      for (const cr of updates.creatives) {
         await api.createCreative(
-          created.campaing_id,
+          id,
           {
             creative_name: cr.name || "",
             link: cr.url,
@@ -288,55 +325,14 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
           cr.pendingFile ? (cr.imageFileName || cr.pendingFile.name) : undefined,
         );
       }
-      await fetchCampaigns();
-      return created.campaing_id;
-    } catch (e) {
-      console.error("Add campaign error:", e);
-      return undefined;
     }
+    await fetchCampaigns();
   }, [user, fetchCampaigns]);
 
-  const updateCampaign = useCallback(async (id: string, updates: Partial<Campaign>) => {
-    if (!user) return;
-    try {
-      const current = campaigns.find(c => c.id === id);
-      if (!current) return;
-      const merged: Campaign = { ...current, ...updates };
-      const body = buildApiCampaignBody(merged);
-      await api.patchCampaign(id, body as Partial<ApiCampaign>);
-
-      if (updates.creatives !== undefined) {
-        const existing = await api.readCreatives(id);
-        await Promise.all(existing.map(cr => api.deleteCreative(cr.id)));
-        for (const cr of updates.creatives) {
-          await api.createCreative(
-            id,
-            {
-              creative_name: cr.name || "",
-              link: cr.url,
-              trackers_macros: {},
-              ...(cr.title ? { title: cr.title } : {}),
-              ...(cr.description ? { description: cr.description } : {}),
-            } as any,
-            cr.pendingFile,
-            cr.pendingFile ? (cr.imageFileName || cr.pendingFile.name) : undefined,
-          );
-        }
-      }
-      await fetchCampaigns();
-    } catch (e) {
-      console.error("Update campaign error:", e);
-    }
-  }, [user, fetchCampaigns, campaigns]);
-
   const deleteCampaign = useCallback(async (id: string) => {
-    if (!user) return;
-    try {
-      await api.deleteCampaign(id);
-      await fetchCampaigns();
-    } catch (e) {
-      console.error("Delete campaign error:", e);
-    }
+    if (!user) throw new Error("Not authenticated");
+    await api.deleteCampaign(id);
+    await fetchCampaigns();
   }, [user, fetchCampaigns]);
 
   const getCampaign = useCallback((id: string) => campaigns.find(c => c.id === id), [campaigns]);
