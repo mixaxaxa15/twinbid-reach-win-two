@@ -56,13 +56,22 @@ export async function http<T>(path: string, opts: RequestOptions = {}): Promise<
   }
 
   if (!res.ok) {
+    // Backend may return either `{ error: { message, code, fields } }`
+    // or a flat `{ success: false, errorMsg: "..." }` envelope. Surface
+    // whichever is present.
     const err = data?.error;
+    const flatMsg = data?.errorMsg;
     throw new ApiError(
       res.status,
-      err?.message || (typeof data === "string" ? data : `HTTP ${res.status}`),
+      err?.message || flatMsg || (typeof data === "string" ? data : `HTTP ${res.status}`),
       err?.code,
       err?.fields,
     );
+  }
+  // 2xx but with `{ success: false, errorMsg }` envelope → throw too so
+  // callers can rely on a single error path.
+  if (data && typeof data === "object" && (data as any).success === false) {
+    throw new ApiError(res.status, (data as any).errorMsg || "Request failed");
   }
   return data as T;
 }
