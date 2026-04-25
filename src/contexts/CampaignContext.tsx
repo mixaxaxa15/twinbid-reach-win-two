@@ -148,6 +148,17 @@ function mapApiCreativeToUi(cr: ApiCreative): Creative {
   };
 }
 
+/** Convert a `YYYY-MM-DD` form value into the timestamps the backend expects. */
+function startTimestamp(date: string): string {
+  if (!date) return "";
+  return `${date}T00:00:00Z`;
+}
+function endTimestamp(date: string): string {
+  if (!date) return "";
+  // Inclusive end-of-day for the chosen end date.
+  return `${date}T23:59:59Z`;
+}
+
 function buildApiCampaignBody(c: Omit<Campaign, "id">): Omit<ApiCampaign, "campaing_id" | "user_id" | "cum_done_dollars"> {
   let w: number | null = null, h: number | null = null;
   if (c.bannerSize && /^\d+x\d+$/.test(c.bannerSize)) {
@@ -167,11 +178,58 @@ function buildApiCampaignBody(c: Omit<Campaign, "id">): Omit<ApiCampaign, "campa
     base_price_cpc: c.pricingModel === "cpc" ? c.priceValue : 0,
     evenness_by_slot_mode: c.evenSpend,
     goal_total_dollars: c.budget,
-    start_ts: c.startDate || "",
-    end_ts: c.endDate || "",
+    start_ts: startTimestamp(c.startDate),
+    end_ts: endTimestamp(c.endDate),
     active_intervals: [],
     ...buildApiTargeting(c.targeting),
   };
+}
+
+/**
+ * Map a *partial* UI update to a partial API patch. Only fields that are
+ * actually present in `updates` are forwarded — this prevents bugs where
+ * toggling one switch (e.g. status) rewrites unrelated fields like
+ * notification preferences or budget.
+ */
+function buildApiCampaignPatch(updates: Partial<Campaign>): Partial<ApiCampaign> {
+  const p: Partial<ApiCampaign> = {};
+  if (updates.name !== undefined) p.campaign_name = updates.name;
+  if (updates.formatKey !== undefined || updates.format !== undefined) {
+    p.format_type = ((updates.formatKey ?? updates.format) || "") as FormatType;
+  }
+  if (updates.brandName !== undefined) p.brand_name = updates.brandName ?? null;
+  if (updates.bannerSize !== undefined) {
+    if (updates.bannerSize && /^\d+x\d+$/.test(updates.bannerSize)) {
+      const [ws, hs] = updates.bannerSize.split("x");
+      p.w = Number(ws); p.h = Number(hs);
+    } else {
+      p.w = null; p.h = null;
+    }
+  }
+  if (updates.status !== undefined) p.status = updates.status;
+  if (updates.trafficType !== undefined) p.traffic_type = updates.trafficType;
+  if (updates.verticals !== undefined) p.vertical = updates.verticals;
+  if (updates.pricingModel !== undefined || updates.priceValue !== undefined) {
+    // Both fields cooperate; require pricingModel to know which slot.
+    const pm = updates.pricingModel;
+    const pv = updates.priceValue;
+    if (pm !== undefined && pv !== undefined) {
+      p.pricing_model = pm;
+      p.base_price_cpm = pm === "cpm" ? pv : 0;
+      p.base_price_cpc = pm === "cpc" ? pv : 0;
+    } else if (pv !== undefined) {
+      // Fall back to writing both with whatever the caller sent.
+      p.base_price_cpm = pv;
+    } else if (pm !== undefined) {
+      p.pricing_model = pm;
+    }
+  }
+  if (updates.evenSpend !== undefined) p.evenness_by_slot_mode = updates.evenSpend;
+  if (updates.budget !== undefined) p.goal_total_dollars = updates.budget;
+  if (updates.startDate !== undefined) p.start_ts = startTimestamp(updates.startDate);
+  if (updates.endDate !== undefined) p.end_ts = endTimestamp(updates.endDate);
+  if (updates.targeting !== undefined) Object.assign(p, buildApiTargeting(updates.targeting));
+  return p;
 }
 
 interface CampaignContextType {
