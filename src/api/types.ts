@@ -182,6 +182,6 @@ export interface AuthResponse extends AuthTokens {
 // is thrown carrying `errorMsg`.
 export interface ApiEnvelope<T> {
   success: boolean;
-  errorMsg?: string;
+  errorMsg: string;
   data?: T;
 }
