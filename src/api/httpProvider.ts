@@ -36,8 +36,10 @@ async function multipart<T>(url: string, method: "POST" | "PATCH", fd: FormData)
     return { success: false, errorMsg: data?.errorMsg || data?.error?.message || `HTTP ${r.status}` };
   }
   // Backend may return an envelope already, or a bare payload.
-  if (data && typeof data === "object" && "success" in data) return data as ApiEnvelope<T>;
-  return { success: true, data: data as T };
+  if (data && typeof data === "object" && "success" in data) {
+    return { errorMsg: "", ...(data as ApiEnvelope<T>) };
+  }
+  return { success: true, errorMsg: "", data: data as T };
 }
 
 // HTTP implementation. Every method returns `ApiEnvelope<T>`; `api/index.ts`

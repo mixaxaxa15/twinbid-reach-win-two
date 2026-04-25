@@ -74,7 +74,7 @@ function delay<T>(v: T, ms = 80): Promise<T> {
 
 /** Wrap a value into a successful envelope (with delay). */
 function ok<T>(v: T, ms?: number): Promise<ApiEnvelope<T>> {
-  return delay({ success: true, data: v } as ApiEnvelope<T>, ms);
+  return delay({ success: true, errorMsg: "", data: v } as ApiEnvelope<T>, ms);
 }
 /** Wrap an error message into a failed envelope. */
 function fail<T>(errorMsg: string, ms?: number): Promise<ApiEnvelope<T>> {

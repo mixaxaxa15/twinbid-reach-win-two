@@ -16,10 +16,8 @@ const raw: RawApiProvider = USE_MOCK ? mockProvider : httpProvider;
 
 function unwrap<T>(env: ApiEnvelope<T>): T {
   if (!env || typeof env !== "object") return env as unknown as T;
-  if (env.success === false) {
-    throw new ApiError(200, env.errorMsg || "Request failed");
-  }
-  return env.data as T;
+  if (env.success === true) return env.data as T;
+  throw new ApiError(200, env.errorMsg || "Request failed");
 }
 
 /** Build a proxy that calls `raw[method](...args)` then unwraps the envelope. */
