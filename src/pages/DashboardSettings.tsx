@@ -175,7 +175,7 @@ export default function DashboardSettings() {
                     <Label>{t("settings.campaignBudgetAlert")}</Label>
                     <p className="text-xs text-muted-foreground mt-0.5">{t("settings.campaignBudgetAlertDesc")}</p>
                   </div>
-                  <Switch checked={notifyCampaign} onCheckedChange={setNotifyCampaign} />
+                  <Switch checked={notifyBudget} onCheckedChange={setNotifyBudget} />
                 </div>
               </div>
               <Separator />
