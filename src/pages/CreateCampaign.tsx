@@ -144,9 +144,9 @@ export default function CreateCampaign() {
     return { min: minCpm };
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 1 && !validateStep1()) return;
-    if (step === 3) { if (!validateStep3()) return; handleCreate(); return; }
+    if (step === 3) { if (!validateStep3()) return; await handleCreate(); return; }
     setStep(step + 1);
     setErrors({});
   };
