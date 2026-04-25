@@ -46,10 +46,11 @@ export default function DashboardBalance() {
     if (!user) return;
     setLoadingRequests(true);
     try {
-      const { items } = await api.listTransactions();
-      setTopupRequests(items);
+      const res = await api.listTransactions();
+      setTopupRequests(Array.isArray(res?.items) ? res.items : []);
     } catch (e) {
       console.error("Topups fetch error:", e);
+      setTopupRequests([]);
     } finally {
       setLoadingRequests(false);
     }
