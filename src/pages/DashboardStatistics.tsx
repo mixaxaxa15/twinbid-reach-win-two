@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Eye, MousePointer, Target, TrendingUp, ArrowUpDown, CalendarIcon, RefreshCw, Filter } from "lucide-react";
+import { Eye, MousePointer, Target, TrendingUp, ArrowUpDown, CalendarIcon, RefreshCw, Filter, Download } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, subDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -490,6 +490,9 @@ export default function DashboardStatistics() {
 
         <Button onClick={handleRefresh} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
           <RefreshCw className="h-4 w-4" /> {t("stats.refresh")}
+        </Button>
+        <Button onClick={handleDownloadCsv} variant="outline" className="border-border gap-2" disabled={!hasSelection || sortedData.length === 0}>
+          <Download className="h-4 w-4" /> {t("stats.downloadCsv")}
         </Button>
       </div>
 
