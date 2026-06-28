@@ -374,6 +374,8 @@ export default function DashboardStatistics() {
     impressions: sortedData.reduce((s, r) => s + r.impressions, 0),
     clicks: sortedData.reduce((s, r) => s + r.clicks, 0),
     spent: sortedData.reduce((s, r) => s + r.spent, 0),
+    conversions: sortedData.reduce((s, r) => s + r.conversions, 0),
+    income: sortedData.reduce((s, r) => s + r.income, 0),
   }), [sortedData]);
 
   const labelHeader = appliedGroupBy === "dates" ? t("stats.date") : appliedGroupBy === "hours" ? t("stats.dateAndHour") : appliedGroupBy === "browsers" ? t("stats.browser") : appliedGroupBy === "siteid" ? "SiteID" : appliedGroupBy === "os" ? t("stats.os") : appliedGroupBy === "country" ? t("stats.country") : t("stats.device");
@@ -381,7 +383,9 @@ export default function DashboardStatistics() {
 
   const handleDownloadCsv = useCallback(() => {
     if (!sortedData.length) return;
-    const headers = [labelHeader, t("stats.impressions"), t("stats.clicks"), t("stats.ctr"), t("stats.spent")];
+    const baseHeaders = [labelHeader, t("stats.impressions"), t("stats.clicks"), t("stats.ctr"), t("stats.spent")];
+    const convHeaders = [t("stats.conversions"), t("stats.cr"), t("stats.income"), t("stats.roi")];
+    const headers = showConversions ? [...baseHeaders, ...convHeaders] : baseHeaders;
     const escape = (v: string | number) => {
       const s = String(v);
       return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -389,15 +393,20 @@ export default function DashboardStatistics() {
     const rows = sortedData.map(r => {
       const label = appliedGroupBy === "country" ? formatCountryLabel(r.label, lang) : r.label;
       const ctr = r.impressions > 0 ? ((r.clicks / r.impressions) * 100).toFixed(2) + "%" : "0.00%";
-      return [label, r.impressions, r.clicks, ctr, r.spent.toFixed(2)].map(escape).join(",");
+      const base = [label, r.impressions, r.clicks, ctr, r.spent.toFixed(2)];
+      if (!showConversions) return base.map(escape).join(",");
+      const cr = r.clicks > 0 ? ((r.conversions / r.clicks) * 100).toFixed(2) + "%" : "0.00%";
+      const roi = r.spent > 0 ? (((r.income - r.spent) / r.spent) * 100).toFixed(2) + "%" : "0.00%";
+      return [...base, r.conversions, cr, r.income.toFixed(2), roi].map(escape).join(",");
     });
-    const totalsRow = [
-      t("stats.total"),
-      totals.impressions,
-      totals.clicks,
-      totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) + "%" : "0.00%",
-      totals.spent.toFixed(2),
-    ].map(escape).join(",");
+    const ctrTotal = totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) + "%" : "0.00%";
+    const baseTotal = [t("stats.total"), totals.impressions, totals.clicks, ctrTotal, totals.spent.toFixed(2)];
+    const crTotal = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) + "%" : "0.00%";
+    const roiTotal = totals.spent > 0 ? (((totals.income - totals.spent) / totals.spent) * 100).toFixed(2) + "%" : "0.00%";
+    const totalsRow = (showConversions
+      ? [...baseTotal, totals.conversions, crTotal, totals.income.toFixed(2), roiTotal]
+      : baseTotal
+    ).map(escape).join(",");
     const csv = "\uFEFF" + [headers.map(escape).join(","), ...rows, totalsRow].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
