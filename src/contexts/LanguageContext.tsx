@@ -444,6 +444,15 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
 
   // Stats CSV export
   "stats.downloadCsv": { ru: "Скачать CSV", en: "Download CSV" },
+  "stats.showConversions": { ru: "Показывать конверсии", en: "Show conversions" },
+  "stats.postbackHint": {
+    ru: "Для отслеживания конверсий используйте Postback URL из настроек кампании.",
+    en: "To track conversions, use the Postback URL from your campaign settings.",
+  },
+  "stats.conversions": { ru: "Конверсии", en: "Conversions" },
+  "stats.cr": { ru: "CR", en: "CR" },
+  "stats.income": { ru: "Доход", en: "Income" },
+  "stats.roi": { ru: "ROI", en: "ROI" },
 
   // Edit Campaign
   "edit.title": { ru: "Редактирование кампании", en: "Edit campaign" },
