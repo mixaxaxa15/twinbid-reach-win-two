@@ -360,6 +360,38 @@ export default function DashboardStatistics() {
   const labelHeader = appliedGroupBy === "dates" ? t("stats.date") : appliedGroupBy === "hours" ? t("stats.dateAndHour") : appliedGroupBy === "browsers" ? t("stats.browser") : appliedGroupBy === "siteid" ? "SiteID" : appliedGroupBy === "os" ? t("stats.os") : appliedGroupBy === "country" ? t("stats.country") : t("stats.device");
   const canSortByLabel = appliedGroupBy === "dates" || appliedGroupBy === "hours";
 
+  const handleDownloadCsv = useCallback(() => {
+    if (!sortedData.length) return;
+    const headers = [labelHeader, t("stats.impressions"), t("stats.clicks"), t("stats.ctr"), t("stats.spent")];
+    const escape = (v: string | number) => {
+      const s = String(v);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = sortedData.map(r => {
+      const label = appliedGroupBy === "country" ? formatCountryLabel(r.label, lang) : r.label;
+      const ctr = r.impressions > 0 ? ((r.clicks / r.impressions) * 100).toFixed(2) + "%" : "0.00%";
+      return [label, r.impressions, r.clicks, ctr, r.spent.toFixed(2)].map(escape).join(",");
+    });
+    const totalsRow = [
+      t("stats.total"),
+      totals.impressions,
+      totals.clicks,
+      totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) + "%" : "0.00%",
+      totals.spent.toFixed(2),
+    ].map(escape).join(",");
+    const csv = "\uFEFF" + [headers.map(escape).join(","), ...rows, totalsRow].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    a.href = url;
+    a.download = `twinbid-stats-${appliedGroupBy}-${ts}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [sortedData, totals, labelHeader, appliedGroupBy, lang, t]);
+
   // Custom tooltip for hours chart
   const HoursTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value?: number }>; label?: string }) => {
     if (!active || !payload?.length) return null;
