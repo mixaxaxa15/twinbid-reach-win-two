@@ -548,6 +548,19 @@ export default function DashboardStatistics() {
           </div>
         </div>
 
+        <label
+          className={cn(
+            "inline-flex items-center gap-2 px-3 h-10 rounded-md border cursor-pointer transition-colors select-none",
+            showConversions
+              ? "border-primary/60 bg-primary/10 text-primary"
+              : "border-border bg-card text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Zap className="h-4 w-4" />
+          <span className="text-sm font-medium">{t("stats.showConversions")}</span>
+          <Switch checked={showConversions} onCheckedChange={setShowConversions} />
+        </label>
+
         <Button onClick={handleRefresh} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
           <RefreshCw className="h-4 w-4" /> {t("stats.refresh")}
         </Button>
@@ -555,6 +568,10 @@ export default function DashboardStatistics() {
           <Download className="h-4 w-4" /> {t("stats.downloadCsv")}
         </Button>
       </div>
+
+      {showConversions && (
+        <p className="text-sm text-muted-foreground -mt-2">{t("stats.postbackHint")}</p>
+      )}
 
       {/* Filters */}
       <Card className="bg-card border-border">
