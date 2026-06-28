@@ -218,15 +218,18 @@ export default function DashboardStatistics() {
       filters,
     }).then(res => {
       if (cancelled) return;
-      const byKey = new Map<string, { impressions: number; clicks: number; spent: number }>();
+      const byKey = new Map<string, { impressions: number; clicks: number; spent: number; conversions: number; income: number }>();
       for (const [key, m] of Object.entries(res.rows)) {
+        const extra = m as unknown as { conversions?: number; income?: number; revenue?: number };
         byKey.set(key, {
           impressions: Number(m.impressions) || 0,
           clicks: Number(m.clicks) || 0,
           spent: Number(m.spent) || 0,
+          conversions: Number(extra.conversions) || 0,
+          income: Number(extra.income ?? extra.revenue) || 0,
         });
       }
-      const empty = { impressions: 0, clicks: 0, spent: 0 };
+      const empty = { impressions: 0, clicks: 0, spent: 0, conversions: 0, income: 0 };
       let rows: UiRow[];
       if (apiGroup === "hour") {
         // Fill every hour in the selected range with zeros for missing buckets,
