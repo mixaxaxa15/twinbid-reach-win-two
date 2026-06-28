@@ -94,6 +94,7 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
       appliedFilterBrowser, setAppliedFilterBrowser,
       appliedFilterDevice, setAppliedFilterDevice,
       appliedFilterOS, setAppliedFilterOS,
+      showConversions, setShowConversions,
     }}>
       {children}
     </StatisticsContext.Provider>
