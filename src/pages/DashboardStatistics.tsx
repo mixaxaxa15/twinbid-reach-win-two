@@ -711,10 +711,26 @@ export default function DashboardStatistics() {
                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("spent")}>
                           {t("stats.spent")} <SortIcon col="spent" />
                         </th>
+                        {showConversions && (
+                          <>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[130px]" onClick={() => toggleSort("conversions")}>
+                              {t("stats.conversions")} <SortIcon col="conversions" />
+                            </th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground w-[100px]">{t("stats.cr")}</th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("income")}>
+                              {t("stats.income")} <SortIcon col="income" />
+                            </th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground w-[110px]">{t("stats.roi")}</th>
+                          </>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedData.map((row) => (
+                      {sortedData.map((row) => {
+                        const cr = row.clicks > 0 ? ((row.conversions / row.clicks) * 100).toFixed(2) : "0.00";
+                        const roiNum = row.spent > 0 ? ((row.income - row.spent) / row.spent) * 100 : 0;
+                        const roi = row.spent > 0 ? roiNum.toFixed(2) : "0.00";
+                        return (
                         <tr key={row.label} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                           <td className="py-3 px-4 font-medium truncate">
                             {appliedGroupBy === "country" ? formatCountryLabel(row.label, lang) : row.label}
@@ -723,14 +739,36 @@ export default function DashboardStatistics() {
                           <td className="py-3 px-4">{row.clicks.toLocaleString()}</td>
                           <td className="py-3 px-4">{row.impressions > 0 ? ((row.clicks / row.impressions) * 100).toFixed(2) : "0.00"}%</td>
                           <td className="py-3 px-4">${row.spent.toLocaleString()}</td>
+                          {showConversions && (
+                            <>
+                              <td className="py-3 px-4">{row.conversions.toLocaleString()}</td>
+                              <td className="py-3 px-4">{cr}%</td>
+                              <td className="py-3 px-4">${row.income.toLocaleString()}</td>
+                              <td className={cn("py-3 px-4 font-medium", roiNum > 0 ? "text-emerald-500" : roiNum < 0 ? "text-red-500" : "")}>{roi}%</td>
+                            </>
+                          )}
                         </tr>
-                      ))}
+                        );
+                      })}
                       <tr className="bg-muted/30 font-semibold">
                         <td className="py-3 px-4">{t("stats.total")}</td>
                         <td className="py-3 px-4">{totals.impressions.toLocaleString()}</td>
                         <td className="py-3 px-4">{totals.clicks.toLocaleString()}</td>
                         <td className="py-3 px-4">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
                         <td className="py-3 px-4">${totals.spent.toLocaleString()}</td>
+                        {showConversions && (() => {
+                          const cr = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) : "0.00";
+                          const roiNum = totals.spent > 0 ? ((totals.income - totals.spent) / totals.spent) * 100 : 0;
+                          const roi = totals.spent > 0 ? roiNum.toFixed(2) : "0.00";
+                          return (
+                            <>
+                              <td className="py-3 px-4">{totals.conversions.toLocaleString()}</td>
+                              <td className="py-3 px-4">{cr}%</td>
+                              <td className="py-3 px-4">${totals.income.toLocaleString()}</td>
+                              <td className={cn("py-3 px-4", roiNum > 0 ? "text-emerald-500" : roiNum < 0 ? "text-red-500" : "")}>{roi}%</td>
+                            </>
+                          );
+                        })()}
                       </tr>
                     </tbody>
                   </table>
