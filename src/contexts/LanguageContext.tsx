@@ -421,6 +421,29 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "create.urlMacrosHint": { ru: "Нажмите для добавления макросов отслеживания:", en: "Click to add tracking macros:" },
   "create.endDateError": { ru: "Дата окончания не может быть раньше сегодняшнего дня", en: "End date cannot be earlier than today" },
   "create.endDateRequired": { ru: "Укажите корректные даты для завершения создания", en: "Specify valid dates to complete creation" },
+  "create.step4": { ru: "Отслеживание конверсий", en: "Conversion tracking" },
+  "create.creating": { ru: "Кампания создаётся, пожалуйста, подождите...", en: "Creating campaign, please wait..." },
+
+  // Postback / conversion tracking
+  "postback.urlLabel": { ru: "Postback URL", en: "Postback URL" },
+  "postback.copy": { ru: "Копировать", en: "Copy" },
+  "postback.copied": { ru: "Скопировано", en: "Copied" },
+  "postback.copyFailed": { ru: "Не удалось скопировать", en: "Failed to copy" },
+  "postback.help1": {
+    ru: "Скопируйте Postback URL и добавьте его в настройках вашего трекера, CPA-сети или прямого рекламодателя.",
+    en: "Copy the Postback URL and add it to the settings of your tracker, CPA network or direct advertiser.",
+  },
+  "postback.help2": {
+    ru: "Когда по вашей кампании произойдёт конверсия, система отправит нам информацию об этом по данной ссылке. После этого конверсия появится в статистике кампании, и вы сможете оценивать эффективность трафика и доход прямо внутри нашей платформы.",
+    en: "When a conversion occurs in your campaign, the system will send us information about it via this URL. After that the conversion will appear in the campaign statistics, and you'll be able to evaluate traffic efficiency and revenue right inside our platform.",
+  },
+  "postback.help3": {
+    ru: "Ссылка статичная и не меняется — её можно использовать для всех кампаний.",
+    en: "The link is static and does not change — you can use it for all campaigns.",
+  },
+
+  // Stats CSV export
+  "stats.downloadCsv": { ru: "Скачать CSV", en: "Download CSV" },
 
   // Edit Campaign
   "edit.title": { ru: "Редактирование кампании", en: "Edit campaign" },
