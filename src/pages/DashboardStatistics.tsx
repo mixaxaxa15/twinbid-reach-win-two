@@ -22,10 +22,10 @@ import { api } from "@/api";
 import type { StatsGroupBy, StatsFilterBy } from "@/api/types";
 
 type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "country";
-type SortKey = "label" | "impressions" | "clicks" | "spent";
+type SortKey = "label" | "impressions" | "clicks" | "spent" | "conversions" | "income";
 type SortDir = "asc" | "desc";
 
-interface UiRow { label: string; impressions: number; clicks: number; spent: number; }
+interface UiRow { label: string; impressions: number; clicks: number; spent: number; conversions: number; income: number; }
 
 // UI groupBy → ClickHouse group_by + bucket key in the response row.
 const GROUP_MAP: Record<GroupBy, { api: StatsGroupBy }> = {
