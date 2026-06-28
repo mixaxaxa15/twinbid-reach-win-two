@@ -190,6 +190,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
             <div className="space-y-2">
               <Label>{t("create.creativeUrl")} *</Label>
               <Input value={creative.url} onChange={e => { updateCreative(creative.id, { url: e.target.value }); if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_url`); }}
+                onBlur={e => ensureClickId(creative.id, e.target.value)}
                 placeholder="https://example.com/landing"
                 className={`bg-background border-border ${errors[`creative_${creative.id}_url`] ? "border-destructive" : ""}`} />
               {errors[`creative_${creative.id}_url`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_url`]}</p>}
@@ -198,18 +199,22 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
                 <div className="flex flex-wrap gap-1.5">
                   {URL_MACROS.map(macro => {
                     const isActive = activeMacros.has(macro);
+                    const isRequired = macro === "click_id";
                     return (
                       <Badge
                         key={macro}
                         variant="outline"
                         className={`cursor-pointer text-xs font-mono transition-colors ${
-                          isActive
-                            ? "bg-primary/15 border-primary/40 text-primary hover:bg-primary/25"
-                            : "hover:bg-primary/10 hover:border-primary/30"
+                          isRequired
+                            ? "bg-primary/20 border-primary/60 text-primary"
+                            : isActive
+                              ? "bg-primary/15 border-primary/40 text-primary hover:bg-primary/25"
+                              : "hover:bg-primary/10 hover:border-primary/30"
                         }`}
                         onClick={() => toggleMacro(creative.id, macro, creative.url)}
+                        title={isRequired ? "Required" : undefined}
                       >
-                        {`{${macro}}`}
+                        {`{${macro}}`}{isRequired ? " *" : ""}
                       </Badge>
                     );
                   })}
