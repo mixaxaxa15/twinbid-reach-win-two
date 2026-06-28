@@ -71,6 +71,7 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
   const [appliedFilterBrowser, setAppliedFilterBrowser] = useState<Set<string>>(new Set());
   const [appliedFilterDevice, setAppliedFilterDevice] = useState<Set<string>>(new Set());
   const [appliedFilterOS, setAppliedFilterOS] = useState<Set<string>>(new Set());
+  const [showConversions, setShowConversions] = useState(false);
 
   return (
     <StatisticsContext.Provider value={{
