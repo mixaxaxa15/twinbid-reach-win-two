@@ -541,4 +541,17 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   // Budget notification
   "notif.campaignBudgetLow": "El presupuesto de la campaña se está agotando",
   "notif.budgetRemaining": "de presupuesto restante",
+
+  // Conversion tracking
+  "create.step4": "Seguimiento de conversiones",
+  "edit.conversion": "Seguimiento de conversiones",
+  "create.creating": "Creando la campaña, por favor espera...",
+  "postback.urlLabel": "Postback URL",
+  "postback.copy": "Copiar",
+  "postback.copied": "Copiado",
+  "postback.copyFailed": "Error al copiar",
+  "postback.help1": "Copia el Postback URL y añádelo en la configuración de tu tracker, red CPA o anunciante directo.",
+  "postback.help2": "Cuando se produzca una conversión en tu campaña, el sistema nos enviará la información a través de este enlace. Después, la conversión aparecerá en las estadísticas de la campaña y podrás evaluar la eficacia del tráfico y los ingresos dentro de nuestra plataforma.",
+  "postback.help3": "El enlace es estático y no cambia — puedes usarlo para todas las campañas.",
+  "stats.downloadCsv": "Descargar CSV",
 };

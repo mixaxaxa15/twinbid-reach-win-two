@@ -12,6 +12,7 @@ import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuali
 import { TargetingSection } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
+import { PostbackSection } from "@/components/dashboard/PostbackSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const bannerSizes = ["300x100", "300x250", "300x600", "728x90"];
@@ -232,6 +233,7 @@ export default function EditCampaign() {
           <TabsTrigger value="general">{t("edit.general")}</TabsTrigger>
           <TabsTrigger value="targeting">{t("edit.targeting")}</TabsTrigger>
           <TabsTrigger value="budget">{t("edit.budget")}</TabsTrigger>
+          <TabsTrigger value="conversion">{t("edit.conversion")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -339,12 +341,19 @@ export default function EditCampaign() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="conversion">
+          <Card className="bg-card border-border">
+            <CardHeader><CardTitle className="text-lg">{t("edit.conversion")}</CardTitle></CardHeader>
+            <CardContent><PostbackSection /></CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {(() => {
-        const tabs = ["general", "targeting", "budget"];
+        const tabs = ["general", "targeting", "budget", "conversion"];
         const idx = tabs.indexOf(activeTab);
-        const isLast = activeTab === "budget";
+        const isLast = activeTab === "conversion";
 
         const validateGeneral = () => {
           const e: Record<string, string> = {};

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Eye, MousePointer, Target, TrendingUp, ArrowUpDown, CalendarIcon, RefreshCw, Filter } from "lucide-react";
+import { Eye, MousePointer, Target, TrendingUp, ArrowUpDown, CalendarIcon, RefreshCw, Filter, Download } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, subDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -360,6 +360,38 @@ export default function DashboardStatistics() {
   const labelHeader = appliedGroupBy === "dates" ? t("stats.date") : appliedGroupBy === "hours" ? t("stats.dateAndHour") : appliedGroupBy === "browsers" ? t("stats.browser") : appliedGroupBy === "siteid" ? "SiteID" : appliedGroupBy === "os" ? t("stats.os") : appliedGroupBy === "country" ? t("stats.country") : t("stats.device");
   const canSortByLabel = appliedGroupBy === "dates" || appliedGroupBy === "hours";
 
+  const handleDownloadCsv = useCallback(() => {
+    if (!sortedData.length) return;
+    const headers = [labelHeader, t("stats.impressions"), t("stats.clicks"), t("stats.ctr"), t("stats.spent")];
+    const escape = (v: string | number) => {
+      const s = String(v);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = sortedData.map(r => {
+      const label = appliedGroupBy === "country" ? formatCountryLabel(r.label, lang) : r.label;
+      const ctr = r.impressions > 0 ? ((r.clicks / r.impressions) * 100).toFixed(2) + "%" : "0.00%";
+      return [label, r.impressions, r.clicks, ctr, r.spent.toFixed(2)].map(escape).join(",");
+    });
+    const totalsRow = [
+      t("stats.total"),
+      totals.impressions,
+      totals.clicks,
+      totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) + "%" : "0.00%",
+      totals.spent.toFixed(2),
+    ].map(escape).join(",");
+    const csv = "\uFEFF" + [headers.map(escape).join(","), ...rows, totalsRow].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    a.href = url;
+    a.download = `twinbid-stats-${appliedGroupBy}-${ts}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [sortedData, totals, labelHeader, appliedGroupBy, lang, t]);
+
   // Custom tooltip for hours chart
   const HoursTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value?: number }>; label?: string }) => {
     if (!active || !payload?.length) return null;
@@ -490,6 +522,9 @@ export default function DashboardStatistics() {
 
         <Button onClick={handleRefresh} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
           <RefreshCw className="h-4 w-4" /> {t("stats.refresh")}
+        </Button>
+        <Button onClick={handleDownloadCsv} variant="outline" className="border-border gap-2" disabled={!hasSelection || sortedData.length === 0}>
+          <Download className="h-4 w-4" /> {t("stats.downloadCsv")}
         </Button>
       </div>
 
