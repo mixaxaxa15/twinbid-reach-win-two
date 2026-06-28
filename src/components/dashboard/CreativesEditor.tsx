@@ -104,24 +104,36 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
     }
   };
 
-  const toggleMacro = (creativeId: string, macro: string, currentUrl: string) => {
+  const appendMacro = (url: string, macro: string) => {
+    if (url.includes(`{${macro}}`)) return url;
     const token = `${macro}={${macro}}`;
-    // Check if macro already in URL
+    const separator = url.includes("?") ? "&" : "?";
+    return url + separator + token;
+  };
+
+  const toggleMacro = (creativeId: string, macro: string, currentUrl: string) => {
+    // click_id is mandatory — clicking the badge always keeps it in the URL.
+    if (macro === "click_id") {
+      updateCreative(creativeId, { url: appendMacro(currentUrl, macro) });
+      return;
+    }
     if (currentUrl.includes(`{${macro}}`)) {
-      // Remove the macro param from URL
       let newUrl = currentUrl;
-      // Remove &macro={macro} or ?macro={macro}
       const regexAmp = new RegExp(`[&?]${macro}=\\{${macro}\\}`, "g");
       newUrl = newUrl.replace(regexAmp, "");
-      // Fix leading & if ? was removed
       if (newUrl.includes("&") && !newUrl.includes("?")) {
         newUrl = newUrl.replace("&", "?");
       }
       updateCreative(creativeId, { url: newUrl });
     } else {
-      // Add macro
-      const separator = currentUrl.includes("?") ? "&" : "?";
-      updateCreative(creativeId, { url: currentUrl + separator + token });
+      updateCreative(creativeId, { url: appendMacro(currentUrl, macro) });
+    }
+  };
+
+  const ensureClickId = (creativeId: string, url: string) => {
+    if (!url.trim()) return;
+    if (!url.includes("{click_id}")) {
+      updateCreative(creativeId, { url: appendMacro(url, "click_id") });
     }
   };
 
