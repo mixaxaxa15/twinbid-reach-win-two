@@ -126,6 +126,7 @@ export default function DashboardStatistics() {
     appliedFilterBrowser, setAppliedFilterBrowser,
     appliedFilterDevice, setAppliedFilterDevice,
     appliedFilterOS, setAppliedFilterOS,
+    showConversions, setShowConversions,
   } = useStatistics();
 
   const appliedGroupBy = groupBy;
