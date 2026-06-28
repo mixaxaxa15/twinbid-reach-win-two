@@ -279,18 +279,32 @@ export default function DashboardStatistics() {
     };
   }, [appliedCampaignIds, appliedCreativeIds, appliedGroupBy, appliedDateRange, appliedFilterCountry, appliedFilterBrowser, appliedFilterDevice, appliedFilterOS, hasSelection]);
 
+  const { showConversions, setShowConversions } = useStatistics();
+
   const metricCards = useMemo(() => {
     const totalImpressions = data.reduce((s, r) => s + r.impressions, 0);
     const totalClicks = data.reduce((s, r) => s + r.clicks, 0);
     const totalSpent = data.reduce((s, r) => s + r.spent, 0);
+    const totalConversions = data.reduce((s, r) => s + r.conversions, 0);
+    const totalIncome = data.reduce((s, r) => s + r.income, 0);
     const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
-    return [
+    const cr = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(2) : "0.00";
+    const roi = totalSpent > 0 ? (((totalIncome - totalSpent) / totalSpent) * 100).toFixed(2) : "0.00";
+    const base = [
       { label: t("stats.impressions"), value: totalImpressions.toLocaleString(), icon: Eye },
       { label: t("stats.clicks"), value: totalClicks.toLocaleString(), icon: MousePointer },
       { label: t("stats.ctr"), value: `${ctr}%`, icon: Target },
       { label: t("stats.spent"), value: `$${totalSpent.toLocaleString()}`, icon: TrendingUp },
     ];
-  }, [data, t]);
+    if (!showConversions) return base;
+    return [
+      ...base,
+      { label: t("stats.conversions"), value: totalConversions.toLocaleString(), icon: Zap },
+      { label: t("stats.cr"), value: `${cr}%`, icon: Percent },
+      { label: t("stats.income"), value: `$${totalIncome.toLocaleString()}`, icon: DollarSign },
+      { label: t("stats.roi"), value: `${roi}%`, icon: TrendingUp },
+    ];
+  }, [data, t, showConversions]);
 
   useEffect(() => {
     if (appliedGroupBy === "dates") { setSortKey("label"); setSortDir("desc"); }
