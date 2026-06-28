@@ -45,6 +45,8 @@ interface StatisticsState {
   setAppliedFilterDevice: React.Dispatch<React.SetStateAction<Set<string>>>;
   appliedFilterOS: Set<string>;
   setAppliedFilterOS: React.Dispatch<React.SetStateAction<Set<string>>>;
+  showConversions: boolean;
+  setShowConversions: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const StatisticsContext = createContext<StatisticsState | null>(null);
