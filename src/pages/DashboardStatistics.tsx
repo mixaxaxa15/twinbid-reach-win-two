@@ -418,7 +418,7 @@ export default function DashboardStatistics() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [sortedData, totals, labelHeader, appliedGroupBy, lang, t]);
+  }, [sortedData, totals, labelHeader, appliedGroupBy, lang, t, showConversions]);
 
   // Custom tooltip for hours chart
   const HoursTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value?: number }>; label?: string }) => {
