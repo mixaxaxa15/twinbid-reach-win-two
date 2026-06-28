@@ -458,6 +458,7 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "edit.save": { ru: "Сохранить", en: "Save" },
   "edit.savedModeration": { ru: "Кампания сохранена и отправлена на модерацию", en: "Campaign saved and sent for moderation" },
   "edit.saved": { ru: "Кампания сохранена", en: "Campaign saved" },
+  "edit.conversion": { ru: "Отслеживание конверсий", en: "Conversion tracking" },
 
   // Targeting Section
   "targeting.description": { ru: "Для каждого параметра выберите режим: Whitelist (только эти значения) или Blacklist (исключить эти значения)", en: "For each parameter choose a mode: Whitelist (only these values) or Blacklist (exclude these values)" },
