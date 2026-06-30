@@ -9,8 +9,8 @@ export const ES_TRANSLATIONS: Record<string, string> = {
 
   // Hero
   "hero.badge": "Plataforma publicitaria de nueva generación",
-  "hero.title1": "TwinBid — ",
-  "hero.title2": "plataforma agregadora de publicidad",
+  "hero.title1": "TwinBid",
+  "hero.title2": "plataforma\nagregadora\npublicitaria",
   "hero.subtitle": "Combina tráfico de cientos de redes publicitarias. Un solo registro y obtienes acceso al inventario de más de",
   "hero.subtitleSites": "1 millón de sitios",
   "hero.subtitleEnd": "a través de un único panel de compra, analítica y optimización.",
