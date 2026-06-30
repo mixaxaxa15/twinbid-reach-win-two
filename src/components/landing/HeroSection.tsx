@@ -7,7 +7,7 @@ export function HeroSection() {
   const { t } = useLanguage();
   const title1 = t("hero.title1").replace(/—\s*$/, "").trim();
   const title2 = t("hero.title2");
-  const words = `${title1} ${title2}`.split(/\s+/).filter(Boolean);
+  const words = `${title1}\n${title2}`.split("\n").map((s) => s.trim()).filter(Boolean);
 
   return (
     <section className="relative min-h-[100svh] flex flex-col justify-center pt-28 pb-20 overflow-hidden">
@@ -23,7 +23,7 @@ export function HeroSection() {
 
         <h1 className="text-hero-monument text-center text-foreground">
           {words.map((w, i) => (
-            <span key={i} className={`block ${i === 0 ? "" : "gradient-text"}`}>{w}</span>
+            <span key={i} className={`block whitespace-nowrap ${i === 0 ? "" : "gradient-text"}`}>{w}</span>
           ))}
         </h1>
 
