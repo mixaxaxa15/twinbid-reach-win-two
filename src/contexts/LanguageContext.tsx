@@ -19,8 +19,8 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
 
   // Hero
   "hero.badge": { ru: "Рекламная платформа нового поколения", en: "Next-generation ad platform" },
-  "hero.title1": { ru: "TwinBid — ", en: "TwinBid — " },
-  "hero.title2": { ru: "платформа агрегатор рекламы", en: "advertising aggregator platform" },
+  "hero.title1": { ru: "TwinBid", en: "TwinBid" },
+  "hero.title2": { ru: "рекламная\nплатформа-\nагрегатор", en: "advertising\naggregator\nplatform" },
   "hero.subtitle": { ru: "Объединяет трафик сотен рекламных сетей. Одна регистрация — и вы получаете доступ к инвентарю более чем", en: "Combines traffic from hundreds of ad networks. One registration — and you get access to inventory from more than" },
   "hero.subtitleSites": { ru: "1 млн сайтов", en: "1M websites" },
   "hero.subtitleEnd": { ru: "через единый кабинет закупки, аналитики и оптимизации.", en: "through a single dashboard for buying, analytics and optimization." },
