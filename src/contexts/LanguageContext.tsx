@@ -85,6 +85,10 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "cta.trust2": { ru: "✓ +25% бонус", en: "✓ +25% bonus" },
   "cta.trust3": { ru: "✓ Мгновенный старт", en: "✓ Instant start" },
 
+  // Marquee
+  "marquee.tryTwinBid": { ru: "Попробуй TwinBid", en: "Try TwinBid" },
+  "marquee.registerNow": { ru: "Зарегистрируйся сейчас", en: "Register now" },
+
   // Footer
   "footer.privacy": { ru: "Политика конфиденциальности", en: "Privacy Policy" },
   "footer.terms": { ru: "Условия использования", en: "Terms of Service" },
