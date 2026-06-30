@@ -14,7 +14,7 @@ export function BenefitsSection() {
     description: t(`benefits.${i + 1}.desc`),
   }));
 
-  const headlineRaw = `${t("benefits.title1")}${t("benefits.title2")}`;
+  const headlineRaw = `${t("benefits.title1")}TwinBid${t("benefits.title2")}`;
 
   return (
     <section id="benefits" className="py-[140px] relative">
