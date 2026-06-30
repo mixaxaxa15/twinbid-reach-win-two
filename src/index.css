@@ -115,6 +115,7 @@
     hyphens: none;
     overflow-wrap: normal;
     word-break: keep-all;
+    font-feature-settings: "ss01", "ss02", "cv11";
   }
   .text-display-xl {
     font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
