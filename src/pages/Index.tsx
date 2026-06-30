@@ -7,15 +7,23 @@ import { FormatsSection } from "@/components/landing/FormatsSection";
 import { StepsSection } from "@/components/landing/StepsSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
+import { Marquee } from "@/components/landing/LiveCanvas";
+import { AnimatedBackground } from "@/components/landing/AnimatedBackground";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
+  const { t } = useLanguage();
+  const marquee1Items = [t("marquee.tryTwinBid"), t("marquee.registerNow")];
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
+      <AnimatedBackground />
       <Header />
       <main>
         <HeroSection />
+        <Marquee items={marquee1Items} />
         <StartConditions />
         <BenefitsSection />
+        <Marquee items={["Popunder", "Native", "Banner", "In-Page Push", "1M+ Sites", "Antifraud", "24/7 Support", "Real-Time Bidding"]} />
         <CashbackSection />
         <FormatsSection />
         <StepsSection />
