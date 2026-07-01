@@ -306,6 +306,10 @@ function buildApiCampaignBody(c: Omit<Campaign, "id">): Omit<ApiCampaign, "campa
   // brand_name is optional. Only include when the user provided a value
   // so the backend can apply its own default / nullability handling.
   if (c.brandName) body.brand_name = c.brandName;
+  // Fixed conversion payout. Backend column: `payout` on the campaign.
+  if (c.conversionPayout !== undefined && c.conversionPayout !== null) {
+    body.payout = c.conversionPayout;
+  }
   // For popunder, the backend only stores CPM. If the user selected CPC,
   // convert the value to an equivalent CPM and send CPM as the model.
   if (c.formatKey === "popunder" && c.pricingModel === "cpc") {
