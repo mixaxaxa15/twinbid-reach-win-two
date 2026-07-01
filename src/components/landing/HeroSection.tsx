@@ -15,7 +15,7 @@ export function HeroSection() {
       <div className="blueprint-aurora hidden md:block" />
 
       <div className="relative container mx-auto px-6 z-10">
-        <div className="flex justify-center mb-10">
+        <div className="flex justify-center mb-6">
           <div className="eyebrow eyebrow-rule inline-flex">
             <span>{t("hero.badge")}</span>
           </div>
@@ -27,8 +27,8 @@ export function HeroSection() {
           ))}
         </h1>
 
-        <div className="mt-12 max-w-2xl mx-auto text-center">
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+        <div className="mt-8 max-w-2xl mx-auto text-center">
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
             {t("hero.subtitle")}{" "}
             <span className="text-foreground">{t("hero.subtitleSites")}</span>{" "}
             {t("hero.subtitleEnd")}
