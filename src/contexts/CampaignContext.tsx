@@ -226,6 +226,7 @@ function mapApiCampaignToUi(c: ApiCampaign, creatives: Creative[]): Campaign {
         ? Object.entries(c.vertical as Record<string, 0 | 1>).filter(([, v]) => v === 1).map(([k]) => k)
         : []) as Vertical[],
     description: undefined,
+    conversionPayout: c.payout ?? null,
   };
 }
 
