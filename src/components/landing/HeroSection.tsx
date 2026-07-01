@@ -10,7 +10,7 @@ export function HeroSection() {
   const words = `${title1}\n${title2}`.split("\n").map((s) => s.trim()).filter(Boolean);
 
   return (
-    <section className="relative min-h-[100svh] flex flex-col justify-center pt-28 pb-20 overflow-hidden">
+    <section className="relative min-h-[100svh] flex flex-col justify-center pt-20 pb-16 overflow-hidden">
       <div className="absolute inset-0 blueprint-grid blueprint-mask pointer-events-none hidden md:block" />
       <div className="blueprint-aurora hidden md:block" />
 
