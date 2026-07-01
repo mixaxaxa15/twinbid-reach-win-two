@@ -73,6 +73,7 @@ export default function EditCampaign() {
       setTrafficType(campaign.trafficType || "mainstream");
       setInitialTrafficType(campaign.trafficType || "mainstream");
       setVerticals(campaign.verticals || []);
+      setConversionPayout(campaign.conversionPayout != null ? String(campaign.conversionPayout) : "");
       setInitialBannerSize(campaign.bannerSize || "");
     }
   }, [campaign]);
