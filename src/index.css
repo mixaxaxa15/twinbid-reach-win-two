@@ -109,14 +109,14 @@
   .text-hero-monument {
     font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
     font-weight: 300;
-    font-size: clamp(32px, 6.5vw, 88px);
+    font-size: clamp(36px, 7.5vw, 104px);
     line-height: 1.08;
     letter-spacing: -0.035em;
     hyphens: none;
     overflow-wrap: normal;
     word-break: keep-all;
     font-feature-settings: "cv11";
-    padding-bottom: 0.12em;
+    padding-bottom: 0.08em;
   }
   .text-display-xl {
     font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
