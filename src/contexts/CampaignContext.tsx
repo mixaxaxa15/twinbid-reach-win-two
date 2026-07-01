@@ -73,6 +73,8 @@ export interface Campaign {
   trafficType: TrafficType;
   verticals: Vertical[];
   description?: string;
+  /** Fixed reward per conversion (USD). Sent as `payout` on the API body. */
+  conversionPayout?: number | null;
 }
 
 // ---- Targeting <-> TargetingMap conversion --------------------------------
