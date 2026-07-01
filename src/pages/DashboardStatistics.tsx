@@ -550,7 +550,7 @@ export default function DashboardStatistics() {
 
         <label
           className={cn(
-            "inline-flex items-center gap-2 px-3 h-10 rounded-md border cursor-pointer transition-colors select-none",
+            "inline-flex items-center gap-2 px-3 h-10 rounded-md border cursor-pointer transition-colors select-none shrink-0 whitespace-nowrap",
             showConversions
               ? "border-primary/60 bg-primary/10 text-primary"
               : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -569,9 +569,9 @@ export default function DashboardStatistics() {
         </Button>
       </div>
 
-      {showConversions && (
-        <p className="text-sm text-muted-foreground -mt-2">{t("stats.postbackHint")}</p>
-      )}
+      <p className={cn("text-sm text-muted-foreground -mt-2", !showConversions && "invisible")}>
+        {t("stats.postbackHint")}
+      </p>
 
       {/* Filters */}
       <Card className="bg-card border-border">
