@@ -24,7 +24,7 @@ export function Footer() {
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="flex-1 flex flex-col items-center md:items-start gap-2">
             <a href="#" className="flex items-center gap-2">
-              <img src={twinbidLogo} alt="TwinBid" className="h-8" />
+              <img src={twinbidLogo} alt="TwinBid" className="h-12" />
             </a>
             <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} TwinBid. All rights reserved.</p>
           </div>
