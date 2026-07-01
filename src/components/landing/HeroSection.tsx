@@ -35,7 +35,7 @@ export function HeroSection() {
           </p>
         </div>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
           <AuthDialog
             defaultTab="register"
             trigger={
