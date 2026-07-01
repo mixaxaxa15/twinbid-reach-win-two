@@ -97,7 +97,7 @@
   .text-monument {
     font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
     font-weight: 300;
-    font-size: clamp(40px, 11vw, 180px);
+    font-size: clamp(36px, 8.5vw, 120px);
     line-height: 0.95;
     letter-spacing: -0.035em;
     overflow-wrap: break-word;
