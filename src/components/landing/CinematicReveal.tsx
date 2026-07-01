@@ -58,6 +58,7 @@ export function WordsReveal({
   const MotionTag = motion[Tag as keyof typeof motion] as any;
   return (
     <MotionTag
+      key={text}
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, margin: "-15% 0px" }}
