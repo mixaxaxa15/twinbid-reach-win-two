@@ -10,12 +10,12 @@ export function HeroSection() {
   const words = `${title1}\n${title2}`.split("\n").map((s) => s.trim()).filter(Boolean);
 
   return (
-    <section className="relative min-h-[100svh] flex flex-col justify-center pt-28 pb-20 overflow-hidden">
+    <section className="relative min-h-[100svh] flex flex-col justify-center pt-20 pb-16 overflow-hidden">
       <div className="absolute inset-0 blueprint-grid blueprint-mask pointer-events-none hidden md:block" />
       <div className="blueprint-aurora hidden md:block" />
 
       <div className="relative container mx-auto px-6 z-10">
-        <div className="flex justify-center mb-10">
+        <div className="flex justify-center mb-6">
           <div className="eyebrow eyebrow-rule inline-flex">
             <span>{t("hero.badge")}</span>
           </div>
@@ -27,15 +27,15 @@ export function HeroSection() {
           ))}
         </h1>
 
-        <div className="mt-12 max-w-2xl mx-auto text-center">
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+        <div className="mt-8 max-w-2xl mx-auto text-center">
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
             {t("hero.subtitle")}{" "}
             <span className="text-foreground">{t("hero.subtitleSites")}</span>{" "}
             {t("hero.subtitleEnd")}
           </p>
         </div>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
           <AuthDialog
             defaultTab="register"
             trigger={
