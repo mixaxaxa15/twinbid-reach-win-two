@@ -170,6 +170,7 @@ export default function CreateCampaign() {
         targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
         evenSpend, bannerSize: adFormat === "banner" ? bannerSize : undefined,
         brandName: showBrandName ? brandName : undefined,
+        conversionPayout: conversionPayout ? parseNum(conversionPayout) : null,
       });
       if (!id) {
         toast.error(t("create.failed") || "Failed to create campaign");
