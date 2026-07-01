@@ -5,7 +5,7 @@ import { CircularBadge } from "./CinematicReveal";
 
 export function HeroSection() {
   const { t } = useLanguage();
-  const title1 = t("hero.title1").replace(/—\s*$/, "").trim();
+  const title1 = t("hero.title1").trim();
   const title2 = t("hero.title2");
   const words = `${title1}\n${title2}`.split("\n").map((s) => s.trim()).filter(Boolean);
 
