@@ -73,6 +73,8 @@ export interface Campaign {
   trafficType: TrafficType;
   verticals: Vertical[];
   description?: string;
+  /** Fixed reward per conversion (USD). Sent as `payout` on the API body. */
+  conversionPayout?: number | null;
 }
 
 // ---- Targeting <-> TargetingMap conversion --------------------------------
@@ -224,6 +226,7 @@ function mapApiCampaignToUi(c: ApiCampaign, creatives: Creative[]): Campaign {
         ? Object.entries(c.vertical as Record<string, 0 | 1>).filter(([, v]) => v === 1).map(([k]) => k)
         : []) as Vertical[],
     description: undefined,
+    conversionPayout: c.payout ?? null,
   };
 }
 
@@ -303,6 +306,10 @@ function buildApiCampaignBody(c: Omit<Campaign, "id">): Omit<ApiCampaign, "campa
   // brand_name is optional. Only include when the user provided a value
   // so the backend can apply its own default / nullability handling.
   if (c.brandName) body.brand_name = c.brandName;
+  // Fixed conversion payout. Backend column: `payout` on the campaign.
+  if (c.conversionPayout !== undefined && c.conversionPayout !== null) {
+    body.payout = c.conversionPayout;
+  }
   // For popunder, the backend only stores CPM. If the user selected CPC,
   // convert the value to an equivalent CPM and send CPM as the model.
   if (c.formatKey === "popunder" && c.pricingModel === "cpc") {
@@ -356,6 +363,9 @@ function buildApiCampaignPatch(updates: Partial<Campaign>): Partial<ApiCampaign>
   if (updates.targeting !== undefined) {
     Object.assign(p, buildApiTargeting(updates.targeting));
     p.active_intervals = scheduleToActiveIntervals(updates.targeting.schedule);
+  }
+  if (updates.conversionPayout !== undefined) {
+    p.payout = updates.conversionPayout;
   }
   return p;
 }

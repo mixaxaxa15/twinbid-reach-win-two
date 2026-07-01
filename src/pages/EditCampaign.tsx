@@ -42,6 +42,7 @@ export default function EditCampaign() {
   const [trafficType, setTrafficType] = useState<TrafficType>("mainstream");
   const [initialTrafficType, setInitialTrafficType] = useState<TrafficType>("mainstream");
   const [verticals, setVerticals] = useState<Vertical[]>([]);
+  const [conversionPayout, setConversionPayout] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState(defaultTab);
 
@@ -72,6 +73,7 @@ export default function EditCampaign() {
       setTrafficType(campaign.trafficType || "mainstream");
       setInitialTrafficType(campaign.trafficType || "mainstream");
       setVerticals(campaign.verticals || []);
+      setConversionPayout(campaign.conversionPayout != null ? String(campaign.conversionPayout) : "");
       setInitialBannerSize(campaign.bannerSize || "");
     }
   }, [campaign]);
@@ -193,6 +195,7 @@ export default function EditCampaign() {
         priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
         bannerSize: showBannerSize ? bannerSize : undefined,
         brandName: showBrandName ? brandName : undefined,
+        conversionPayout: conversionPayout ? parseNum(conversionPayout) : null,
       });
     } catch (err: any) {
       toast.error(`${t("edit.saveFailed") || "Failed to save campaign"}: ${err?.message || err}`);
@@ -345,7 +348,7 @@ export default function EditCampaign() {
         <TabsContent value="conversion">
           <Card className="bg-card border-border">
             <CardHeader><CardTitle className="text-lg">{t("edit.conversion")}</CardTitle></CardHeader>
-            <CardContent><PostbackSection /></CardContent>
+            <CardContent><PostbackSection payout={conversionPayout} onPayoutChange={setConversionPayout} /></CardContent>
           </Card>
         </TabsContent>
       </Tabs>

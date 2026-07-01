@@ -445,6 +445,11 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
     ru: "Ссылка статичная и не меняется — её можно использовать для всех кампаний.",
     en: "The link is static and does not change — you can use it for all campaigns.",
   },
+  "postback.payoutLabel": { ru: "Выплата за конверсию", en: "Conversion payout" },
+  "postback.payoutHint": {
+    ru: "Если выплата по конверсии не будет автоматически передана через postback, в статистике будет использоваться значение из этого поля.",
+    en: "If the conversion payout is not delivered automatically via postback, the value from this field will be used in statistics.",
+  },
 
   // Stats CSV export
   "stats.downloadCsv": { ru: "Скачать CSV", en: "Download CSV" },
