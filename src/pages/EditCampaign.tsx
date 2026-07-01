@@ -42,6 +42,7 @@ export default function EditCampaign() {
   const [trafficType, setTrafficType] = useState<TrafficType>("mainstream");
   const [initialTrafficType, setInitialTrafficType] = useState<TrafficType>("mainstream");
   const [verticals, setVerticals] = useState<Vertical[]>([]);
+  const [conversionPayout, setConversionPayout] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState(defaultTab);
 
