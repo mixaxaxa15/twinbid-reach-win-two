@@ -110,12 +110,13 @@
     font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
     font-weight: 300;
     font-size: clamp(42px, 11vw, 180px);
-    line-height: 0.92;
+    line-height: 1.08;
     letter-spacing: -0.035em;
     hyphens: none;
     overflow-wrap: normal;
     word-break: keep-all;
     font-feature-settings: "cv11";
+    padding-bottom: 0.12em;
   }
   .text-display-xl {
     font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
