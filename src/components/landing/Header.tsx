@@ -34,7 +34,7 @@ export function Header() {
       <div className="container mx-auto px-8">
         <div className="relative flex items-center justify-between h-20">
           <a href="#" className="flex items-center gap-2 shrink-0 relative z-10">
-            <img src={twinbidLogo} alt="TwinBid" className="h-7" />
+            <img src={twinbidLogo} alt="TwinBid" className="h-[42px]" />
           </a>
 
           <nav className="hidden md:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
