@@ -553,6 +553,8 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "postback.help1": "Copia el Postback URL y añádelo en la configuración de tu tracker, red CPA o anunciante directo.",
   "postback.help2": "Cuando se produzca una conversión en tu campaña, el sistema nos enviará la información a través de este enlace. Después, la conversión aparecerá en las estadísticas de la campaña y podrás evaluar la eficacia del tráfico y los ingresos dentro de nuestra plataforma.",
   "postback.help3": "El enlace es estático y no cambia — puedes usarlo para todas las campañas.",
+  "postback.payoutLabel": "Pago por conversión",
+  "postback.payoutHint": "Si el pago por conversión no se envía automáticamente por postback, en las estadísticas se utilizará el valor de este campo.",
   "stats.downloadCsv": "Descargar CSV",
   "stats.showConversions": "Mostrar conversiones",
   "stats.postbackHint": "Para rastrear conversiones, utiliza el Postback URL desde la configuración de la campaña.",
