@@ -20,15 +20,10 @@ export function FormatsSection() {
             </LineReveal>
             <WordsReveal
               as="h2"
-              text={t("formats.title")}
+              text={`${t("formats.title").trim()} ${t("formats.title2").trim()}`}
               className="text-display block text-foreground"
-              stagger={0.06}
-            />
-            <WordsReveal
-              as="h2"
-              text={t("formats.title2")}
-              className="text-display block gradient-text mt-1"
-              delay={0.15}
+              brandWord={t("formats.title2").trim()}
+              brandClass="gradient-text"
               stagger={0.06}
             />
             <LineReveal delay={0.5} className="mt-8 max-w-xl mx-auto">
