@@ -49,7 +49,7 @@ export function CTASection() {
 
           <LineReveal delay={1.05} className="mt-20">
             <div className="rule max-w-md mx-auto mb-6" />
-            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-muted-foreground text-[12px] font-mono-eyebrow tracking-[0.2em] uppercase">
+            <div className="mobile-no-dots flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-muted-foreground text-[12px] font-mono-eyebrow tracking-[0.2em] uppercase">
               <span>{t("cta.trust1")}</span>
               <span className="w-1 h-1 rounded-full bg-border" />
               <span>{t("cta.trust2")}</span>
