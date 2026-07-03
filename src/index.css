@@ -345,10 +345,14 @@
   .scroll-indicator { display: flex; }
 }
 
-/* Disable expensive scroll-reveal blur/grid on small screens */
+/* Disable expensive scroll-reveal blur/grid + infinite animations on small screens.
+   Mobile users get a static landing to avoid jank. */
 @media (max-width: 900px) {
   .blueprint-grid,
   .blueprint-aurora { display: none !important; }
+  .marquee-track { animation: none !important; transform: none !important; }
+  .hover-scale:hover,
+  .hover-glow:hover { transform: none !important; }
 }
 
 /* Hide number input spinners */
