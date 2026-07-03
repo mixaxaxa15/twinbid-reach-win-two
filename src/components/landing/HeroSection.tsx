@@ -23,7 +23,12 @@ export function HeroSection() {
 
         <h1 className="text-hero-monument text-center text-foreground">
           {words.map((w, i) => (
-            <span key={i} className={`block whitespace-nowrap ${i === 0 ? "" : "gradient-text"}`}>{w}</span>
+            <span
+              key={i}
+              className={`block md:whitespace-nowrap break-words ${i === 0 ? "" : "gradient-text"}`}
+            >
+              {w}
+            </span>
           ))}
         </h1>
 
