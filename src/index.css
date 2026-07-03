@@ -345,14 +345,18 @@
   .scroll-indicator { display: flex; }
 }
 
-/* Disable expensive scroll-reveal blur/grid + infinite animations on small screens.
-   Mobile users get a static landing to avoid jank. */
+/* Mobile tweaks: drop expensive blurs/grid, keep marquee running, hide
+   decorative rule dashes so long localized text stays centered. */
 @media (max-width: 900px) {
   .blueprint-grid,
   .blueprint-aurora { display: none !important; }
-  .marquee-track { animation: none !important; transform: none !important; }
   .hover-scale:hover,
   .hover-glow:hover { transform: none !important; }
+  .eyebrow-rule { max-width: 100%; text-align: center; }
+  .eyebrow-rule::before,
+  .eyebrow-rule::after { display: none; }
+  .mobile-no-dots > .rounded-full { display: none; }
+  .mobile-no-dots { gap: 0.5rem 1.25rem; }
 }
 
 /* Hide number input spinners */
