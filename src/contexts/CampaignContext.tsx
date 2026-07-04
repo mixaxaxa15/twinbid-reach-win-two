@@ -462,21 +462,17 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         effectiveUpdates.priceValue = (effectiveUpdates.priceValue as number) * 1000;
       }
     }
-    // Build a *partial* patch so toggling a single field (status, budget,
-    // ...) does not rewrite unrelated fields.
-    const patch = buildApiCampaignPatch(effectiveUpdates);
-    if (Object.keys(patch).length > 0) {
-      await api.patchCampaign(id, patch);
-    }
-
+    // Sync creatives BEFORE patching the campaign. Some status transitions
+    // (draft → moderation) are rejected by the backend when the campaign has
+    // no creatives, so we need the creatives to exist before the PATCH runs.
     if (updates.creatives !== undefined) {
       const existingRaw = await api.readCreatives(id).catch(() => [] as ApiCreative[]);
       const existing: ApiCreative[] = Array.isArray(existingRaw) ? existingRaw : [];
       const existingById = new Map(existing.map(cr => [cr.id, cr]));
       // Resolve current banner size for w/h on creative body.
-      const current = campaigns.find(c => c.id === id);
-      const formatKey = updates.formatKey ?? current?.formatKey;
-      const bannerSize = updates.bannerSize ?? current?.bannerSize;
+      const currentC = campaigns.find(c => c.id === id);
+      const formatKey = updates.formatKey ?? currentC?.formatKey;
+      const bannerSize = updates.bannerSize ?? currentC?.bannerSize;
       let cw: number | null = null, ch: number | null = null;
       if (formatKey === "banner" && bannerSize && /^\d+x\d+$/.test(bannerSize)) {
         const [ws, hs] = bannerSize.split("x");
@@ -515,6 +511,14 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         );
       }
     }
+
+    // Build a *partial* patch so toggling a single field (status, budget,
+    // ...) does not rewrite unrelated fields.
+    const patch = buildApiCampaignPatch(effectiveUpdates);
+    if (Object.keys(patch).length > 0) {
+      await api.patchCampaign(id, patch);
+    }
+
     await fetchCampaigns();
   }, [user, fetchCampaigns, campaigns]);
 
