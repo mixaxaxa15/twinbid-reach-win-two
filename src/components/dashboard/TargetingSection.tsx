@@ -337,9 +337,10 @@ function ListItem({ config, list: rawList, onUpdate }: {
 
   const getDisplayLabel = (item: string) => {
     if (countryNames[item]) return `${countryNames[item][lang]} (${item})`;
-    if (languageNames[item]) return `${languageNames[item]} (${item})`;
+    if (languageNames[item]) return `${languageNames[item][lang]} (${item})`;
     return item;
   };
+
 
   const addItem = (item: string) => {
     if (item && !list.items.includes(item)) {
