@@ -60,9 +60,10 @@ function AutocompleteInput({
 
   const getDisplayLabel = (option: string) => {
     if (countryNames[option]) return `${countryNames[option][lang]} (${option})`;
-    if (languageNames[option]) return `${languageNames[option]} (${option})`;
+    if (languageNames[option]) return `${languageNames[option][lang]} (${option})`;
     return option;
   };
+
 
   const filtered = options.filter(o => {
     const display = getDisplayLabel(o);
