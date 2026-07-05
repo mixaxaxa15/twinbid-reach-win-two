@@ -176,7 +176,7 @@ export default function DashboardStatistics() {
   // On mount: if nothing applied yet, auto-apply "all active campaigns" + last 7 days.
   useEffect(() => {
     if (appliedCampaignIds.size === 0 && activeCampaigns.length > 0) {
-      const defaultRange: DateRange = { from: subDays(new Date(), 6), to: new Date() };
+      const defaultRange: DateRange = { from: subDays(utcToday(), 6), to: utcToday() };
       setAppliedCampaignIds(new Set(activeCampaigns.map(c => c.id)));
       // Reflect defaults in the UI controls so the user sees what's applied
       if (!dateRange?.from) setDateRange(defaultRange);
