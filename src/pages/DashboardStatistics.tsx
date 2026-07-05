@@ -539,7 +539,18 @@ export default function DashboardStatistics() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="range" selected={dateRange} onSelect={handleDateChange} numberOfMonths={2} className="p-3 pointer-events-auto" />
+                <Calendar
+                  mode="single"
+                  onDayClick={handleDayClick}
+                  selected={dateRange?.from}
+                  modifiers={{
+                    selected: [dateRange?.from, dateRange?.to].filter(Boolean) as Date[],
+                  }}
+                  numberOfMonths={2}
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
               </PopoverContent>
             </Popover>
             {[
