@@ -114,6 +114,27 @@ function extractMacrosFromUrl(url: string | undefined): Record<string, boolean> 
     TRACKER_MACRO_KEYS.map(m => [m, !!(url && url.includes(`{${m}}`))])
   ) as Record<string, boolean>;
 }
+function appendMacroToUrl(url: string, macro: string): string {
+  if (!url.trim()) return "";
+  if (url.includes(`{${macro}}`)) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}${macro}={${macro}}`;
+}
+// Rebuild the display URL from the bare backend `link` + `trackers_macros` map,
+// so the editor can highlight the active macro badges by looking at `{macro}`
+// substrings in `creative.url`.
+function buildUrlWithMacros(
+  cleanUrl: string | undefined,
+  macros: Record<string, boolean | 0 | 1> | undefined,
+): string {
+  let url = cleanUrl || "";
+  for (const macro of TRACKER_MACRO_KEYS) {
+    if (macros && (macros[macro] === true || macros[macro] === 1)) {
+      url = appendMacroToUrl(url, macro);
+    }
+  }
+  return url;
+}
 // URL tokens that may appear in the landing URL (includes click_id for stripping).
 const URL_MACRO_TOKENS = [
   "click_id", "site_id", "country_code", "creative_id",
@@ -269,7 +290,7 @@ function mapApiCreativeToUi(cr: ApiCreative): Creative {
   return {
     id: cr.id,
     name: cr.creative_name || undefined,
-    url: cr.link,
+    url: buildUrlWithMacros(cr.link, cr.trackers_macros as any),
     imageUrl: anyCr.presigned_s3_url || undefined,
     imageFileName: anyCr.name || undefined,
     title: anyCr.title || undefined,
