@@ -119,7 +119,9 @@ export function LineReveal({
 export function CircularBadge({ text, size = 132 }: { text: string; size?: number }) {
   const light = useLightMode();
   const id = "circular-path";
-  const label = text.trim();
+  const label = text.trim().replace(/\s+/g, " ");
+  const pathLength = 2 * Math.PI * 38;
+  const circularText = `${label}\u2009•\u2009${label}\u2009•\u2009`;
   const inner = (
     <svg viewBox="0 0 100 100" className="w-full h-full">
       <defs>
@@ -129,12 +131,17 @@ export function CircularBadge({ text, size = 132 }: { text: string; size?: numbe
         fill="hsl(var(--foreground))"
         style={{
           fontSize: "6.5px",
-          letterSpacing: "0.23em",
+          letterSpacing: "0.28em",
           fontFamily: "JetBrains Mono, monospace",
         }}
       >
-        <textPath href={`#${id}`} startOffset="0">
-          {`${label} • ${label} •`}
+        <textPath
+          href={`#${id}`}
+          startOffset="0"
+          textLength={pathLength}
+          lengthAdjust="spacing"
+        >
+          {circularText}
         </textPath>
       </text>
     </svg>
