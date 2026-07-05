@@ -544,7 +544,21 @@ export default function DashboardStatistics() {
                   onDayClick={handleDayClick}
                   selected={dateRange?.from}
                   modifiers={{
-                    selected: [dateRange?.from, dateRange?.to].filter(Boolean) as Date[],
+                    selected: (() => {
+                      const from = dateRange?.from;
+                      const to = dateRange?.to;
+                      if (!from) return [];
+                      if (!to) return [from];
+                      const days: Date[] = [];
+                      const start = new Date(from);
+                      start.setHours(0, 0, 0, 0);
+                      const end = new Date(to);
+                      end.setHours(0, 0, 0, 0);
+                      for (let d = new Date(start); d.getTime() <= end.getTime(); d.setDate(d.getDate() + 1)) {
+                        days.push(new Date(d));
+                      }
+                      return days;
+                    })(),
                   }}
                   numberOfMonths={2}
                   className="p-3 pointer-events-auto"
