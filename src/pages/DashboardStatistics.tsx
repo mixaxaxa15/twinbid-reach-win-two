@@ -339,13 +339,21 @@ export default function DashboardStatistics() {
     setSelectedCreativeIds(new Set());
   };
 
-  const handleDateChange = (range: DateRange | undefined) => {
-    if (!range) return;
-    if (clickCount === 0) { setDateRange({ from: range.from, to: undefined }); setClickCount(1); }
-    else if (clickCount === 1) {
-      if (range.from && range.to) { setDateRange(range); } else if (range.from) { setDateRange({ from: dateRange?.from, to: range.from }); }
-      setClickCount(2);
-    } else { setDateRange({ from: range.from || range.to, to: undefined }); setClickCount(1); }
+  const handleDayClick = (day: Date) => {
+    const from = dateRange?.from;
+    const to = dateRange?.to;
+    // Start new range if nothing selected, or a complete range already exists
+    if (!from || (from && to)) {
+      setDateRange({ from: day, to: undefined });
+      return;
+    }
+    // Only "from" is selected — second click sets "to"
+    if (day.getTime() < from.getTime()) {
+      // Earlier date becomes the new start
+      setDateRange({ from: day, to: undefined });
+    } else {
+      setDateRange({ from, to: day });
+    }
   };
 
   const chartData = useMemo(() => {
