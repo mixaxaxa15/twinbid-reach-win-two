@@ -96,7 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string | undefined, telegram: string) => {
     try {
-      const res = await api.signup({ email, password, full_name: fullName, telegram, manager_telegram: DEFAULT_MANAGER_TELEGRAM });
+      const utm_source = getStoredUtmSource() ?? undefined;
+      const res = await api.signup({ email, password, full_name: fullName, telegram, manager_telegram: DEFAULT_MANAGER_TELEGRAM, utm_source });
       storeTokens(res.access_token, res.refresh_token);
       setUser({ id: "mock-user", email: res.user.mail, full_name: res.user.name });
       return { error: null };
