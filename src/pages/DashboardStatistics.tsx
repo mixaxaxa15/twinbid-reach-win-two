@@ -48,6 +48,13 @@ function formatHourLabel(raw: string): string {
   const [day, hour] = raw.split(" ");
   return `${formatDateLabel(day)} ${hour}`;
 }
+// "Today" in UTC 0. Returns a local Date whose Y/M/D fields equal the current
+// UTC calendar day, so fmtUtcDay() (which reads getFullYear/Month/Date) emits
+// the correct UTC date string regardless of the user's timezone.
+function utcToday(): Date {
+  const n = new Date();
+  return new Date(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+}
 
 // Dictionaries used purely for filter UI options.
 const DIMENSION_MAP: Record<string, string[]> = {
