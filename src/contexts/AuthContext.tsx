@@ -3,6 +3,7 @@ import { api, ApiError } from "@/api";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, API_BASE_URL } from "@/api/config";
 import { DEFAULT_MANAGER_TELEGRAM } from "@/lib/constants";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getStoredUtmSource } from "@/lib/utmSource";
 
 /** Minimal user shape consumed by the rest of the UI. */
 export interface AuthUser {
