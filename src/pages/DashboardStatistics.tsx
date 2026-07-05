@@ -551,8 +551,6 @@ export default function DashboardStatistics() {
                 />
               </PopoverContent>
             </Popover>
-              </PopoverContent>
-            </Popover>
             {[
               { label: t("stats.today"), getRange: () => { const d = new Date(); return { from: d, to: d }; } },
               { label: t("stats.yesterday"), getRange: () => { const d = subDays(new Date(), 1); return { from: d, to: d }; } },
