@@ -200,16 +200,19 @@ function activeIntervalsToSchedule(intervals: ApiCampaign["active_intervals"] | 
 }
 
 function buildApiTargeting(targeting: Record<string, TargetingState>): Pick<ApiCampaign, TargetKey> {
-  const out = {} as Pick<ApiCampaign, TargetKey>;
-  for (const [uiKey, apiKey] of TARGET_KEY_MAP) out[apiKey] = targetingStateToMap(targeting[uiKey] || { mode: "none", items: [] });
-  return out;
+  const out: any = {};
+  for (const [uiKey, apiKey] of TARGET_KEY_MAP) {
+    out[apiKey] = targetingStateToPayload(targeting[uiKey] || { mode: "none", items: [] });
+  }
+  return out as Pick<ApiCampaign, TargetKey>;
 }
 function readApiTargeting(c: ApiCampaign): Record<string, TargetingState> {
   return {
-    ...Object.fromEntries(TARGET_KEY_MAP.map(([uiKey, apiKey]) => [uiKey, targetingMapToState(c[apiKey])])),
+    ...Object.fromEntries(TARGET_KEY_MAP.map(([uiKey, apiKey]) => [uiKey, targetingPayloadToState(c[apiKey] as any)])),
     schedule: activeIntervalsToSchedule(c.active_intervals),
   };
 }
+
 
 // ---- Mapping --------------------------------------------------------------
 function mapApiCampaignToUi(c: ApiCampaign, creatives: Creative[]): Campaign {
