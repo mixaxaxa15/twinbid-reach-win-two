@@ -290,7 +290,7 @@ function mapApiCreativeToUi(cr: ApiCreative): Creative {
   return {
     id: cr.id,
     name: cr.creative_name || undefined,
-    url: cr.link,
+    url: buildUrlWithMacros(cr.link, cr.trackers_macros as any),
     imageUrl: anyCr.presigned_s3_url || undefined,
     imageFileName: anyCr.name || undefined,
     title: anyCr.title || undefined,
