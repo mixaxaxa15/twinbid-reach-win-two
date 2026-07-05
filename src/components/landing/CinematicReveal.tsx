@@ -129,7 +129,7 @@ export function CircularBadge({ text, size = 132 }: { text: string; size?: numbe
         style={{ fontSize: "6.5px", letterSpacing: "0.28em", fontFamily: "JetBrains Mono, monospace" }}
       >
         <textPath href={`#${id}`} startOffset="0" textLength="238" lengthAdjust="spacing">
-          {text} • {text} •
+          {text} • {text} •{" "}
         </textPath>
 
 
