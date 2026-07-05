@@ -77,16 +77,26 @@ export interface Campaign {
   conversionPayout?: number | null;
 }
 
-// ---- Targeting <-> TargetingMap conversion --------------------------------
-function targetingStateToMap(t: TargetingState): TargetingMap {
-  if (t.mode === "none" || t.items.length === 0) return {};
-  const flag: 0 | 1 = t.mode === "white" ? 1 : 0;
-  return Object.fromEntries(t.items.map(v => [v, flag])) as TargetingMap;
+// ---- Targeting <-> API list conversion ------------------------------------
+// New API shape: { isWhiteList: boolean, objects: string[] }.
+// Old shape (still accepted on read for backwards compatibility): { "<id>": 0 | 1 }.
+interface TargetingListPayload { isWhiteList: boolean; objects: string[] }
+function targetingStateToPayload(t: TargetingState): TargetingListPayload {
+  if (t.mode === "none" || t.items.length === 0) return { isWhiteList: true, objects: [] };
+  return { isWhiteList: t.mode === "white", objects: t.items };
 }
-function targetingMapToState(m: TargetingMap | undefined): TargetingState {
-  if (!m || Object.keys(m).length === 0) return { mode: "none", items: [] };
-  const entries = Object.entries(m);
-  const allWhite = entries.every(([, v]) => v === 1);
+function targetingPayloadToState(m: TargetingListPayload | TargetingMap | undefined): TargetingState {
+  if (!m) return { mode: "none", items: [] };
+  // New shape
+  if (typeof (m as any).isWhiteList === "boolean" && Array.isArray((m as any).objects)) {
+    const p = m as TargetingListPayload;
+    if (!p.objects.length) return { mode: "none", items: [] };
+    return { mode: p.isWhiteList ? "white" : "black", items: p.objects.map(String) };
+  }
+  // Old shape
+  const entries = Object.entries(m as Record<string, unknown>);
+  if (!entries.length) return { mode: "none", items: [] };
+  const allWhite = entries.every(([, v]) => v === 1 || v === true);
   return { mode: allWhite ? "white" : "black", items: entries.map(([k]) => k) };
 }
 
@@ -94,15 +104,22 @@ function verticalsToApiArray(verticals: readonly string[] | undefined): Record<s
   return Object.fromEntries((verticals || []).map(v => [v, 1])) as Record<string, 1>;
 }
 
+// Backend tracker macros — booleans, no `click_id` (mandatory server-side).
+const TRACKER_MACRO_KEYS = [
+  "device", "browser", "site_id", "device_os", "ip_address",
+  "campaign_id", "creative_id", "country_code",
+] as const;
+function extractMacrosFromUrl(url: string | undefined): Record<string, boolean> {
+  return Object.fromEntries(
+    TRACKER_MACRO_KEYS.map(m => [m, !!(url && url.includes(`{${m}}`))])
+  ) as Record<string, boolean>;
+}
+// URL tokens that may appear in the landing URL (includes click_id for stripping).
 const URL_MACRO_TOKENS = [
   "click_id", "site_id", "country_code", "creative_id",
   "campaign_id", "browser", "device", "device_os", "ip_address",
 ] as const;
-function extractMacrosFromUrl(url: string | undefined): Record<string, 0 | 1> {
-  return Object.fromEntries(
-    URL_MACRO_TOKENS.map(m => [m, (url && url.includes(`{${m}}`)) ? 1 : 0])
-  ) as Record<string, 0 | 1>;
-}
+
 // Strip macro query params (e.g. `click_id={click_id}`) so the backend
 // receives only the bare landing URL. Macros are sent separately via
 // `trackers_macros`.
