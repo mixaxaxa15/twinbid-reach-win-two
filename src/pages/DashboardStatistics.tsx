@@ -48,6 +48,13 @@ function formatHourLabel(raw: string): string {
   const [day, hour] = raw.split(" ");
   return `${formatDateLabel(day)} ${hour}`;
 }
+// "Today" in UTC 0. Returns a local Date whose Y/M/D fields equal the current
+// UTC calendar day, so fmtUtcDay() (which reads getFullYear/Month/Date) emits
+// the correct UTC date string regardless of the user's timezone.
+function utcToday(): Date {
+  const n = new Date();
+  return new Date(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+}
 
 // Dictionaries used purely for filter UI options.
 const DIMENSION_MAP: Record<string, string[]> = {
@@ -169,7 +176,7 @@ export default function DashboardStatistics() {
   // On mount: if nothing applied yet, auto-apply "all active campaigns" + last 7 days.
   useEffect(() => {
     if (appliedCampaignIds.size === 0 && activeCampaigns.length > 0) {
-      const defaultRange: DateRange = { from: subDays(new Date(), 6), to: new Date() };
+      const defaultRange: DateRange = { from: subDays(utcToday(), 6), to: utcToday() };
       setAppliedCampaignIds(new Set(activeCampaigns.map(c => c.id)));
       // Reflect defaults in the UI controls so the user sees what's applied
       if (!dateRange?.from) setDateRange(defaultRange);
@@ -570,10 +577,10 @@ export default function DashboardStatistics() {
               </PopoverContent>
             </Popover>
             {[
-              { label: t("stats.today"), getRange: () => { const d = new Date(); return { from: d, to: d }; } },
-              { label: t("stats.yesterday"), getRange: () => { const d = subDays(new Date(), 1); return { from: d, to: d }; } },
-              { label: t("stats.week"), getRange: () => ({ from: subDays(new Date(), 6), to: new Date() }) },
-              { label: t("stats.month"), getRange: () => ({ from: subDays(new Date(), 29), to: new Date() }) },
+              { label: t("stats.today"), getRange: () => { const d = utcToday(); return { from: d, to: d }; } },
+              { label: t("stats.yesterday"), getRange: () => { const d = subDays(utcToday(), 1); return { from: d, to: d }; } },
+              { label: t("stats.week"), getRange: () => ({ from: subDays(utcToday(), 6), to: utcToday() }) },
+              { label: t("stats.month"), getRange: () => ({ from: subDays(utcToday(), 29), to: utcToday() }) },
             ].map((preset) => (
               <Button key={preset.label} variant="outline" size="sm" className="border-border text-xs"
                 onClick={() => setDateRange(preset.getRange())}>
