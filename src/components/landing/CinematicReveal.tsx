@@ -128,8 +128,8 @@ export function CircularBadge({ text, size = 132 }: { text: string; size?: numbe
         fill="hsl(var(--foreground))"
         style={{ fontSize: "6.5px", letterSpacing: "0.28em", fontFamily: "JetBrains Mono, monospace" }}
       >
-        <textPath href={`#${id}`} startOffset="0" textLength="220" lengthAdjust="spacing">
-          {`${text} • ${text} • \u00A0`}
+        <textPath href={`#${id}`} startOffset="0">
+          {text} • {text} •
         </textPath>
 
 
