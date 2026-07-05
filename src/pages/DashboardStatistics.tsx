@@ -547,7 +547,10 @@ export default function DashboardStatistics() {
             ))}
           </div>
         </div>
+      </div>
 
+      {/* Actions row — fixed placement so Show conversions never shifts on toggle */}
+      <div className="flex flex-wrap items-center gap-3">
         <label
           className={cn(
             "inline-flex items-center gap-2 px-3 h-10 rounded-md border cursor-pointer transition-colors select-none shrink-0 whitespace-nowrap",
