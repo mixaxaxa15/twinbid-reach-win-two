@@ -17,7 +17,13 @@ import { useCampaigns } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useStatistics } from "@/contexts/StatisticsContext";
 import { formatCountryLabel } from "@/lib/countries";
-import { COUNTRY_CODES, OPERATING_SYSTEMS, BROWSERS, DEVICE_TYPES } from "@/lib/dimensions";
+import { COUNTRY_CODES } from "@/lib/dimensions";
+import {
+  BROWSER_FILTER_KEYS, OS_FILTER_KEYS, DEVICE_FILTER_KEYS,
+  BROWSER_REVERSE, OS_REVERSE, DEVICE_REVERSE,
+  expandFilter, mapRawToGroup, OTHER_KEY,
+  BROWSER_FILTER_MAP, OS_FILTER_MAP, DEVICE_FILTER_MAP,
+} from "@/lib/statFilters";
 import { api } from "@/api";
 import type { StatsGroupBy, StatsFilterBy } from "@/api/types";
 
