@@ -65,9 +65,9 @@ function utcToday(): Date {
 // Dictionaries used purely for filter UI options.
 const DIMENSION_MAP: Record<string, string[]> = {
   country: COUNTRY_CODES,
-  browsers: BROWSERS,
-  devices: DEVICE_TYPES,
-  os: OPERATING_SYSTEMS,
+  browsers: BROWSER_FILTER_KEYS,
+  devices: DEVICE_FILTER_KEYS,
+  os: OS_FILTER_KEYS,
 };
 
 // Multi-select filter component (supports plain string options or {value,label} pairs)
