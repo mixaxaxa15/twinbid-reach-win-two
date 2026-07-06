@@ -202,6 +202,9 @@ export default function DashboardStatistics() {
 
   const [data, setData] = useState<UiRow[]>([]);
   const [slowLoading, setSlowLoading] = useState(false);
+  type PageSize = 50 | 100 | "all";
+  const [pageSize, setPageSize] = useState<PageSize>(50);
+  useEffect(() => { setPageSize(50); }, [appliedGroupBy]);
 
   useEffect(() => {
     if (!hasSelection) { setData([]); return; }
