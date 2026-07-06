@@ -6,6 +6,42 @@ import type {
   CampaignStatus as ApiStatus, FormatType,
 } from "@/api/types";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  BROWSER_FILTER_MAP, OS_FILTER_MAP, DEVICE_FILTER_MAP,
+  BROWSER_REVERSE, OS_REVERSE, DEVICE_REVERSE,
+} from "@/lib/statFilters";
+
+// Browser/OS/device_type items in the UI are group keys (e.g. "Chrome",
+// "iOS", "mobile") but the backend targeting expects raw values (e.g.
+// "Chromium", "JSChromeBrowser"). Expand on send, collapse on read.
+// Unknown raw values on read are dropped silently — the UI has no "other"
+// bucket for targeting because targeting is a server-side rule and cannot
+// express "everything not in the known groups".
+const EXPAND_BY_UI_KEY: Record<string, Record<string, string[]>> = {
+  browser: BROWSER_FILTER_MAP,
+  os: OS_FILTER_MAP,
+  deviceType: DEVICE_FILTER_MAP,
+};
+const COLLAPSE_BY_UI_KEY: Record<string, Map<string, string>> = {
+  browser: BROWSER_REVERSE,
+  os: OS_REVERSE,
+  deviceType: DEVICE_REVERSE,
+};
+function expandTargetingItems(uiKey: string, items: string[]): string[] {
+  const map = EXPAND_BY_UI_KEY[uiKey];
+  if (!map) return items;
+  return Array.from(new Set(items.flatMap(k => map[k] ?? [k])));
+}
+function collapseTargetingItems(uiKey: string, items: string[]): string[] {
+  const rev = COLLAPSE_BY_UI_KEY[uiKey];
+  if (!rev) return items;
+  const out = new Set<string>();
+  for (const raw of items) {
+    const group = rev.get(raw);
+    if (group) out.add(group);
+  }
+  return Array.from(out);
+}
 
 export type CampaignStatus = ApiStatus;
 export type PricingModel = ApiPricing;
