@@ -285,7 +285,38 @@ export default function DashboardStatistics() {
           return { label: formatDateLabel(k), ...m };
         });
       } else {
-        rows = Array.from(byKey.entries()).map(([key, m]) => ({ label: key, ...m }));
+        // For dimensions that have a UI group map, collapse raw values into
+        // group keys (unknowns → "other") and aggregate. Then, if the applied
+        // filter for that dimension is non-empty, keep only the selected keys
+        // (needed because when "other" was selected we skipped the backend
+        // filter and asked for everything).
+        const reverse =
+          apiGroup === "browser" ? BROWSER_REVERSE :
+          apiGroup === "os"      ? OS_REVERSE :
+          apiGroup === "device_type" ? DEVICE_REVERSE : null;
+        const filterSet =
+          apiGroup === "browser" ? appliedFilterBrowser :
+          apiGroup === "os"      ? appliedFilterOS :
+          apiGroup === "device_type" ? appliedFilterDevice : null;
+
+        if (reverse) {
+          const grouped = new Map<string, typeof empty>();
+          for (const [rawKey, m] of byKey.entries()) {
+            const groupKey = mapRawToGroup(rawKey, reverse);
+            const acc = grouped.get(groupKey) ?? { ...empty };
+            acc.impressions += m.impressions;
+            acc.clicks += m.clicks;
+            acc.spent += m.spent;
+            acc.conversions += m.conversions;
+            acc.income += m.income;
+            grouped.set(groupKey, acc);
+          }
+          rows = Array.from(grouped.entries())
+            .filter(([key]) => !filterSet || filterSet.size === 0 || filterSet.has(key))
+            .map(([key, m]) => ({ label: key, ...m }));
+        } else {
+          rows = Array.from(byKey.entries()).map(([key, m]) => ({ label: key, ...m }));
+        }
       }
       setData(rows);
     }).catch(e => { if (!cancelled) console.error("Stats query error:", e); })
