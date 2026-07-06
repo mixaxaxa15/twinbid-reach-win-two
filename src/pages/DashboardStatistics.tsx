@@ -873,7 +873,7 @@ export default function DashboardStatistics() {
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedData.map((row) => {
+                      {visibleRows.map((row) => {
                         const cr = row.clicks > 0 ? ((row.conversions / row.clicks) * 100).toFixed(2) : "0.00";
                         const roiNum = row.spent > 0 ? ((row.income - row.spent) / row.spent) * 100 : 0;
                         const roi = row.spent > 0 ? roiNum.toFixed(2) : "0.00";
