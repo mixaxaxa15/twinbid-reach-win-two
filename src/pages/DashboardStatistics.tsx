@@ -202,6 +202,9 @@ export default function DashboardStatistics() {
 
   const [data, setData] = useState<UiRow[]>([]);
   const [slowLoading, setSlowLoading] = useState(false);
+  type PageSize = 50 | 100 | "all";
+  const [pageSize, setPageSize] = useState<PageSize>(50);
+  useEffect(() => { setPageSize(50); }, [appliedGroupBy]);
 
   useEffect(() => {
     if (!hasSelection) { setData([]); return; }
@@ -456,6 +459,11 @@ export default function DashboardStatistics() {
       return sortDir === "desc" ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey];
     });
   }, [data, sortKey, sortDir]);
+
+  const visibleRows = useMemo(
+    () => pageSize === "all" ? sortedData : sortedData.slice(0, pageSize),
+    [sortedData, pageSize],
+  );
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === "desc" ? "asc" : "desc");
@@ -805,14 +813,27 @@ export default function DashboardStatistics() {
 
           <Card className="bg-card border-border">
             <CardHeader>
-              <div className="flex flex-wrap items-center gap-2">
-                {(Object.keys(groupLabels) as GroupBy[]).map((g) => (
-                  <Button key={g} variant={groupBy === g ? "default" : "outline"} size="sm"
-                    onClick={() => setGroupBy(g)}
-                    className={cn("min-w-[100px]", groupBy === g ? "bg-primary text-primary-foreground" : "border-border")}>
-                    {groupLabels[g]}
-                  </Button>
-                ))}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  {(Object.keys(groupLabels) as GroupBy[]).map((g) => (
+                    <Button key={g} variant={groupBy === g ? "default" : "outline"} size="sm"
+                      onClick={() => setGroupBy(g)}
+                      className={cn("min-w-[100px]", groupBy === g ? "bg-primary text-primary-foreground" : "border-border")}>
+                      {groupLabels[g]}
+                    </Button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground mr-1">{t("stats.rows")}</span>
+                  {([50, 100, "all"] as PageSize[]).map(sz => (
+                    <Button key={String(sz)} size="sm"
+                      variant={pageSize === sz ? "default" : "outline"}
+                      onClick={() => setPageSize(sz)}
+                      className={cn("min-w-[52px]", pageSize === sz ? "bg-primary text-primary-foreground" : "border-border")}>
+                      {sz === "all" ? t("stats.rowsAll") : sz}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -852,7 +873,7 @@ export default function DashboardStatistics() {
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedData.map((row) => {
+                      {visibleRows.map((row) => {
                         const cr = row.clicks > 0 ? ((row.conversions / row.clicks) * 100).toFixed(2) : "0.00";
                         const roiNum = row.spent > 0 ? ((row.income - row.spent) / row.spent) * 100 : 0;
                         const roi = row.spent > 0 ? roiNum.toFixed(2) : "0.00";
