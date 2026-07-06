@@ -294,6 +294,8 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "stats.country": { ru: "Страна", en: "Country" },
   "stats.total": { ru: "Итого", en: "Total" },
   "stats.noData": { ru: "Нет данных для выбранных фильтров", en: "No data for selected filters" },
+  "stats.rows": { ru: "Строк", en: "Rows" },
+  "stats.rowsAll": { ru: "Все", en: "All" },
   "stats.selectCampaignAndPeriod": { ru: "Выберите кампанию и период для просмотра статистики", en: "Select a campaign and period to view statistics" },
   "stats.filters": { ru: "Фильтры", en: "Filters" },
   "stats.filterCountry": { ru: "Страна", en: "Country" },
