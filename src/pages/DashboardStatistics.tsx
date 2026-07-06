@@ -460,6 +460,11 @@ export default function DashboardStatistics() {
     });
   }, [data, sortKey, sortDir]);
 
+  const visibleRows = useMemo(
+    () => pageSize === "all" ? sortedData : sortedData.slice(0, pageSize),
+    [sortedData, pageSize],
+  );
+
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === "desc" ? "asc" : "desc");
     else { setSortKey(key); setSortDir("desc"); }
