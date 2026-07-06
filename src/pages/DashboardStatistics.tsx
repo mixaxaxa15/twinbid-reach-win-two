@@ -207,6 +207,9 @@ export default function DashboardStatistics() {
     if (!hasSelection) { setData([]); return; }
     let cancelled = false;
     const apiGroup = GROUP_MAP[appliedGroupBy].api;
+    // Clear stale rows synchronously so the table doesn't briefly show the
+    // previous grouping while the new query is in-flight.
+    setData([]);
     const fmtUtcDay = (d: Date) => {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, "0");
