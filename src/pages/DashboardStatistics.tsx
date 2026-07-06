@@ -207,11 +207,6 @@ export default function DashboardStatistics() {
     if (!hasSelection) { setData([]); return; }
     let cancelled = false;
     const apiGroup = GROUP_MAP[appliedGroupBy].api;
-    // All statistics are queried in UTC 0. The calendar visually represents
-    // calendar days (no time-of-day component), so we serialize the picked
-    // day as a UTC date string (YYYY-MM-DD) using its Y/M/D fields directly.
-    // We deliberately do NOT use toISOString(), which would shift the day
-    // for users in positive timezones (local midnight → previous UTC day).
     const fmtUtcDay = (d: Date) => {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -220,10 +215,10 @@ export default function DashboardStatistics() {
     };
     const from = appliedDateRange?.from ? fmtUtcDay(appliedDateRange.from) : "";
     const to = appliedDateRange?.to ? fmtUtcDay(appliedDateRange.to) : from;
-    // Expand human-readable group keys (e.g. "Chrome", "TikTok / ByteDance")
-    // into the raw values ClickHouse stores. If "other" is included, we can't
-    // enumerate the unknown set, so we skip that dimension's filter and
-    // post-filter grouped rows client-side below.
+
+    // Build the base filter set. For dimensions where "other" is selected we
+    // can't just enumerate values, so we resolve them via a preliminary query
+    // (see below) and inject the resulting raw list here.
     const filters: Partial<Record<StatsFilterBy, string[]>> = {};
     if (appliedFilterCountry.size) filters.country = Array.from(appliedFilterCountry);
     const browserRaw = expandFilter(appliedFilterBrowser, BROWSER_FILTER_MAP);
@@ -233,19 +228,58 @@ export default function DashboardStatistics() {
     const osRaw = expandFilter(appliedFilterOS, OS_FILTER_MAP);
     if (osRaw && osRaw.length) filters.os = osRaw;
 
-    // If the request takes longer than 1s, surface a centered overlay so the
-    // user knows the stats are still loading (slow network etc.). The overlay
-    // disappears immediately when the response arrives.
+    // Dimensions where the user picked "other" — we need to discover the raw
+    // values actually present and keep the subset whose group ∈ filterSet.
+    type OtherDim = {
+      field: StatsFilterBy;
+      group: StatsGroupBy;
+      filterSet: Set<string>;
+      reverse: Map<string, string>;
+    };
+    const otherDims: OtherDim[] = [];
+    if (appliedFilterBrowser.has(OTHER_KEY))
+      otherDims.push({ field: "browser", group: "browser", filterSet: appliedFilterBrowser, reverse: BROWSER_REVERSE });
+    if (appliedFilterOS.has(OTHER_KEY))
+      otherDims.push({ field: "os", group: "os", filterSet: appliedFilterOS, reverse: OS_REVERSE });
+    if (appliedFilterDevice.has(OTHER_KEY))
+      otherDims.push({ field: "device_type", group: "device_type", filterSet: appliedFilterDevice, reverse: DEVICE_REVERSE });
+
     const slowTimer = window.setTimeout(() => { if (!cancelled) setSlowLoading(true); }, 1000);
 
-    api.statsQuery({
+    const baseReq = {
       from, to,
       campaign_ids: Array.from(appliedCampaignIds),
       creative_ids: appliedCreativeIds.size ? Array.from(appliedCreativeIds) : undefined,
-      group_by: apiGroup,
-      filters,
-    }).then(res => {
-      if (cancelled) return;
+    };
+
+    const resolveOthers = async () => {
+      if (otherDims.length === 0) return;
+      // For each "other" dimension, query grouped by that dimension using the
+      // other (already resolved) filters, to enumerate the raw values present.
+      const results = await Promise.all(otherDims.map(dim => {
+        const preFilters: Partial<Record<StatsFilterBy, string[]>> = { ...filters };
+        delete preFilters[dim.field];
+        return api.statsQuery({
+          ...baseReq,
+          group_by: dim.group,
+          filters: preFilters,
+        }).then(res => ({ dim, rawKeys: Object.keys(res.rows) }));
+      }));
+      for (const { dim, rawKeys } of results) {
+        const kept = rawKeys.filter(raw => dim.filterSet.has(mapRawToGroup(raw, dim.reverse)));
+        // If the user selected only "other" and there are no unknown values,
+        // send an impossible filter so the main query returns empty.
+        filters[dim.field] = kept.length ? kept : ["__none__"];
+      }
+    };
+
+    resolveOthers()
+      .then(() => {
+        if (cancelled) return null;
+        return api.statsQuery({ ...baseReq, group_by: apiGroup, filters });
+      })
+      .then(res => {
+      if (cancelled || !res) return;
       const byKey = new Map<string, { impressions: number; clicks: number; spent: number; conversions: number; income: number }>();
       for (const [key, m] of Object.entries(res.rows)) {
         const extra = m as unknown as { conversions?: number; income?: number; revenue?: number };
@@ -260,8 +294,6 @@ export default function DashboardStatistics() {
       const empty = { impressions: 0, clicks: 0, spent: 0, conversions: 0, income: 0 };
       let rows: UiRow[];
       if (apiGroup === "hour") {
-        // Fill every hour in the selected range with zeros for missing buckets,
-        // so both the table and the chart show a continuous timeline.
         const keys: string[] = [];
         const start = new Date(`${from}T00:00:00Z`);
         const end = new Date(`${to}T00:00:00Z`);
@@ -292,11 +324,6 @@ export default function DashboardStatistics() {
           return { label: formatDateLabel(k), ...m };
         });
       } else {
-        // For dimensions that have a UI group map, collapse raw values into
-        // group keys (unknowns → "other") and aggregate. Then, if the applied
-        // filter for that dimension is non-empty, keep only the selected keys
-        // (needed because when "other" was selected we skipped the backend
-        // filter and asked for everything).
         const reverse =
           apiGroup === "browser" ? BROWSER_REVERSE :
           apiGroup === "os"      ? OS_REVERSE :
