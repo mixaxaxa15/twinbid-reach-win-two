@@ -8,10 +8,12 @@ import type { TargetingState, ListMode } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { COUNTRIES, LANGUAGES, COUNTRY_CODES, LANGUAGE_CODES } from "@/lib/dimensions";
 import {
-  COUNTRIES, LANGUAGES, OPERATING_SYSTEMS, BROWSERS,
-  COUNTRY_CODES, LANGUAGE_CODES, DEVICE_TYPES,
-} from "@/lib/dimensions";
+  BROWSER_FILTER_KEYS, OS_FILTER_KEYS, DEVICE_FILTER_KEYS, OTHER_KEY,
+} from "@/lib/statFilters";
+
+const withoutOther = (keys: string[]) => keys.filter(k => k !== OTHER_KEY);
 
 const countryNames: Record<string, { ru: string; en: string; es: string }> =
   Object.fromEntries(COUNTRIES.map(c => [c.code, { ru: c.ru, en: c.en, es: c.es }]));
