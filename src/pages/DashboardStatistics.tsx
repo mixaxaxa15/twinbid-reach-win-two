@@ -77,7 +77,14 @@ function MultiSelectFilter({ label, options, selected, onChange }: {
   onChange: React.Dispatch<React.SetStateAction<Set<string>>>;
 }) {
   const { t } = useLanguage();
-  const normalized = options.map(o => typeof o === "string" ? { value: o, label: o } : o);
+  const normalized = options
+    .map(o => typeof o === "string" ? { value: o, label: o } : o)
+    .slice()
+    .sort((a, b) => {
+      if (a.value === OTHER_KEY) return 1;
+      if (b.value === OTHER_KEY) return -1;
+      return a.label.localeCompare(b.label);
+    });
   const toggle = (val: string) => {
     onChange(prev => {
       const next = new Set(prev);
