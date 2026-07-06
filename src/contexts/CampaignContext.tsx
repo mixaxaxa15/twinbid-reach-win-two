@@ -259,13 +259,18 @@ function activeIntervalsToSchedule(intervals: ApiCampaign["active_intervals"] | 
 function buildApiTargeting(targeting: Record<string, TargetingState>): Pick<ApiCampaign, TargetKey> {
   const out: any = {};
   for (const [uiKey, apiKey] of TARGET_KEY_MAP) {
-    out[apiKey] = targetingStateToPayload(targeting[uiKey] || { mode: "none", items: [] });
+    const state = targeting[uiKey] || { mode: "none", items: [] };
+    const expanded: TargetingState = { ...state, items: expandTargetingItems(uiKey, state.items) };
+    out[apiKey] = targetingStateToPayload(expanded);
   }
   return out as Pick<ApiCampaign, TargetKey>;
 }
 function readApiTargeting(c: ApiCampaign): Record<string, TargetingState> {
   return {
-    ...Object.fromEntries(TARGET_KEY_MAP.map(([uiKey, apiKey]) => [uiKey, targetingPayloadToState(c[apiKey] as any)])),
+    ...Object.fromEntries(TARGET_KEY_MAP.map(([uiKey, apiKey]) => {
+      const state = targetingPayloadToState(c[apiKey] as any);
+      return [uiKey, { ...state, items: collapseTargetingItems(uiKey, state.items) }];
+    })),
     schedule: activeIntervalsToSchedule(c.active_intervals),
   };
 }
