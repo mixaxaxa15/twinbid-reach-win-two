@@ -213,11 +213,18 @@ export default function DashboardStatistics() {
     };
     const from = appliedDateRange?.from ? fmtUtcDay(appliedDateRange.from) : "";
     const to = appliedDateRange?.to ? fmtUtcDay(appliedDateRange.to) : from;
+    // Expand human-readable group keys (e.g. "Chrome", "TikTok / ByteDance")
+    // into the raw values ClickHouse stores. If "other" is included, we can't
+    // enumerate the unknown set, so we skip that dimension's filter and
+    // post-filter grouped rows client-side below.
     const filters: Partial<Record<StatsFilterBy, string[]>> = {};
     if (appliedFilterCountry.size) filters.country = Array.from(appliedFilterCountry);
-    if (appliedFilterBrowser.size) filters.browser = Array.from(appliedFilterBrowser);
-    if (appliedFilterDevice.size)  filters.device_type = Array.from(appliedFilterDevice);
-    if (appliedFilterOS.size)      filters.os = Array.from(appliedFilterOS);
+    const browserRaw = expandFilter(appliedFilterBrowser, BROWSER_FILTER_MAP);
+    if (browserRaw && browserRaw.length) filters.browser = browserRaw;
+    const deviceRaw = expandFilter(appliedFilterDevice, DEVICE_FILTER_MAP);
+    if (deviceRaw && deviceRaw.length) filters.device_type = deviceRaw;
+    const osRaw = expandFilter(appliedFilterOS, OS_FILTER_MAP);
+    if (osRaw && osRaw.length) filters.os = osRaw;
 
     // If the request takes longer than 1s, surface a centered overlay so the
     // user knows the stats are still loading (slow network etc.). The overlay
