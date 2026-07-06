@@ -264,6 +264,8 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "stats.country": "País",
   "stats.total": "Total",
   "stats.noData": "Sin datos para los filtros seleccionados",
+  "stats.rows": "Filas",
+  "stats.rowsAll": "Todas",
   "stats.selectCampaignAndPeriod": "Selecciona una campaña y un periodo para ver las estadísticas",
   "stats.filters": "Filtros",
   "stats.filterCountry": "País",
