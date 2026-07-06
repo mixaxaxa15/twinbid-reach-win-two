@@ -813,14 +813,27 @@ export default function DashboardStatistics() {
 
           <Card className="bg-card border-border">
             <CardHeader>
-              <div className="flex flex-wrap items-center gap-2">
-                {(Object.keys(groupLabels) as GroupBy[]).map((g) => (
-                  <Button key={g} variant={groupBy === g ? "default" : "outline"} size="sm"
-                    onClick={() => setGroupBy(g)}
-                    className={cn("min-w-[100px]", groupBy === g ? "bg-primary text-primary-foreground" : "border-border")}>
-                    {groupLabels[g]}
-                  </Button>
-                ))}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  {(Object.keys(groupLabels) as GroupBy[]).map((g) => (
+                    <Button key={g} variant={groupBy === g ? "default" : "outline"} size="sm"
+                      onClick={() => setGroupBy(g)}
+                      className={cn("min-w-[100px]", groupBy === g ? "bg-primary text-primary-foreground" : "border-border")}>
+                      {groupLabels[g]}
+                    </Button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground mr-1">{t("stats.rows")}</span>
+                  {([50, 100, "all"] as PageSize[]).map(sz => (
+                    <Button key={String(sz)} size="sm"
+                      variant={pageSize === sz ? "default" : "outline"}
+                      onClick={() => setPageSize(sz)}
+                      className={cn("min-w-[52px]", pageSize === sz ? "bg-primary text-primary-foreground" : "border-border")}>
+                      {sz === "all" ? t("stats.rowsAll") : sz}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
