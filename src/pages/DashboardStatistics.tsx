@@ -17,7 +17,13 @@ import { useCampaigns } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useStatistics } from "@/contexts/StatisticsContext";
 import { formatCountryLabel } from "@/lib/countries";
-import { COUNTRY_CODES, OPERATING_SYSTEMS, BROWSERS, DEVICE_TYPES } from "@/lib/dimensions";
+import { COUNTRY_CODES } from "@/lib/dimensions";
+import {
+  BROWSER_FILTER_KEYS, OS_FILTER_KEYS, DEVICE_FILTER_KEYS,
+  BROWSER_REVERSE, OS_REVERSE, DEVICE_REVERSE,
+  expandFilter, mapRawToGroup, OTHER_KEY,
+  BROWSER_FILTER_MAP, OS_FILTER_MAP, DEVICE_FILTER_MAP,
+} from "@/lib/statFilters";
 import { api } from "@/api";
 import type { StatsGroupBy, StatsFilterBy } from "@/api/types";
 
@@ -59,9 +65,9 @@ function utcToday(): Date {
 // Dictionaries used purely for filter UI options.
 const DIMENSION_MAP: Record<string, string[]> = {
   country: COUNTRY_CODES,
-  browsers: BROWSERS,
-  devices: DEVICE_TYPES,
-  os: OPERATING_SYSTEMS,
+  browsers: BROWSER_FILTER_KEYS,
+  devices: DEVICE_FILTER_KEYS,
+  os: OS_FILTER_KEYS,
 };
 
 // Multi-select filter component (supports plain string options or {value,label} pairs)
@@ -207,11 +213,18 @@ export default function DashboardStatistics() {
     };
     const from = appliedDateRange?.from ? fmtUtcDay(appliedDateRange.from) : "";
     const to = appliedDateRange?.to ? fmtUtcDay(appliedDateRange.to) : from;
+    // Expand human-readable group keys (e.g. "Chrome", "TikTok / ByteDance")
+    // into the raw values ClickHouse stores. If "other" is included, we can't
+    // enumerate the unknown set, so we skip that dimension's filter and
+    // post-filter grouped rows client-side below.
     const filters: Partial<Record<StatsFilterBy, string[]>> = {};
     if (appliedFilterCountry.size) filters.country = Array.from(appliedFilterCountry);
-    if (appliedFilterBrowser.size) filters.browser = Array.from(appliedFilterBrowser);
-    if (appliedFilterDevice.size)  filters.device_type = Array.from(appliedFilterDevice);
-    if (appliedFilterOS.size)      filters.os = Array.from(appliedFilterOS);
+    const browserRaw = expandFilter(appliedFilterBrowser, BROWSER_FILTER_MAP);
+    if (browserRaw && browserRaw.length) filters.browser = browserRaw;
+    const deviceRaw = expandFilter(appliedFilterDevice, DEVICE_FILTER_MAP);
+    if (deviceRaw && deviceRaw.length) filters.device_type = deviceRaw;
+    const osRaw = expandFilter(appliedFilterOS, OS_FILTER_MAP);
+    if (osRaw && osRaw.length) filters.os = osRaw;
 
     // If the request takes longer than 1s, surface a centered overlay so the
     // user knows the stats are still loading (slow network etc.). The overlay
@@ -272,7 +285,38 @@ export default function DashboardStatistics() {
           return { label: formatDateLabel(k), ...m };
         });
       } else {
-        rows = Array.from(byKey.entries()).map(([key, m]) => ({ label: key, ...m }));
+        // For dimensions that have a UI group map, collapse raw values into
+        // group keys (unknowns → "other") and aggregate. Then, if the applied
+        // filter for that dimension is non-empty, keep only the selected keys
+        // (needed because when "other" was selected we skipped the backend
+        // filter and asked for everything).
+        const reverse =
+          apiGroup === "browser" ? BROWSER_REVERSE :
+          apiGroup === "os"      ? OS_REVERSE :
+          apiGroup === "device_type" ? DEVICE_REVERSE : null;
+        const filterSet =
+          apiGroup === "browser" ? appliedFilterBrowser :
+          apiGroup === "os"      ? appliedFilterOS :
+          apiGroup === "device_type" ? appliedFilterDevice : null;
+
+        if (reverse) {
+          const grouped = new Map<string, typeof empty>();
+          for (const [rawKey, m] of byKey.entries()) {
+            const groupKey = mapRawToGroup(rawKey, reverse);
+            const acc = grouped.get(groupKey) ?? { ...empty };
+            acc.impressions += m.impressions;
+            acc.clicks += m.clicks;
+            acc.spent += m.spent;
+            acc.conversions += m.conversions;
+            acc.income += m.income;
+            grouped.set(groupKey, acc);
+          }
+          rows = Array.from(grouped.entries())
+            .filter(([key]) => !filterSet || filterSet.size === 0 || filterSet.has(key))
+            .map(([key, m]) => ({ label: key, ...m }));
+        } else {
+          rows = Array.from(byKey.entries()).map(([key, m]) => ({ label: key, ...m }));
+        }
       }
       setData(rows);
     }).catch(e => { if (!cancelled) console.error("Stats query error:", e); })
