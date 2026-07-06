@@ -24,9 +24,9 @@ const languageNames: Record<string, { ru: string; en: string; es: string }> =
 const targetingOptions: Record<string, string[]> = {
   country: COUNTRY_CODES,
   language: LANGUAGE_CODES,
-  deviceType: DEVICE_TYPES,
-  os: OPERATING_SYSTEMS,
-  browser: BROWSERS,
+  deviceType: withoutOther(DEVICE_FILTER_KEYS),
+  os: withoutOther(OS_FILTER_KEYS),
+  browser: withoutOther(BROWSER_FILTER_KEYS),
   sites: [],
 };
 
