@@ -67,10 +67,12 @@ function AutocompleteInput({
   };
 
 
-  const filtered = options.filter(o => {
-    const display = getDisplayLabel(o);
-    return display.toLowerCase().includes(value.toLowerCase()) && !existingItems.includes(o);
-  }).slice(0, 20);
+  const filtered = options
+    .filter(o => {
+      const display = getDisplayLabel(o);
+      return display.toLowerCase().includes(value.toLowerCase()) && !existingItems.includes(o);
+    })
+    .sort((a, b) => getDisplayLabel(a).localeCompare(getDisplayLabel(b), lang));
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
