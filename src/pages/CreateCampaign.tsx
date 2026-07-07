@@ -339,7 +339,7 @@ export default function CreateCampaign() {
                 <>
                   <div className="pt-2">
                     <p className="text-sm font-medium text-muted-foreground mb-3">{t("create.creatives")}</p>
-                    <CreativesEditor formatKey={adFormat} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
+                    <CreativesEditor formatKey={adFormat} bannerSize={bannerSize} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
                   </div>
                 </>
               )}
