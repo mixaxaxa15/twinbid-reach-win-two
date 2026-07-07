@@ -134,7 +134,7 @@ export default function EditCampaign() {
 
   const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
-  const handleSave = async () => {
+  const handleSave = async (skipMismatchCheck = false) => {
     const e: Record<string, string> = {};
     const tb = parseNum(totalBudget);
     if (!totalBudget || isNaN(tb) || tb < 1) e.totalBudget = t("edit.errorBudgetMin");
@@ -177,6 +177,12 @@ export default function EditCampaign() {
       if (e.totalBudget) setActiveTab("budget");
       return;
     }
+
+    if (!skipMismatchCheck && creatives.some(c => c.sizeMismatch)) {
+      setConfirmMismatchOpen(true);
+      return;
+    }
+
 
     let newStatus = campaign.status;
     if (campaign.status === "draft") {
