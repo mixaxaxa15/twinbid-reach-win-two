@@ -227,7 +227,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
                 <Label>{t("create.uploadImage")} *</Label>
                 <input
                   ref={el => { fileInputRefs.current[creative.id] = el; }}
-                  type="file" accept=".png,.jpg,.jpeg" className="hidden"
+                  type="file" accept=".png,.jpg,.jpeg,.gif" className="hidden"
                   onChange={e => handleImageUpload(creative.id, e)} />
                 <p className="text-xs text-muted-foreground">{t("create.imageFormatHint")}</p>
                 <div className="flex items-center gap-3">
