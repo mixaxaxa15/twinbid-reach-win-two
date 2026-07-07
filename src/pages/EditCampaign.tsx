@@ -394,7 +394,7 @@ export default function EditCampaign() {
               </Button>
             ) : <div />}
             {isLast ? (
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button onClick={() => handleSave()} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Save className="h-4 w-4 mr-2" /> {t("edit.save")}
               </Button>
             ) : (
@@ -405,6 +405,21 @@ export default function EditCampaign() {
           </div>
         );
       })()}
+
+      <AlertDialog open={confirmMismatchOpen} onOpenChange={setConfirmMismatchOpen}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("create.mismatchConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("create.mismatchConfirmBody")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("create.mismatchGoEdit")}</AlertDialogCancel>
+            <AlertDialogAction onClick={async () => { setConfirmMismatchOpen(false); await handleSave(true); }}>
+              {t("create.mismatchSaveAnyway")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
