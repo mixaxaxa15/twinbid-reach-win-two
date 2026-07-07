@@ -391,6 +391,21 @@ export default function CreateCampaign() {
           </div>
         </div>
       )}
+
+      <AlertDialog open={confirmMismatchOpen} onOpenChange={setConfirmMismatchOpen}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("create.mismatchConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("create.mismatchConfirmBody")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("create.mismatchGoEdit")}</AlertDialogCancel>
+            <AlertDialogAction onClick={async () => { setConfirmMismatchOpen(false); await handleCreate(); }}>
+              {t("create.mismatchSaveAnyway")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
