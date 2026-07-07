@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type Creative, type Vertical, VERTICALS } from "@/contexts/CampaignContext";
@@ -45,6 +46,7 @@ export default function EditCampaign() {
   const [conversionPayout, setConversionPayout] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [confirmMismatchOpen, setConfirmMismatchOpen] = useState(false);
 
   useEffect(() => {
     if (campaign) {
@@ -132,7 +134,7 @@ export default function EditCampaign() {
 
   const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
-  const handleSave = async () => {
+  const handleSave = async (skipMismatchCheck = false) => {
     const e: Record<string, string> = {};
     const tb = parseNum(totalBudget);
     if (!totalBudget || isNaN(tb) || tb < 1) e.totalBudget = t("edit.errorBudgetMin");
@@ -175,6 +177,12 @@ export default function EditCampaign() {
       if (e.totalBudget) setActiveTab("budget");
       return;
     }
+
+    if (!skipMismatchCheck && creatives.some(c => c.sizeMismatch)) {
+      setConfirmMismatchOpen(true);
+      return;
+    }
+
 
     let newStatus = campaign.status;
     if (campaign.status === "draft") {
@@ -314,7 +322,7 @@ export default function EditCampaign() {
 
               <div className="pt-2">
                 <p className="text-sm font-medium text-muted-foreground mb-3">{t("create.creatives")}</p>
-                <CreativesEditor formatKey={campaign.formatKey} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
+                <CreativesEditor formatKey={campaign.formatKey} bannerSize={bannerSize} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
               </div>
             </CardContent>
           </Card>
@@ -386,7 +394,7 @@ export default function EditCampaign() {
               </Button>
             ) : <div />}
             {isLast ? (
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button onClick={() => handleSave()} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Save className="h-4 w-4 mr-2" /> {t("edit.save")}
               </Button>
             ) : (
@@ -397,6 +405,21 @@ export default function EditCampaign() {
           </div>
         );
       })()}
+
+      <AlertDialog open={confirmMismatchOpen} onOpenChange={setConfirmMismatchOpen}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("create.mismatchConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("create.mismatchConfirmBody")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("create.mismatchGoEdit")}</AlertDialogCancel>
+            <AlertDialogAction onClick={async () => { setConfirmMismatchOpen(false); await handleSave(true); }}>
+              {t("create.mismatchSaveAnyway")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

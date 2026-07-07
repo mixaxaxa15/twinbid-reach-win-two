@@ -75,6 +75,8 @@ export interface Creative {
   pendingFile?: File;
   title?: string;
   description?: string;
+  /** UI-only flag: the uploaded image dimensions don't match the required size. Not sent to API. */
+  sizeMismatch?: boolean;
 }
 
 export const VERTICALS = [

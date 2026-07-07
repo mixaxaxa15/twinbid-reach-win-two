@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type ListMode, type Creative, type Vertical, VERTICALS } from "@/contexts/CampaignContext";
@@ -63,6 +64,7 @@ export default function CreateCampaign() {
   const [conversionPayout, setConversionPayout] = useState("");
   const savedAsDraft = useRef(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [confirmMismatchOpen, setConfirmMismatchOpen] = useState(false);
 
   const clearError = (...keys: string[]) => setErrors(prev => {
     const next = { ...prev };
@@ -152,7 +154,11 @@ export default function CreateCampaign() {
   const handleNext = async () => {
     if (step === 1 && !validateStep1()) return;
     if (step === 3) { if (!validateStep3()) return; setStep(4); setErrors({}); return; }
-    if (step === 4) { await handleCreate(); return; }
+    if (step === 4) {
+      if (creatives.some(c => c.sizeMismatch)) { setConfirmMismatchOpen(true); return; }
+      await handleCreate();
+      return;
+    }
     setStep(step + 1);
     setErrors({});
   };
@@ -339,7 +345,7 @@ export default function CreateCampaign() {
                 <>
                   <div className="pt-2">
                     <p className="text-sm font-medium text-muted-foreground mb-3">{t("create.creatives")}</p>
-                    <CreativesEditor formatKey={adFormat} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
+                    <CreativesEditor formatKey={adFormat} bannerSize={bannerSize} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
                   </div>
                 </>
               )}
@@ -385,6 +391,21 @@ export default function CreateCampaign() {
           </div>
         </div>
       )}
+
+      <AlertDialog open={confirmMismatchOpen} onOpenChange={setConfirmMismatchOpen}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("create.mismatchConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("create.mismatchConfirmBody")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("create.mismatchGoEdit")}</AlertDialogCancel>
+            <AlertDialogAction onClick={async () => { setConfirmMismatchOpen(false); await handleCreate(); }}>
+              {t("create.mismatchSaveAnyway")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

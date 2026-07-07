@@ -5,18 +5,27 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Upload, Plus, Trash2, Loader2 } from "lucide-react";
+import { Upload, Plus, Trash2, Loader2, Pencil, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Creative } from "@/contexts/CampaignContext";
-// Read a File as a base64 data URL — used as a local preview until the next
-// reload, when the backend will return a presigned read URL.
+import { ImageCropperDialog, type CropperTarget } from "@/components/dashboard/ImageCropperDialog";
+
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
+  });
+}
+
+function loadImageDims(dataUrl: string): Promise<{ w: number; h: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = dataUrl;
   });
 }
 
@@ -27,6 +36,7 @@ const URL_MACROS = [
 
 interface CreativesEditorProps {
   formatKey: string;
+  bannerSize?: string;
   creatives: Creative[];
   onChange: (creatives: Creative[]) => void;
   errors?: Record<string, string>;
@@ -36,13 +46,29 @@ interface CreativesEditorProps {
 const generateId = () => String(Date.now()) + Math.random().toString(36).slice(2, 6);
 
 const MAX_CREATIVES = 10;
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
 
-export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, onClearError }: CreativesEditorProps) {
+function getTargetDims(formatKey: string, bannerSize?: string): CropperTarget | null {
+  if (formatKey === "banner") {
+    if (!bannerSize || !/^\d+x\d+$/.test(bannerSize)) return null;
+    const [w, h] = bannerSize.split("x").map(Number);
+    return { w, h, mode: "fixed" };
+  }
+  if (formatKey === "push") return { w: 192, h: 192, mode: "fixed" };
+  if (formatKey === "native") return { w: 200, h: 200, mode: "square-resizable", minSide: 200 };
+  return null;
+}
+
+export function CreativesEditor({ formatKey, bannerSize, creatives, onChange, errors = {}, onClearError }: CreativesEditorProps) {
   const { t } = useLanguage();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // Original source per creative (for re-opening cropper)
+  const [origSources, setOrigSources] = useState<Record<string, { dataUrl: string; naturalWidth: number; naturalHeight: number; fileName: string; isGif: boolean }>>({});
+  const [cropperCreativeId, setCropperCreativeId] = useState<string | null>(null);
+
+  const target = getTargetDims(formatKey, bannerSize);
 
   const showTitle = formatKey === "native" || formatKey === "push";
   const showDescription = formatKey === "native" || formatKey === "push";
@@ -63,10 +89,18 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
   const removeCreative = (id: string) => {
     if (creatives.length <= 1) return;
     onChange(creatives.filter(c => c.id !== id));
+    setOrigSources(prev => { const n = { ...prev }; delete n[id]; return n; });
   };
 
   const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
   const ALLOWED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif"];
+
+  const checkMismatch = (natW: number, natH: number): boolean => {
+    if (!target) return false;
+    if (target.mode === "fixed") return natW !== target.w || natH !== target.h;
+    // square-resizable: require square, min side
+    return natW !== natH || natW < (target.minSide ?? 200);
+  };
 
   const handleImageUpload = async (creativeId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,14 +118,19 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
     }
     setUploadingId(creativeId);
     try {
-      // Local preview only. The actual file is uploaded by CampaignContext to
-      // the backend AFTER the creative row is created — backend then writes
-      // s3_file_path itself. Frontend never touches s3_file_path.
-      const previewUrl = await readFileAsDataUrl(file);
+      const dataUrl = await readFileAsDataUrl(file);
+      const { w, h } = await loadImageDims(dataUrl);
+      const isGif = file.type === "image/gif" || ext === ".gif";
+      const mismatch = checkMismatch(w, h);
+      setOrigSources(prev => ({
+        ...prev,
+        [creativeId]: { dataUrl, naturalWidth: w, naturalHeight: h, fileName: file.name, isGif },
+      }));
       updateCreative(creativeId, {
-        imageUrl: previewUrl,
+        imageUrl: dataUrl,
         pendingFile: file,
         imageFileName: file.name,
+        sizeMismatch: mismatch,
       });
       onClearError?.(`creative_${creativeId}_image`);
       toast.success(t("create.imageUploaded"));
@@ -112,7 +151,6 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
   };
 
   const toggleMacro = (creativeId: string, macro: string, currentUrl: string) => {
-    // click_id is mandatory — clicking the badge always keeps it in the URL.
     if (macro === "click_id") {
       updateCreative(creativeId, { url: appendMacro(currentUrl, macro) });
       return;
@@ -137,12 +175,20 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
     }
   };
 
+  const openCropper = (creativeId: string) => {
+    if (!origSources[creativeId]) return;
+    setCropperCreativeId(creativeId);
+  };
+
+  const activeSource = cropperCreativeId ? origSources[cropperCreativeId] : null;
+
   return (
     <>
     <div className="space-y-4">
       {creatives.map((creative, idx) => {
-        // Compute active macros for this creative
         const activeMacros = new Set(URL_MACROS.filter(m => creative.url.includes(`{${m}}`)));
+        const src = origSources[creative.id];
+        const canCrop = !!src && !src.isGif && !!target;
 
         return (
           <div key={creative.id} className="p-4 rounded-lg border border-border bg-background/30 space-y-4">
@@ -229,8 +275,13 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
                   ref={el => { fileInputRefs.current[creative.id] = el; }}
                   type="file" accept=".png,.jpg,.jpeg,.gif" className="hidden"
                   onChange={e => handleImageUpload(creative.id, e)} />
-                <p className="text-xs text-muted-foreground">{t("create.imageFormatHint")}</p>
-                <div className="flex items-center gap-3">
+                <p className="text-xs text-muted-foreground">
+                  {t("create.imageFormatHint")}
+                  {target && (target.mode === "fixed"
+                    ? ` · ${target.w}×${target.h}px`
+                    : ` · ≥ ${target.minSide ?? 200}×${target.minSide ?? 200}px (1:1)`)}
+                </p>
+                <div className="flex items-center gap-3 flex-wrap">
                   <Button type="button" variant="outline" disabled={uploadingId === creative.id}
                     onClick={() => fileInputRefs.current[creative.id]?.click()} className="border-border gap-2">
                     {uploadingId === creative.id
@@ -238,8 +289,24 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
                       : <Upload className="h-4 w-4" />}
                     {t("create.uploadImage")}
                   </Button>
+                  {canCrop && (
+                    <Button type="button" variant="outline" onClick={() => openCropper(creative.id)} className="border-border gap-2">
+                      <Pencil className="h-4 w-4" />
+                      {t("create.editImage")}
+                    </Button>
+                  )}
                   {creative.imageFileName && <span className="text-sm text-muted-foreground">{creative.imageFileName}</span>}
                 </div>
+                {creative.sizeMismatch && target && (
+                  <div className="flex items-start gap-2 p-2 rounded border border-yellow-500/30 bg-yellow-500/10">
+                    <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+                    <p className="text-xs text-yellow-500">
+                      {src?.isGif
+                        ? t("create.gifExactSize").replace("{w}", String(target.w)).replace("{h}", String(target.h))
+                        : t("create.imageWrongSize").replace("{w}", String(target.w)).replace("{h}", String(target.h))}
+                    </p>
+                  </div>
+                )}
                 {creative.imageUrl && (
                   <button type="button" onClick={() => setPreviewUrl(creative.imageUrl!)} className="block">
                     <img src={creative.imageUrl} alt="Preview" className="mt-2 max-h-32 rounded border border-border cursor-zoom-in hover:opacity-90 transition-opacity" />
@@ -267,6 +334,23 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
         )}
       </DialogContent>
     </Dialog>
+    <ImageCropperDialog
+      open={!!cropperCreativeId}
+      source={activeSource ? { dataUrl: activeSource.dataUrl, naturalWidth: activeSource.naturalWidth, naturalHeight: activeSource.naturalHeight } : null}
+      target={target}
+      fileNameHint={activeSource?.fileName}
+      onClose={() => setCropperCreativeId(null)}
+      onSave={(file, dataUrl) => {
+        if (!cropperCreativeId) return;
+        updateCreative(cropperCreativeId, {
+          imageUrl: dataUrl,
+          pendingFile: file,
+          imageFileName: file.name,
+          sizeMismatch: false,
+        });
+        setCropperCreativeId(null);
+      }}
+    />
     </>
   );
 }
