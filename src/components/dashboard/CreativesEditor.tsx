@@ -65,8 +65,8 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
     onChange(creatives.filter(c => c.id !== id));
   };
 
-  const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg"];
-  const ALLOWED_EXTENSIONS = [".png", ".jpg", ".jpeg"];
+  const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
+  const ALLOWED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif"];
 
   const handleImageUpload = async (creativeId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
