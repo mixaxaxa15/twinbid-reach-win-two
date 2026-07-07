@@ -64,6 +64,7 @@ export default function CreateCampaign() {
   const [conversionPayout, setConversionPayout] = useState("");
   const savedAsDraft = useRef(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [confirmMismatchOpen, setConfirmMismatchOpen] = useState(false);
 
   const clearError = (...keys: string[]) => setErrors(prev => {
     const next = { ...prev };
@@ -153,7 +154,11 @@ export default function CreateCampaign() {
   const handleNext = async () => {
     if (step === 1 && !validateStep1()) return;
     if (step === 3) { if (!validateStep3()) return; setStep(4); setErrors({}); return; }
-    if (step === 4) { await handleCreate(); return; }
+    if (step === 4) {
+      if (creatives.some(c => c.sizeMismatch)) { setConfirmMismatchOpen(true); return; }
+      await handleCreate();
+      return;
+    }
     setStep(step + 1);
     setErrors({});
   };
