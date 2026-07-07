@@ -65,8 +65,8 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
     onChange(creatives.filter(c => c.id !== id));
   };
 
-  const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg"];
-  const ALLOWED_EXTENSIONS = [".png", ".jpg", ".jpeg"];
+  const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
+  const ALLOWED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif"];
 
   const handleImageUpload = async (creativeId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -227,7 +227,7 @@ export function CreativesEditor({ formatKey, creatives, onChange, errors = {}, o
                 <Label>{t("create.uploadImage")} *</Label>
                 <input
                   ref={el => { fileInputRefs.current[creative.id] = el; }}
-                  type="file" accept=".png,.jpg,.jpeg" className="hidden"
+                  type="file" accept=".png,.jpg,.jpeg,.gif" className="hidden"
                   onChange={e => handleImageUpload(creative.id, e)} />
                 <p className="text-xs text-muted-foreground">{t("create.imageFormatHint")}</p>
                 <div className="flex items-center gap-3">
