@@ -543,6 +543,8 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "view.bid": { ru: "Ставка", en: "Bid" },
   "budget.belowMin": { ru: "Ставка ниже минимальной", en: "Bid is below minimum" },
   "budget.belowRec": { ru: "Ставка ниже рекомендованной — может быть мало показов", en: "Bid is below recommended — may result in few impressions" },
+  "budget.aboveMax": { ru: "Максимум: ${max}", en: "Maximum: ${max}" },
+  "budget.aboveMaxError": { ru: "Ставка не может превышать ${max}", en: "Bid cannot exceed ${max}" },
   "budget.startDate": { ru: "Дата начала", en: "Start date" },
   "budget.endDate": { ru: "Дата окончания", en: "End date" },
   "budget.endDateError": { ru: "Дата окончания не может быть раньше сегодняшнего дня", en: "End date cannot be earlier than today" },
