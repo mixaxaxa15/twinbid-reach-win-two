@@ -88,8 +88,10 @@ export function BudgetSection({
   const availableModels = getAvailableModels(formatKey);
   const limits = getPriceLimits(formatKey, trafficQuality, pricingModel);
   const priceNum = parseNumericValue(priceValue);
+  const maxPrice = pricingModel === "cpm" ? MAX_CPM : MAX_CPC;
   const isBelowMin = priceValue !== "" && priceNum < limits.min;
   const isBelowRec = priceValue !== "" && priceNum >= limits.min && priceNum < limits.rec;
+  const isAboveMax = priceValue !== "" && priceNum > maxPrice;
 
   // End date validation
   const endDateInvalid = endDate ? (() => {
