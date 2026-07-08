@@ -36,6 +36,9 @@ const formatCpmLimits: Record<string, Record<TrafficQuality, { min: number; rec:
 
 const CPC_MULTIPLIER = 1.7 / 1000;
 
+const MAX_CPM = 1000;
+const MAX_CPC = 1;
+
 function getPriceLimits(formatKey: string, quality: TrafficQuality, model: PricingModel) {
   const limits = formatCpmLimits[formatKey] || formatCpmLimits.banner;
   const vals = limits[quality];
