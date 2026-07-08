@@ -179,7 +179,7 @@ export function BudgetSection({
         <div className="relative max-w-xs">
           <Input value={priceValue} onChange={(e) => setPriceValue(e.target.value)}
             placeholder={String(limits.rec)}
-            className={cn("bg-background border-border pr-8", (isBelowMin || errors.priceValue) && "border-destructive")} />
+            className={cn("bg-background border-border pr-8", (isBelowMin || isAboveMax || errors.priceValue) && "border-destructive")} />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
         </div>
         <div className="space-y-1">
@@ -190,6 +190,12 @@ export function BudgetSection({
             <div className="flex items-center gap-1 text-destructive">
               <AlertTriangle className="h-3 w-3" />
               <p className="text-xs">{t("budget.belowMin")} (${limits.min})</p>
+            </div>
+          )}
+          {isAboveMax && (
+            <div className="flex items-center gap-1 text-destructive">
+              <AlertTriangle className="h-3 w-3" />
+              <p className="text-xs">{t("budget.aboveMax").replace("{max}", String(maxPrice))}</p>
             </div>
           )}
           {isBelowRec && (
