@@ -480,6 +480,8 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "view.bid": "Puja",
   "budget.belowMin": "La puja está por debajo del mínimo",
   "budget.belowRec": "La puja está por debajo de lo recomendado; puede haber pocas impresiones",
+  "budget.aboveMax": "Máximo: ${max}",
+  "budget.aboveMaxError": "La puja no puede superar ${max}",
   "budget.startDate": "Fecha de inicio",
   "budget.endDate": "Fecha de fin",
   "budget.endDateError": "La fecha de fin no puede ser anterior a hoy",
