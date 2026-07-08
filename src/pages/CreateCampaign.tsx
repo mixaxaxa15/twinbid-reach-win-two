@@ -88,7 +88,8 @@ export default function CreateCampaign() {
       const mins = formatMins[adFormat] || formatMins.banner;
       const minCpm = mins[trafficQuality];
       const min = pricingModel === "cpc" ? +(minCpm * 1.7 / 1000).toFixed(5) : minCpm;
-      if (pv >= min) clearError("priceValue");
+      const max = pricingModel === "cpm" ? 1000 : 1;
+      if (pv >= min && pv <= max) clearError("priceValue");
     }
   }, [priceValue, pricingModel, trafficQuality, adFormat]);
 
@@ -126,7 +127,9 @@ export default function CreateCampaign() {
     if (!totalBudget || isNaN(tb) || tb < 1) e.totalBudget = t("edit.errorBudgetMin");
     const pv = parseNum(priceValue);
     const { min } = getMinPrice();
+    const max = pricingModel === "cpm" ? 1000 : 1;
     if (!priceValue || isNaN(pv) || pv < min) e.priceValue = `${t("budget.belowMin")} ($${min})`;
+    else if (pv > max) e.priceValue = t("budget.aboveMaxError").replace("{max}", String(max));
     if (!startDate) e.startDate = t("create.required");
     if (!endDate) e.endDate = t("create.required");
     if (endDate) {
