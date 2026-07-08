@@ -297,6 +297,12 @@ export function CreativesEditor({ formatKey, bannerSize, creatives, onChange, er
                       {t("create.editImage")}
                     </Button>
                   )}
+                  {creative.imageUrl && formatKey !== "popunder" && (
+                    <Button type="button" variant="outline" onClick={() => setPreviewCreativeId(creative.id)} className="border-border gap-2">
+                      <Eye className="h-4 w-4" />
+                      {t("create.previewCreative")}
+                    </Button>
+                  )}
                   {creative.imageFileName && <span className="text-sm text-muted-foreground">{creative.imageFileName}</span>}
                 </div>
                 {creative.sizeMismatch && target && (
