@@ -68,6 +68,7 @@ export function CreativesEditor({ formatKey, bannerSize, creatives, onChange, er
   // Original source per creative (for re-opening cropper)
   const [origSources, setOrigSources] = useState<Record<string, { dataUrl: string; naturalWidth: number; naturalHeight: number; fileName: string; isGif: boolean }>>({});
   const [cropperCreativeId, setCropperCreativeId] = useState<string | null>(null);
+  const [previewCreativeId, setPreviewCreativeId] = useState<string | null>(null);
 
   const target = getTargetDims(formatKey, bannerSize);
 
