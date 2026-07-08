@@ -359,6 +359,13 @@ export function CreativesEditor({ formatKey, bannerSize, creatives, onChange, er
         setCropperCreativeId(null);
       }}
     />
+    <CreativePreviewDialog
+      open={!!previewCreativeId}
+      onClose={() => setPreviewCreativeId(null)}
+      formatKey={formatKey}
+      bannerSize={bannerSize}
+      creative={creatives.find(c => c.id === previewCreativeId) || null}
+    />
     </>
   );
 }
