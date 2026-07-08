@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCampaigns } from "@/contexts/CampaignContext";
-import { BalanceCard } from "@/components/dashboard/BalanceCard";
 import { Eye, MousePointer, Target } from "lucide-react";
 import { useCampaignStats, statOf } from "@/hooks/use-campaign-stats";
 
