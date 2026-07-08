@@ -115,7 +115,8 @@ export default function EditCampaign() {
       const mins = formatMins[campaign.formatKey] || formatMins.banner;
       const minCpm = mins[trafficQuality];
       const min = pricingModel === "cpc" ? +(minCpm * 1.7 / 1000).toFixed(5) : minCpm;
-      if (pv >= min) clearError("priceValue");
+      const max = pricingModel === "cpm" ? 1000 : 1;
+      if (pv >= min && pv <= max) clearError("priceValue");
     }
   }, [priceValue, pricingModel, trafficQuality, campaign]);
 
