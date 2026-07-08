@@ -5,11 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Upload, Plus, Trash2, Loader2, Pencil, AlertTriangle } from "lucide-react";
+import { Upload, Plus, Trash2, Loader2, Pencil, AlertTriangle, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Creative } from "@/contexts/CampaignContext";
 import { ImageCropperDialog, type CropperTarget } from "@/components/dashboard/ImageCropperDialog";
+import { CreativePreviewDialog } from "@/components/dashboard/CreativePreviewDialog";
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
