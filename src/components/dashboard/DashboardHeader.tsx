@@ -54,13 +54,13 @@ export function DashboardHeader() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/dashboard/balance")}
-            className="flex items-center gap-1.5 rounded-full bg-muted/40 border border-border/60 px-2.5 py-1 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+            className="flex items-center gap-2 rounded-full bg-muted/40 border border-border/60 px-3.5 py-1.5 text-base font-semibold text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
           >
-            <Wallet className="h-4 w-4 text-muted-foreground" />
+            <Wallet className="h-5 w-5 text-muted-foreground" />
             <span className="tabular-nums">
               {loading ? "..." : `$${balance.toLocaleString()}`}
             </span>
-            <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+            <Plus className="h-4 w-4 text-muted-foreground" />
           </button>
           <LanguageSelector />
           <Popover open={open} onOpenChange={setOpen}>
