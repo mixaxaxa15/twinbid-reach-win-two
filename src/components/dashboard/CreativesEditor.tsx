@@ -72,6 +72,28 @@ export function CreativesEditor({ formatKey, bannerSize, creatives, onChange, er
 
   const target = getTargetDims(formatKey, bannerSize);
 
+  // Recompute sizeMismatch when format/bannerSize changes (e.g. user uploaded image before choosing size)
+  useEffect(() => {
+    if (!creatives.some(c => c.imageUrl)) return;
+    let changed = false;
+    const next = creatives.map(c => {
+      if (!c.imageUrl) return c;
+      const src = origSources[c.id];
+      if (!src) return c;
+      const mismatch = target ? (target.mode === "fixed"
+        ? src.naturalWidth !== target.w || src.naturalHeight !== target.h
+        : src.naturalWidth !== src.naturalHeight || src.naturalWidth < (target.minSide ?? 200))
+        : false;
+      if (mismatch !== !!c.sizeMismatch) {
+        changed = true;
+        return { ...c, sizeMismatch: mismatch };
+      }
+      return c;
+    });
+    if (changed) onChange(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formatKey, bannerSize, origSources]);
+
   const showTitle = formatKey === "native" || formatKey === "push";
   const showDescription = formatKey === "native" || formatKey === "push";
   const showImage = formatKey !== "popunder";
