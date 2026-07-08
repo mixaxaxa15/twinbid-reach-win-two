@@ -15,10 +15,12 @@ export function DashboardHeader() {
   const { notifications, removeNotification } = useNotifications();
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, loading } = useProfile();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const [confirmDismiss, setConfirmDismiss] = useState<Notification | null>(null);
+
+  const balance = profile?.balance ?? 0;
 
   const handleDismissClick = (n: Notification) => {
     if (n.onDismiss) {
