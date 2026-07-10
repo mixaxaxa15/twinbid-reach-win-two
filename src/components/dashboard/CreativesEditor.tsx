@@ -389,4 +389,4 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
     />
     </>
   );
-}
+});
