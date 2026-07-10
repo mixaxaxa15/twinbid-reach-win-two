@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +44,11 @@ interface CreativesEditorProps {
   onClearError?: (...keys: string[]) => void;
 }
 
+export interface CreativesEditorHandle {
+  /** Open the crop editor for a given creative (or first mismatched if omitted). */
+  openCropperFor: (creativeId?: string) => Promise<void>;
+}
+
 const generateId = () => String(Date.now()) + Math.random().toString(36).slice(2, 6);
 
 const MAX_CREATIVES = 10;
@@ -51,7 +56,10 @@ const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
 
 import { getTargetDims } from "@/lib/creativeTarget";
 
-export function CreativesEditor({ formatKey, bannerSize, creatives, onChange, errors = {}, onClearError }: CreativesEditorProps) {
+export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditorProps>(function CreativesEditor(
+  { formatKey, bannerSize, creatives, onChange, errors = {}, onClearError },
+  ref,
+) {
   const { t } = useLanguage();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [uploadingId, setUploadingId] = useState<string | null>(null);
@@ -194,6 +202,36 @@ export function CreativesEditor({ formatKey, bannerSize, creatives, onChange, er
     if (!origSources[creativeId]) return;
     setCropperCreativeId(creativeId);
   };
+
+  /** Ensure a source entry exists for `creative` (loads dims from imageUrl if needed). */
+  const ensureSource = async (creative: Creative) => {
+    if (origSources[creative.id]) return origSources[creative.id];
+    if (!creative.imageUrl) return null;
+    const isGif = creative.imageUrl.startsWith("data:image/gif") || /\.gif$/i.test(creative.imageFileName || "");
+    try {
+      const { w, h } = await loadImageDims(creative.imageUrl);
+      const entry = { dataUrl: creative.imageUrl, naturalWidth: w, naturalHeight: h, fileName: creative.imageFileName || "image", isGif };
+      setOrigSources(prev => ({ ...prev, [creative.id]: entry }));
+      return entry;
+    } catch {
+      return null;
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    openCropperFor: async (creativeId?: string) => {
+      const targetCreative = creativeId
+        ? creatives.find(c => c.id === creativeId)
+        : creatives.find(c => c.sizeMismatch) || creatives.find(c => c.imageUrl);
+      if (!targetCreative) return;
+      const src = await ensureSource(targetCreative);
+      if (!src || src.isGif) {
+        toast.error(t("create.autoCropGifSkip"));
+        return;
+      }
+      setCropperCreativeId(targetCreative.id);
+    },
+  }), [creatives, origSources, t]);
 
   const activeSource = cropperCreativeId ? origSources[cropperCreativeId] : null;
 
@@ -381,4 +419,4 @@ export function CreativesEditor({ formatKey, bannerSize, creatives, onChange, er
     />
     </>
   );
-}
+});

@@ -93,25 +93,29 @@ export function AutoCropConfirmDialog({ open, creatives, target, onCancel, onCon
             </div>
           )}
           {!loading && previews.map(p => (
-            <div key={p.creativeId} className="rounded-lg border border-border bg-background/40 p-3">
-              <div className="text-xs font-medium text-foreground mb-2">{p.label}</div>
+            <div key={p.creativeId} className="rounded-lg border border-border bg-background/40 p-4">
+              <div className="text-xs font-medium text-foreground mb-3 text-center">{p.label}</div>
               {p.isGif ? (
-                <div className="flex items-center gap-3">
-                  <img src={p.beforeUrl} alt="" className="max-h-24 rounded border border-border" />
-                  <p className="text-xs text-yellow-500">{t("create.autoCropGifSkip")}</p>
+                <div className="flex flex-col items-center gap-2">
+                  <img src={p.beforeUrl} alt="" className="max-h-64 max-w-full rounded border border-border object-contain bg-black/20" />
+                  <p className="text-xs text-yellow-500 text-center">{t("create.autoCropGifSkip")}</p>
                 </div>
               ) : p.error ? (
-                <p className="text-xs text-destructive">{t("create.autoCropError")}</p>
+                <p className="text-xs text-destructive text-center">{t("create.autoCropError")}</p>
               ) : (
-                <div className="flex items-center gap-3">
-                  <div className="text-center">
-                    <img src={p.beforeUrl} alt="" className="max-h-24 max-w-[140px] rounded border border-border object-contain bg-black/20" />
-                    <div className="text-[10px] text-muted-foreground mt-1">{t("create.autoCropBefore")}</div>
+                <div className="flex items-center justify-center gap-4">
+                  <div className="flex flex-col items-center flex-1 min-w-0">
+                    <div className="w-full aspect-square max-w-[220px] flex items-center justify-center rounded border border-border bg-black/30 overflow-hidden">
+                      <img src={p.beforeUrl} alt="" className="max-h-full max-w-full object-contain" />
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-2">{t("create.autoCropBefore")}</div>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div className="text-center">
-                    {p.afterUrl && <img src={p.afterUrl} alt="" className="max-h-24 max-w-[140px] rounded border border-primary/60 object-contain bg-black/20" />}
-                    <div className="text-[10px] text-primary mt-1">
+                  <ArrowRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <div className="flex flex-col items-center flex-1 min-w-0">
+                    <div className="w-full aspect-square max-w-[220px] flex items-center justify-center rounded border border-primary/60 bg-black/30 overflow-hidden">
+                      {p.afterUrl && <img src={p.afterUrl} alt="" className="max-h-full max-w-full object-contain" />}
+                    </div>
+                    <div className="text-[11px] text-primary mt-2 text-center">
                       {t("create.autoCropAfter")} {target && `· ${target.w}×${target.h}${target.mode === "square-resizable" ? "+" : ""}`}
                     </div>
                   </div>

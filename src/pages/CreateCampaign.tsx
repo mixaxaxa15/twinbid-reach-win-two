@@ -13,7 +13,7 @@ import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuali
 import { useNotifications } from "@/contexts/NotificationContext";
 import { TargetingSection, targetingConfigs } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
-import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
+import { CreativesEditor, type CreativesEditorHandle } from "@/components/dashboard/CreativesEditor";
 import { PostbackSection } from "@/components/dashboard/PostbackSection";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -66,6 +66,7 @@ export default function CreateCampaign() {
   const savedAsDraft = useRef(false);
   const [isCreating, setIsCreating] = useState(false);
   const [confirmMismatchOpen, setConfirmMismatchOpen] = useState(false);
+  const creativesEditorRef = useRef<CreativesEditorHandle>(null);
 
   const clearError = (...keys: string[]) => setErrors(prev => {
     const next = { ...prev };
@@ -351,7 +352,7 @@ export default function CreateCampaign() {
                 <>
                   <div className="pt-2">
                     <p className="text-sm font-medium text-muted-foreground mb-3">{t("create.creatives")}</p>
-                    <CreativesEditor formatKey={adFormat} bannerSize={bannerSize} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
+                    <CreativesEditor ref={creativesEditorRef} formatKey={adFormat} bannerSize={bannerSize} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
                   </div>
                 </>
               )}
@@ -402,7 +403,12 @@ export default function CreateCampaign() {
         open={confirmMismatchOpen}
         creatives={creatives}
         target={getTargetDims(adFormat, bannerSize)}
-        onCancel={() => setConfirmMismatchOpen(false)}
+        onCancel={() => {
+          setConfirmMismatchOpen(false);
+          // Jump to step 1 (creatives) and open cropper for the first mismatched image
+          setStep(1);
+          setTimeout(() => { void creativesEditorRef.current?.openCropperFor(); }, 50);
+        }}
         onConfirm={async (next) => {
           setCreatives(next);
           setConfirmMismatchOpen(false);

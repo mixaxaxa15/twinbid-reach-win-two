@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type Creative, type Vertical, VERTICALS } from "@/contexts/CampaignContext";
 import { TargetingSection } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
-import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
+import { CreativesEditor, type CreativesEditorHandle } from "@/components/dashboard/CreativesEditor";
 import { PostbackSection } from "@/components/dashboard/PostbackSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -48,6 +48,7 @@ export default function EditCampaign() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [confirmMismatchOpen, setConfirmMismatchOpen] = useState(false);
+  const creativesEditorRef = useRef<CreativesEditorHandle>(null);
 
   useEffect(() => {
     if (campaign) {
@@ -327,7 +328,7 @@ export default function EditCampaign() {
 
               <div className="pt-2">
                 <p className="text-sm font-medium text-muted-foreground mb-3">{t("create.creatives")}</p>
-                <CreativesEditor formatKey={campaign.formatKey} bannerSize={bannerSize} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
+                <CreativesEditor ref={creativesEditorRef} formatKey={campaign.formatKey} bannerSize={bannerSize} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
               </div>
             </CardContent>
           </Card>
@@ -415,7 +416,11 @@ export default function EditCampaign() {
         open={confirmMismatchOpen}
         creatives={creatives}
         target={getTargetDims(campaign.formatKey, bannerSize)}
-        onCancel={() => setConfirmMismatchOpen(false)}
+        onCancel={() => {
+          setConfirmMismatchOpen(false);
+          setActiveTab("general");
+          setTimeout(() => { void creativesEditorRef.current?.openCropperFor(); }, 50);
+        }}
         onConfirm={async (next) => {
           setCreatives(next);
           setConfirmMismatchOpen(false);
