@@ -136,7 +136,8 @@ export default function EditCampaign() {
 
   const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
-  const handleSave = async (skipMismatchCheck = false) => {
+  const handleSave = async (skipMismatchCheck = false, overrideCreatives?: Creative[]) => {
+    const crvs = overrideCreatives ?? creatives;
     const e: Record<string, string> = {};
     const tb = parseNum(totalBudget);
     if (!totalBudget || isNaN(tb) || tb < 1) e.totalBudget = t("edit.errorBudgetMin");
@@ -166,7 +167,7 @@ export default function EditCampaign() {
     }
     if (!name.trim()) e.name = t("create.required");
 
-    creatives.forEach(c => {
+    crvs.forEach(c => {
       if (!c.name?.trim()) e[`creative_${c.id}_name`] = t("create.required");
       if (!c.url.trim()) e[`creative_${c.id}_url`] = t("create.required");
       if (campaign.formatKey !== "popunder" && !c.imageUrl) e[`creative_${c.id}_image`] = t("create.required");
@@ -182,7 +183,7 @@ export default function EditCampaign() {
       return;
     }
 
-    if (!skipMismatchCheck && creatives.some(c => c.sizeMismatch)) {
+    if (!skipMismatchCheck && crvs.some(c => c.sizeMismatch)) {
       setConfirmMismatchOpen(true);
       return;
     }
@@ -201,7 +202,7 @@ export default function EditCampaign() {
 
     try {
       await updateCampaign(campaign.id, {
-        name: name.trim(), creatives, trafficType, verticals,
+        name: name.trim(), creatives: crvs, trafficType, verticals,
         targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
         budget: tb, dailyBudget: null,
         priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
