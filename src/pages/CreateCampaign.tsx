@@ -13,7 +13,7 @@ import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuali
 import { useNotifications } from "@/contexts/NotificationContext";
 import { TargetingSection, targetingConfigs } from "@/components/dashboard/TargetingSection";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
-import { CreativesEditor } from "@/components/dashboard/CreativesEditor";
+import { CreativesEditor, type CreativesEditorHandle } from "@/components/dashboard/CreativesEditor";
 import { PostbackSection } from "@/components/dashboard/PostbackSection";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
