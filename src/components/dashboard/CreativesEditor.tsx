@@ -203,6 +203,36 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
     setCropperCreativeId(creativeId);
   };
 
+  /** Ensure a source entry exists for `creative` (loads dims from imageUrl if needed). */
+  const ensureSource = async (creative: Creative) => {
+    if (origSources[creative.id]) return origSources[creative.id];
+    if (!creative.imageUrl) return null;
+    const isGif = creative.imageUrl.startsWith("data:image/gif") || /\.gif$/i.test(creative.imageFileName || "");
+    try {
+      const { w, h } = await loadImageDims(creative.imageUrl);
+      const entry = { dataUrl: creative.imageUrl, naturalWidth: w, naturalHeight: h, fileName: creative.imageFileName || "image", isGif };
+      setOrigSources(prev => ({ ...prev, [creative.id]: entry }));
+      return entry;
+    } catch {
+      return null;
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    openCropperFor: async (creativeId?: string) => {
+      const targetCreative = creativeId
+        ? creatives.find(c => c.id === creativeId)
+        : creatives.find(c => c.sizeMismatch) || creatives.find(c => c.imageUrl);
+      if (!targetCreative) return;
+      const src = await ensureSource(targetCreative);
+      if (!src || src.isGif) {
+        toast.error(t("create.autoCropGifSkip"));
+        return;
+      }
+      setCropperCreativeId(targetCreative.id);
+    },
+  }), [creatives, origSources, t]);
+
   const activeSource = cropperCreativeId ? origSources[cropperCreativeId] : null;
 
   return (
