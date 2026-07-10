@@ -403,7 +403,12 @@ export default function CreateCampaign() {
         open={confirmMismatchOpen}
         creatives={creatives}
         target={getTargetDims(adFormat, bannerSize)}
-        onCancel={() => setConfirmMismatchOpen(false)}
+        onCancel={() => {
+          setConfirmMismatchOpen(false);
+          // Jump to step 1 (creatives) and open cropper for the first mismatched image
+          setStep(1);
+          setTimeout(() => { void creativesEditorRef.current?.openCropperFor(); }, 50);
+        }}
         onConfirm={async (next) => {
           setCreatives(next);
           setConfirmMismatchOpen(false);
