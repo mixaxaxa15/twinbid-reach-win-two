@@ -9,7 +9,7 @@ const formatDescKeys = ["formats.popunder.desc", "formats.native.desc", "formats
 
 function MockFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative w-full aspect-[16/9] rounded-lg border border-border/70 bg-background/40 overflow-hidden mb-10">
+    <div className="relative w-full aspect-[16/10] rounded-xl border border-border/70 bg-background/50 overflow-hidden mb-10">
       {children}
     </div>
   );
@@ -18,25 +18,25 @@ function MockFrame({ children }: { children: React.ReactNode }) {
 function PopunderMock() {
   return (
     <MockFrame>
-      {/* fake browser window in top-left */}
-      <div className="absolute top-3 left-3 w-[55%] h-[62%] rounded-md border border-border/70 bg-background/80 p-2">
-        <div className="flex items-center gap-1.5 mb-2">
-          <X className="w-2.5 h-2.5 text-muted-foreground/70" strokeWidth={1.5} />
-          <div className="h-[3px] flex-1 rounded-full bg-muted-foreground/25" />
-        </div>
-        <div className="space-y-1.5">
-          <div className="h-[3px] w-[70%] rounded-full bg-muted-foreground/25" />
-          <div className="h-[3px] w-[45%] rounded-full bg-muted-foreground/20" />
-        </div>
-      </div>
-      {/* popunder rising underneath */}
+      {/* full-frame popunder rising behind */}
       <div
-        className="absolute inset-x-0 bottom-0 h-[60%] rounded-t-md border-t border-l border-r border-primary/30"
+        className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, hsl(var(--primary) / 0.28) 0%, hsl(var(--primary) / 0.08) 60%, transparent 100%)",
+            "linear-gradient(135deg, hsl(var(--primary) / 0.32) 0%, hsl(var(--primary) / 0.10) 55%, transparent 100%)",
         }}
       />
+      {/* browser window on top-left */}
+      <div className="absolute top-4 left-4 w-[62%] h-[70%] rounded-md bg-background border border-border/70 p-2.5 shadow-lg">
+        <div className="flex items-center gap-2 mb-3">
+          <X className="w-3 h-3 text-muted-foreground/70" strokeWidth={1.5} />
+          <div className="h-[4px] w-[38%] rounded-full bg-muted-foreground/25" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-[4px] w-[85%] rounded-full bg-muted-foreground/25" />
+          <div className="h-[4px] w-[55%] rounded-full bg-muted-foreground/20" />
+        </div>
+      </div>
     </MockFrame>
   );
 }
@@ -44,20 +44,37 @@ function PopunderMock() {
 function NativeMock() {
   return (
     <MockFrame>
-      <div className="absolute inset-0 p-4 flex flex-col justify-center gap-2.5">
+      <div className="absolute inset-0 p-4 flex flex-col gap-3">
         {/* sponsored row */}
-        <div className="flex items-center gap-2.5 rounded-md border border-primary/25 bg-primary/[0.04] p-2">
-          <div className="w-6 h-6 rounded-sm bg-primary/30" />
-          <div className="flex-1 flex items-center gap-2">
-            <span className="font-mono-eyebrow text-[8px] tracking-[0.2em] text-primary">SPONSORED</span>
-            <div className="h-[3px] flex-1 rounded-full bg-muted-foreground/25" />
+        <div
+          className="flex items-center gap-3 rounded-md p-2.5"
+          style={{
+            background:
+              "linear-gradient(90deg, hsl(var(--primary) / 0.10), transparent 70%)",
+          }}
+        >
+          <div
+            className="w-9 h-9 rounded-sm flex-shrink-0"
+            style={{
+              background:
+                "linear-gradient(135deg, hsl(var(--primary) / 0.55), hsl(var(--primary) / 0.15))",
+            }}
+          />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-[4px] w-[70%] rounded-full bg-muted-foreground/25" />
+            <span className="block font-mono-eyebrow text-[9px] tracking-[0.28em] text-primary">
+              SPONSORED
+            </span>
           </div>
         </div>
-        {/* two neutral rows */}
+        {/* neutral rows */}
         {[0, 1].map((i) => (
-          <div key={i} className="flex items-center gap-2.5 p-2">
-            <div className="w-6 h-6 rounded-sm bg-muted-foreground/20" />
-            <div className="h-[3px] flex-1 rounded-full bg-muted-foreground/20" />
+          <div key={i} className="flex items-center gap-3 p-2.5">
+            <div className="w-9 h-9 rounded-sm bg-muted-foreground/15 flex-shrink-0" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-[4px] w-[65%] rounded-full bg-muted-foreground/20" />
+              <div className="h-[4px] w-[45%] rounded-full bg-muted-foreground/15" />
+            </div>
           </div>
         ))}
       </div>
@@ -70,31 +87,33 @@ function BannerMock() {
     <MockFrame>
       {/* top leaderboard */}
       <div
-        className="absolute top-3 left-3 right-3 h-8 rounded-md border border-primary/30 flex items-center justify-center"
+        className="absolute top-4 left-4 right-4 h-9 rounded-md flex items-center justify-center"
         style={{
           background:
-            "linear-gradient(180deg, hsl(var(--primary) / 0.28), hsl(var(--primary) / 0.1))",
+            "linear-gradient(180deg, hsl(var(--primary) / 0.35), hsl(var(--primary) / 0.12))",
         }}
       >
-        <span className="font-mono-eyebrow text-[9px] tracking-[0.25em] text-foreground/80">
+        <span className="font-mono-eyebrow text-[10px] tracking-[0.25em] text-foreground/85">
           728 × 90 · BANNER
         </span>
       </div>
       {/* article lines */}
-      <div className="absolute left-3 top-14 w-[52%] space-y-1.5">
-        <div className="h-[3px] w-[90%] rounded-full bg-muted-foreground/25" />
-        <div className="h-[3px] w-[75%] rounded-full bg-muted-foreground/20" />
-        <div className="h-[3px] w-[60%] rounded-full bg-muted-foreground/20" />
+      <div className="absolute left-4 top-[70px] w-[48%] space-y-2">
+        <div className="h-[4px] w-[90%] rounded-full bg-muted-foreground/25" />
+        <div className="h-[4px] w-[75%] rounded-full bg-muted-foreground/20" />
+        <div className="h-[4px] w-[55%] rounded-full bg-muted-foreground/20" />
       </div>
       {/* sidebar 300x250 */}
       <div
-        className="absolute bottom-3 right-3 w-[36%] aspect-[6/5] rounded-md border border-primary/30 flex items-center justify-center"
+        className="absolute bottom-4 right-4 w-[40%] h-[62%] rounded-md flex items-center justify-center"
         style={{
           background:
-            "linear-gradient(180deg, hsl(var(--primary) / 0.28), hsl(var(--primary) / 0.08))",
+            "linear-gradient(180deg, hsl(var(--primary) / 0.35), hsl(var(--primary) / 0.08))",
         }}
       >
-        <span className="font-mono-eyebrow text-[8px] tracking-[0.22em] text-foreground/70">300 × 250</span>
+        <span className="font-mono-eyebrow text-[10px] tracking-[0.25em] text-foreground/75">
+          300 × 250
+        </span>
       </div>
     </MockFrame>
   );
@@ -104,16 +123,23 @@ function PushMock() {
   return (
     <MockFrame>
       {/* page content */}
-      <div className="absolute inset-0 p-4 space-y-2">
-        <div className="h-[3px] w-[70%] rounded-full bg-muted-foreground/20" />
-        <div className="h-[3px] w-[55%] rounded-full bg-muted-foreground/15" />
-        <div className="h-[3px] w-[65%] rounded-full bg-muted-foreground/15" />
+      <div className="absolute inset-0 p-4 space-y-2.5">
+        <div className="h-[4px] w-[65%] rounded-full bg-muted-foreground/20" />
+        <div className="h-[4px] w-[50%] rounded-full bg-muted-foreground/15" />
       </div>
       {/* push toast */}
-      <div className="absolute bottom-3 right-3 w-[62%] h-9 rounded-md border border-border/80 bg-background/95 flex items-center gap-2 pl-1.5 pr-2">
-        <div className="w-6 h-6 rounded-sm bg-primary/40 flex-shrink-0" />
-        <div className="h-[3px] flex-1 rounded-full bg-muted-foreground/30" />
-        <X className="w-2.5 h-2.5 text-muted-foreground/60" strokeWidth={1.5} />
+      <div className="absolute bottom-4 right-4 w-[70%] h-11 rounded-md border border-border/80 bg-background/95 flex items-center gap-2.5 pl-2 pr-2.5 shadow-lg">
+        <div
+          className="w-7 h-7 rounded-sm flex items-center justify-center flex-shrink-0"
+          style={{
+            background:
+              "linear-gradient(135deg, hsl(var(--primary) / 0.6), hsl(var(--primary) / 0.2))",
+          }}
+        >
+          <Bell className="w-3.5 h-3.5 text-foreground/80" strokeWidth={1.5} />
+        </div>
+        <div className="h-[4px] flex-1 rounded-full bg-muted-foreground/35" />
+        <X className="w-3 h-3 text-muted-foreground/60 flex-shrink-0" strokeWidth={1.5} />
       </div>
     </MockFrame>
   );
