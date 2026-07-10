@@ -44,6 +44,11 @@ interface CreativesEditorProps {
   onClearError?: (...keys: string[]) => void;
 }
 
+export interface CreativesEditorHandle {
+  /** Open the crop editor for a given creative (or first mismatched if omitted). */
+  openCropperFor: (creativeId?: string) => Promise<void>;
+}
+
 const generateId = () => String(Date.now()) + Math.random().toString(36).slice(2, 6);
 
 const MAX_CREATIVES = 10;
@@ -51,7 +56,10 @@ const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
 
 import { getTargetDims } from "@/lib/creativeTarget";
 
-export function CreativesEditor({ formatKey, bannerSize, creatives, onChange, errors = {}, onClearError }: CreativesEditorProps) {
+export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditorProps>(function CreativesEditor(
+  { formatKey, bannerSize, creatives, onChange, errors = {}, onClearError },
+  ref,
+) {
   const { t } = useLanguage();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [uploadingId, setUploadingId] = useState<string | null>(null);
