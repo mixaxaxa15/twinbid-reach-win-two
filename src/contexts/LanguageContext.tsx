@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { setErrorTranslator } from "@/lib/apiStatus";
+import { translateServerError } from "@/lib/serverErrors";
 
 export type Lang = "en" | "ru" | "es";
 
@@ -170,16 +172,17 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
 
   // Dashboard Overview
   "overview.recentCampaigns": { ru: "Кампании", en: "Campaigns" },
+  "overview.activeCampaignsTitle": { ru: "Активные кампании", en: "Active campaigns" },
   "overview.id": { ru: "ID", en: "ID" },
   "overview.name": { ru: "Название", en: "Name" },
   "overview.status": { ru: "Статус", en: "Status" },
   "overview.impressions": { ru: "Показы", en: "Impressions" },
   "overview.spent": { ru: "Расход", en: "Spent" },
 
-  // StatsCards (overview)
-  "statsCards.impressions": { ru: "Показы", en: "Impressions" },
-  "statsCards.clicks": { ru: "Клики", en: "Clicks" },
-  "statsCards.ctr": { ru: "CTR", en: "CTR" },
+  // StatsCards (overview) — labels reflect that widgets aggregate active campaigns only
+  "statsCards.impressions": { ru: "Показы по активным кампаниям", en: "Impressions on active campaigns" },
+  "statsCards.clicks": { ru: "Клики по активным кампаниям", en: "Clicks on active campaigns" },
+  "statsCards.ctr": { ru: "CTR по активным кампаниям", en: "CTR of active campaigns" },
 
   // BalanceCard (overview)
   "balanceCard.title": { ru: "Баланс", en: "Balance" },
@@ -650,6 +653,19 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   // Budget notification
   "notif.campaignBudgetLow": { ru: "Бюджет кампании заканчивается", en: "Campaign budget running low" },
   "notif.budgetRemaining": { ru: "бюджета осталось", en: "budget remaining" },
+
+  // Server error translations (shown as toast bodies)
+  "balance.toast.submitError": { ru: "Ошибка пополнения", en: "Top-up error" },
+  "errors.generic": { ru: "Не удалось выполнить операцию. Попробуйте позже.", en: "Something went wrong. Please try again later." },
+  "errors.promoAlreadyUsed": { ru: "Вы уже использовали этот промокод.", en: "You have already used this promo code." },
+  "errors.promoNotFound": { ru: "Промокод не найден.", en: "Promo code not found." },
+  "errors.insufficientFunds": { ru: "Недостаточно средств.", en: "Insufficient funds." },
+  "errors.unauthorized": { ru: "Сессия истекла. Войдите заново.", en: "Session expired. Please sign in again." },
+  "errors.forbidden": { ru: "Действие запрещено.", en: "Action not allowed." },
+  "errors.notFound": { ru: "Данные не найдены.", en: "Not found." },
+  "errors.network": { ru: "Проблемы с сетью. Проверьте соединение.", en: "Network problem. Please check your connection." },
+  "errors.rateLimit": { ru: "Слишком много запросов. Попробуйте позже.", en: "Too many requests. Please try again later." },
+  "errors.invalidHash": { ru: "Неверный хэш транзакции.", en: "Invalid transaction hash." },
 };
 
 
@@ -689,6 +705,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     if (lang === "ru") return entry.ru || entry.en || key;
     return entry.en || entry.ru || key;
   }, [lang]);
+
+  useEffect(() => {
+    setErrorTranslator((raw) => translateServerError(raw, t));
+    return () => setErrorTranslator(null);
+  }, [t]);
 
   return (
     <LanguageContext.Provider value={{ lang, setLang: handleSetLang, t }}>

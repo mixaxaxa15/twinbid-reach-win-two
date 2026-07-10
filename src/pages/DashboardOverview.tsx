@@ -57,7 +57,7 @@ export default function DashboardOverview() {
         ))}
       </div>
       <Card className="bg-card border-border">
-        <CardHeader><CardTitle>{t("campaigns.title")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("overview.activeCampaignsTitle")}</CardTitle></CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">

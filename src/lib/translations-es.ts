@@ -140,16 +140,20 @@ export const ES_TRANSLATIONS: Record<string, string> = {
 
   // Dashboard Overview
   "overview.recentCampaigns": "Campañas",
+  "overview.activeCampaignsTitle": "Campañas activas",
   "overview.id": "ID",
   "overview.name": "Nombre",
   "overview.status": "Estado",
   "overview.impressions": "Impresiones",
   "overview.spent": "Gasto",
 
-  // StatsCards
-  "statsCards.impressions": "Impresiones",
-  "statsCards.clicks": "Clics",
-  "statsCards.ctr": "CTR",
+  // StatsCards refer to active campaigns
+  "statsCards.impressions": "Impresiones de campañas activas",
+  "statsCards.clicks": "Clics de campañas activas",
+  "statsCards.ctr": "CTR de campañas activas",
+
+
+
 
   // BalanceCard
   "balanceCard.title": "Saldo",
@@ -594,4 +598,17 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "stats.cr": "CR",
   "stats.income": "Ingresos",
   "stats.roi": "ROI",
+
+  // Server error translations
+  "balance.toast.submitError": "Error de recarga",
+  "errors.generic": "No se pudo completar la operación. Inténtalo más tarde.",
+  "errors.promoAlreadyUsed": "Ya usaste este código promocional.",
+  "errors.promoNotFound": "Código promocional no encontrado.",
+  "errors.insufficientFunds": "Fondos insuficientes.",
+  "errors.unauthorized": "La sesión ha expirado. Vuelve a iniciar sesión.",
+  "errors.forbidden": "Acción no permitida.",
+  "errors.notFound": "No encontrado.",
+  "errors.network": "Problema de red. Comprueba tu conexión.",
+  "errors.rateLimit": "Demasiadas solicitudes. Inténtalo más tarde.",
+  "errors.invalidHash": "Hash de transacción no válido.",
 };

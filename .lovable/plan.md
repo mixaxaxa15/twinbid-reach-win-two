@@ -1,92 +1,63 @@
-# План
 
-## Часть 1. Верхние лимиты ставок (CPM ≤ $1000, CPC ≤ $1)
+## 1. Вкладка «Обзор» — переименования
 
-### Поведение
-- Ограничение только на превышение сверху; текущие подсказки min/recommended остаются как есть.
-- Информация о лимите **не показывается по умолчанию** — появляется только тогда, когда введённое значение больше максимума.
-- При превышении:
-  - Поле подсвечивается красной рамкой (как при `isBelowMin`).
-  - Под полем — сообщение с иконкой `AlertTriangle`: «Максимум для CPM — $1000» / «Максимум для CPC — $1».
-  - Валидация в `CreateCampaign.tsx` и `EditCampaign.tsx` блокирует сабмит с ошибкой в `errors.priceValue`.
+`src/pages/DashboardOverview.tsx`:
+- Заголовок таблицы: `t("campaigns.title")` → новый ключ `t("overview.activeCampaignsTitle")` («Активные кампании» / «Active campaigns» / «Campañas activas»).
+- Подписи 3 виджетов над таблицей: заменить на новые ключи `overview.activeImpressions`, `overview.activeClicks`, `overview.activeCtr` со значениями:
+  - RU: «Показы по активным кампаниям», «Клики по активным кампаниям», «CTR по активным кампаниям»
+  - EN: «Impressions on active campaigns», «Clicks on active campaigns», «CTR of active campaigns»
+  - ES: «Impresiones de campañas activas», «Clics de campañas activas», «CTR de campañas activas»
 
-### Технически (`src/components/dashboard/BudgetSection.tsx`)
-- Ввести константы `MAX_CPM = 1000`, `MAX_CPC = 1`.
-- Вычислить `maxPrice = pricingModel === "cpm" ? MAX_CPM : MAX_CPC` и `isAboveMax = Number(priceValue) > maxPrice`.
-- Добавить блок под существующими `isBelowMin`/`isBelowRec`, аналогичный по стилю:
-  ```
-  {isAboveMax && (
-    <div className="flex items-center gap-1 text-destructive">
-      <AlertTriangle className="h-3 w-3" />
-      <p className="text-xs">{t("budget.aboveMax")} (${maxPrice})</p>
-    </div>
-  )}
-  ```
-- Красная рамка `border-destructive` при `isAboveMax` (добавить в className инпута).
+Добавить эти ключи в `src/contexts/LanguageContext.tsx` (EN + RU) и `src/lib/translations-es.ts` (ES).
 
-### Валидация в страницах (`CreateCampaign.tsx`, `EditCampaign.tsx`)
-- В блоках, где считается `min` для `priceValue`, добавить проверку максимума: если `price > (pricingModel === "cpm" ? 1000 : 1)` → `errors.priceValue = t("budget.aboveMaxError")` с подстановкой значения.
-- Ошибка блокирует переход к следующему шагу / сохранение.
+## 2. Статистика — не прыгать наверх при смене группировки
 
-### Локализация
-Добавить ключи в `LanguageContext.tsx` (RU/EN) и `translations-es.ts` (ES):
-- `budget.aboveMax` — короткое инлайн-сообщение: «Максимум: ${max}» / «Maximum: ${max}» / «Máximo: ${max}».
-- `budget.aboveMaxError` — для валидатора: «Ставка не может превышать ${max}».
+Проблема: в `src/pages/DashboardStatistics.tsx` при смене `groupBy` выполняются:
+- `setPageSize(50)` (эффект на 207 строке),
+- `setData([])` синхронно внутри загрузчика (215),
 
----
+Из-за этого таблица мгновенно исчезает, страница укорачивается и браузер визуально сдвигается к виджетам.
 
-## Часть 2. Предпросмотр креативов (push / native / banner) — концепция
+Правки в `src/pages/DashboardStatistics.tsx`:
+- Убрать синхронный `setData([])` при смене группировки. Вместо этого держать старые строки до прихода новых, а «placeholder» показывать только через `slowLoading` (уже есть).
+- Перед сменой `appliedGroupBy` фиксировать `window.scrollY`, после применения новых данных (в `useLayoutEffect`, зависящем от `data`) восстанавливать сохранённое значение через `window.scrollTo({ top: savedY })`. Сохранение — в обработчике клика по кнопке группировки (передать сохранение как callback перед `setGroupBy`).
+- Аналогично для смены `pageSize` (сброс на 50 при новой группировке не должен «прыгать» — уже покрывается фиксом scroll).
 
-Что предлагаю сделать (без реализации на этом шаге — сначала согласовать):
+## 3. Человекочитаемые ошибки на языке интерфейса
 
-### Где показывать
-1. **В `CreativesEditor.tsx`** — под превью загруженной картинки добавить кнопку `Eye` «Предпросмотр на сайте». Открывает модалку с рендером.
-2. **В карточке кампании** (`CampaignsList` / детали) — та же кнопка на каждом креативе.
+Симптом (скриншот): всплывает «balance.toast.submitError: promocode already used by this user» — показан ключ + сырое серверное сообщение.
 
-### Как это будет выглядеть
+### 3.1. Хелпер перевода серверных ошибок
 
-**Модалка «Как это увидит пользователь»** — тёмный фон-имитация чужого сайта (шапка-заглушка, колонки контента, «lorem ipsum»), в который органично встроен креатив в реальных пропорциях. Табы сверху позволяют переключать контекст размещения.
+Новый файл `src/lib/serverErrors.ts`:
+- Экспортирует `translateServerError(rawMessage: string, t: (k: string) => string): string`.
+- Держит массив правил `{ match: RegExp | string, key: string }`, например:
+  - `promocode already used by this user` → `errors.promoAlreadyUsed`
+  - `promocode not found` → `errors.promoNotFound`
+  - `insufficient funds` → `errors.insufficientFunds`
+  - `unauthorized` / `401` → `errors.unauthorized`
+  - fallback → `errors.generic` («Произошла ошибка, попробуйте позже»).
+- Никогда не возвращает исходный английский технический текст.
 
-**Banner** (300×250 / 728×90 / 300×600 / 300×100):
-- Макет фейкового блог-сайта: шапка с логотипом-заглушкой, статья слева, сайдбар справа.
-- Баннер вставлен в соответствующее по размеру место: 300×250 — в сайдбаре, 728×90 — над статьёй, 300×600 — сайдбар высокий, 300×100 — inline в тексте.
-- Клик по баннеру ничего не делает (или мягкий tooltip «Клик засчитается как переход по {url}»).
+### 3.2. Ключи переводов
 
-**Push / IPP (192×192)**:
-- Рендер как классическое push-уведомление ОС:
-  - Верхняя плашка с фавиконкой (favicon сайта-рекламодателя или заглушка), названием сайта, временем «now».
-  - Заголовок креатива (`title`), под ним `description` в 2 строки с обрезкой.
-  - Справа — квадратная миниатюра 192×192 (в модалке отмасштабирована до ~64px, как в реальном уведомлении).
-- Два варианта одновременно: «Chrome desktop» и «Android» — просто разные скругления/шрифты, один и тот же контент.
+Добавить в `LanguageContext.tsx` (EN/RU) и `translations-es.ts` (ES) блок `errors.*`:
+- `errors.promoAlreadyUsed`: «Этот промокод уже был использован» / «You already used this promo code» / «Ya usaste este código promocional».
+- `errors.promoNotFound`: «Промокод не найден».
+- `errors.insufficientFunds`: «Недостаточно средств».
+- `errors.unauthorized`: «Сессия истекла, войдите заново».
+- `errors.generic`: «Не удалось выполнить операцию. Попробуйте позже».
 
-**Native**:
-- Врезка «Рекомендуем почитать» / «Sponsored» в фейковой ленте статей: квадратная картинка слева, справа `title` + `description` + метка «Ad», под ней домен из URL.
-- Соседние 2–3 «настоящие» карточки-заглушки для контекста.
+Также заменить существующий `balance.toast.submitError` на короткий префикс без двоеточия («Ошибка пополнения»).
 
-**Popunder** — предпросмотра нет (только URL открывается), показать заглушку «Popunder открывает целевой URL в новой вкладке».
+### 3.3. Точки применения
 
-### Реализация
-- Отдельный компонент `CreativePreviewDialog.tsx` (shadcn `Dialog` + `Tabs`).
-- Принимает `creative` + `formatKey` + `bannerSize`.
-- Внутри — три под-компонента: `BannerMockup`, `PushMockup`, `NativeMockup`. Разметка полностью Tailwind, без внешних либ.
-- Мок-контент (текст статей, названия сайтов) — константы в самом файле, локализованные через `t()`.
-- Домен для «источника» вытаскиваем из `creative.url` через `new URL(url).hostname`.
+- `src/lib/apiStatus.ts` → `notifyError`: пропускать `extractMessage(e)` через `translateServerError`. Требуется передать `t` — либо через глобальный реестр (инициализируется в `App.tsx` эффектом от `useLanguage`, кладёт `t` в модульную переменную), либо экспортировать `setErrorTranslator(fn)` и вызывать из провайдера языка. Выбираем второй вариант: `apiStatus.ts` экспортирует `setErrorTranslator`, `LanguageContext` при монтировании / смене языка вызывает его, передавая `(raw) => translateServerError(raw, t)`.
+- `src/pages/DashboardBalance.tsx`, `src/components/PendingPaymentDialog.tsx`: заменить прямые `toast.error(\`${prefix}: ${e?.message}\`)` на `notifyError(prefix, e)` из `apiStatus.ts`, чтобы использовать единый перевод.
+- Проверить остальные места (`rg "toast.error" src`) — привести к `notifyError`, но только там, где показывается серверная ошибка (клиентские валидации типа «промокод неверный» оставить как есть).
 
-### Что даёт
-- Рекламодатель сразу видит, что заголовок обрезается, картинка не читается на 192px, баннер выглядит несбалансированно — и правит до запуска.
-- Снижает нагрузку на модерацию и саппорт.
+## Технические заметки
 
----
-
-## Что затрагиваем в этом плане
-**Часть 1 — реализуем сейчас:**
-- `src/components/dashboard/BudgetSection.tsx`
-- `src/pages/CreateCampaign.tsx`
-- `src/pages/EditCampaign.tsx`
-- `src/contexts/LanguageContext.tsx`
-- `src/lib/translations-es.ts`
-
-**Часть 2 — только концепция.** Реализовывать буду отдельным запросом после того, как одобрите подход (или скорректируете макеты).
-
-## Что НЕ трогаем
-Бэкенд, схема БД, серверная валидация ставок, popunder-логика, остальные направления улучшений из предыдущего сообщения.
+- Ключ `balance.toast.submitError` остаётся как префикс тоста; сам текст ошибки поступает из `translateServerError`, поэтому пользователь видит вид «Ошибка пополнения: Этот промокод уже был использован».
+- В `apiStatus.ts` сохранение обратной совместимости: если переводчик не установлен, используется прежнее поведение (сырое сообщение) — гарантирует, что тесты и SSR не сломаются.
+- Восстановление скролла статистики делаем через `useLayoutEffect(() => { if (pendingScrollRef.current != null) { window.scrollTo(0, pendingScrollRef.current); pendingScrollRef.current = null; } }, [data, appliedGroupBy])`.
