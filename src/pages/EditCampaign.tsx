@@ -416,7 +416,11 @@ export default function EditCampaign() {
         open={confirmMismatchOpen}
         creatives={creatives}
         target={getTargetDims(campaign.formatKey, bannerSize)}
-        onCancel={() => setConfirmMismatchOpen(false)}
+        onCancel={() => {
+          setConfirmMismatchOpen(false);
+          setActiveTab("general");
+          setTimeout(() => { void creativesEditorRef.current?.openCropperFor(); }, 50);
+        }}
         onConfirm={async (next) => {
           setCreatives(next);
           setConfirmMismatchOpen(false);
