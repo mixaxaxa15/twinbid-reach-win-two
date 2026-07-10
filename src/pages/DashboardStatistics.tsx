@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -206,13 +206,26 @@ export default function DashboardStatistics() {
   const [pageSize, setPageSize] = useState<PageSize>(50);
   useEffect(() => { setPageSize(50); }, [appliedGroupBy]);
 
+  // Preserve scroll position when the user switches grouping or page size.
+  // Without this, clearing rows synchronously shrinks the page and the browser
+  // jumps up to the widgets. We snapshot scrollY on the intent (button click)
+  // and restore it in a layout effect once new rows have laid out.
+  const pendingScrollRef = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (pendingScrollRef.current != null) {
+      window.scrollTo({ top: pendingScrollRef.current });
+      pendingScrollRef.current = null;
+    }
+  }, [data, appliedGroupBy, pageSize]);
+
   useEffect(() => {
     if (!hasSelection) { setData([]); return; }
     let cancelled = false;
     const apiGroup = GROUP_MAP[appliedGroupBy].api;
-    // Clear stale rows synchronously so the table doesn't briefly show the
-    // previous grouping while the new query is in-flight.
-    setData([]);
+    // Do NOT clear rows synchronously — keeping the previous table visible
+    // until new data arrives prevents the page from collapsing and the
+    // browser from scrolling up. `slowLoading` still shows a spinner overlay
+    // for long queries.
     const fmtUtcDay = (d: Date) => {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, "0");
