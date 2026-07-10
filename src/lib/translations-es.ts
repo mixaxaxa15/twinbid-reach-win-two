@@ -140,11 +140,17 @@ export const ES_TRANSLATIONS: Record<string, string> = {
 
   // Dashboard Overview
   "overview.recentCampaigns": "Campañas",
+  "overview.activeCampaignsTitle": "Campañas activas",
   "overview.id": "ID",
   "overview.name": "Nombre",
   "overview.status": "Estado",
   "overview.impressions": "Impresiones",
   "overview.spent": "Gasto",
+
+  // StatsCards refer to active campaigns
+  "statsCards.impressions": "Impresiones de campañas activas",
+  "statsCards.clicks": "Clics de campañas activas",
+  "statsCards.ctr": "CTR de campañas activas",
 
   // StatsCards
   "statsCards.impressions": "Impresiones",
