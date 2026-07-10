@@ -126,7 +126,7 @@ export function AutoCropConfirmDialog({ open, creatives, target, onCancel, onCon
 
         <AlertDialogFooter>
           <AlertDialogCancel>{t("create.mismatchGoEdit")}</AlertDialogCancel>
-          <AlertDialogAction disabled={loading || !hasCroppable} onClick={handleConfirm}>
+          <AlertDialogAction disabled={loading || !hasCroppable || hasGif} onClick={handleConfirm}>
             {t("create.autoCropConfirm")}
           </AlertDialogAction>
         </AlertDialogFooter>
