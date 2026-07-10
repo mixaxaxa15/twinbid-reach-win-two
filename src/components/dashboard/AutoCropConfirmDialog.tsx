@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Loader2, ArrowRight } from "lucide-react";
 import type { Creative } from "@/contexts/CampaignContext";
@@ -65,7 +65,10 @@ export function AutoCropConfirmDialog({ open, creatives, target, onCancel, onCon
     return () => { cancelled = true; };
   }, [open, creatives, target, t]);
 
+  const confirmingRef = useRef(false);
+
   const handleConfirm = () => {
+    confirmingRef.current = true;
     const map = new Map(previews.map(p => [p.creativeId, p]));
     const next = creatives.map(c => {
       const p = map.get(c.id);
@@ -79,7 +82,12 @@ export function AutoCropConfirmDialog({ open, creatives, target, onCancel, onCon
   const hasGif = previews.some(p => p.isGif);
 
   return (
-    <AlertDialog open={open} onOpenChange={(o) => { if (!o) onCancel(); }}>
+    <AlertDialog open={open} onOpenChange={(o) => {
+      if (!o) {
+        if (confirmingRef.current) { confirmingRef.current = false; return; }
+        onCancel();
+      }
+    }}>
       <AlertDialogContent className="bg-card border-border max-w-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle>{t("create.mismatchConfirmTitle")}</AlertDialogTitle>
