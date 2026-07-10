@@ -167,7 +167,9 @@ export default function CreateCampaign() {
     setErrors({});
   };
 
-  const handleCreate = async () => {
+  const handleCreate = () => handleCreateWith(creatives);
+
+  const handleCreateWith = async (crvs: Creative[]) => {
     if (isCreating) return;
     setIsCreating(true);
     try {
@@ -176,7 +178,7 @@ export default function CreateCampaign() {
         name: name.trim(), status: "draft", format: formatLabels[adFormat] || adFormat,
         formatKey: adFormat, trafficType, verticals, budget: parseNum(totalBudget), dailyBudget: null,
         spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: parseNum(priceValue),
-        trafficQuality, startDate, endDate, creatives,
+        trafficQuality, startDate, endDate, creatives: crvs,
         targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
         evenSpend, bannerSize: adFormat === "banner" ? bannerSize : undefined,
         brandName: showBrandName ? brandName : undefined,
