@@ -447,7 +447,7 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "create.autoCropAfter": { ru: "После обрезки", en: "After crop" },
   "create.autoCropConfirm": { ru: "Обрезать и сохранить", en: "Auto-crop and save" },
   "create.autoCropGifSkip": { ru: "GIF не может быть автоматически обрезан. Отредактируйте его вручную.", en: "GIF can't be auto-cropped. Please edit it manually." },
-  "create.autoCropGifNote": { ru: "GIF-креативы будут сохранены без изменений — отредактируйте их вручную.", en: "GIF creatives will be saved unchanged — edit them manually." },
+  "create.autoCropGifNote": { ru: "Сохранение заблокировано: размер GIF не соответствует требуемому размеру баннера. GIF нельзя автоматически обрезать — замените файл на GIF нужного размера.", en: "Saving is blocked: GIF size doesn't match the required banner size. GIFs can't be auto-cropped — replace the file with a GIF of the correct size." },
   "create.autoCropError": { ru: "Не удалось подготовить превью. Отредактируйте вручную.", en: "Failed to prepare preview. Please edit manually." },
   "create.creativeTitle": { ru: "Заголовок", en: "Title" },
   "create.creativeDescription": { ru: "Описание", en: "Description" },
