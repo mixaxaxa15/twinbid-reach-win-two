@@ -411,20 +411,18 @@ export default function EditCampaign() {
         );
       })()}
 
-      <AlertDialog open={confirmMismatchOpen} onOpenChange={setConfirmMismatchOpen}>
-        <AlertDialogContent className="bg-card border-border">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("create.mismatchConfirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("create.mismatchConfirmBody")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("create.mismatchGoEdit")}</AlertDialogCancel>
-            <AlertDialogAction onClick={async () => { setConfirmMismatchOpen(false); await handleSave(true); }}>
-              {t("create.mismatchSaveAnyway")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AutoCropConfirmDialog
+        open={confirmMismatchOpen}
+        creatives={creatives}
+        target={getTargetDims(campaign.formatKey, bannerSize)}
+        onCancel={() => setConfirmMismatchOpen(false)}
+        onConfirm={async (next) => {
+          setCreatives(next);
+          setConfirmMismatchOpen(false);
+          await handleSave(true, next);
+        }}
+      />
+
     </div>
   );
 }
