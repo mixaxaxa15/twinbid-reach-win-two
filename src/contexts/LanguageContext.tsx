@@ -421,7 +421,7 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "create.imageFormatHint": { ru: "PNG, JPG или GIF, до 1 МБ", en: "PNG, JPG or GIF, up to 1 MB" },
   "create.imageSizeError": { ru: "Размер файла не должен превышать 1 МБ", en: "File size must not exceed 1 MB" },
   "create.creativeLimit": { ru: "Можно добавить не более {max} креативов на кампанию", en: "You can add up to {max} creatives per campaign" },
-  "create.imageWrongSize": { ru: "Размер не соответствует требуемому ({w}×{h}). Рекомендуем отредактировать.", en: "Size doesn't match required ({w}×{h}). We recommend editing it." },
+  "create.imageWrongSize": { ru: "Размер не соответствует требуемому ({w}×{h}). Если не обрежете вручную, картинка будет автоматически подогнана под формат при сохранении.", en: "Size doesn't match required ({w}×{h}). If you don't crop it manually, the image will be auto-fit to the format on save." },
   "create.editImage": { ru: "Редактировать", en: "Edit" },
   "create.previewCreative": { ru: "Предпросмотр", en: "Preview" },
   "create.previewTitle": { ru: "Как креатив будет показан на сайте", en: "How the creative will look on a site" },
