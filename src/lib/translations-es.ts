@@ -419,7 +419,7 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "create.autoCropAfter": "Recortada",
   "create.autoCropConfirm": "Recortar y guardar",
   "create.autoCropGifSkip": "El GIF no puede recortarse automáticamente. Edítalo manualmente.",
-  "create.autoCropGifNote": "Los creativos GIF se guardarán sin cambios: edítalos manualmente.",
+  "create.autoCropGifNote": "Guardado bloqueado: el tamaño del GIF no coincide con el tamaño requerido del banner. Los GIF no pueden recortarse automáticamente: reemplaza el archivo por un GIF del tamaño correcto.",
   "create.autoCropError": "No se pudo preparar la vista previa. Edítala manualmente.",
   "create.creativeTitle": "Título",
   "create.creativeDescription": "Descripción",
