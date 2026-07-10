@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { setErrorTranslator } from "@/lib/apiStatus";
+import { translateServerError } from "@/lib/serverErrors";
 
 export type Lang = "en" | "ru" | "es";
 
@@ -703,6 +705,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     if (lang === "ru") return entry.ru || entry.en || key;
     return entry.en || entry.ru || key;
   }, [lang]);
+
+  useEffect(() => {
+    setErrorTranslator((raw) => translateServerError(raw, t));
+    return () => setErrorTranslator(null);
+  }, [t]);
 
   return (
     <LanguageContext.Provider value={{ lang, setLang: handleSetLang, t }}>
