@@ -66,6 +66,7 @@ export default function CreateCampaign() {
   const savedAsDraft = useRef(false);
   const [isCreating, setIsCreating] = useState(false);
   const [confirmMismatchOpen, setConfirmMismatchOpen] = useState(false);
+  const creativesEditorRef = useRef<CreativesEditorHandle>(null);
 
   const clearError = (...keys: string[]) => setErrors(prev => {
     const next = { ...prev };
