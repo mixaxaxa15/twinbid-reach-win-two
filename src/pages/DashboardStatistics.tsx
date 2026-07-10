@@ -830,7 +830,11 @@ export default function DashboardStatistics() {
                 <div className="flex flex-wrap items-center gap-2">
                   {(Object.keys(groupLabels) as GroupBy[]).map((g) => (
                     <Button key={g} variant={groupBy === g ? "default" : "outline"} size="sm"
-                      onClick={() => setGroupBy(g)}
+                      onClick={() => {
+                        if (groupBy === g) return;
+                        pendingScrollRef.current = window.scrollY;
+                        setGroupBy(g);
+                      }}
                       className={cn("min-w-[100px]", groupBy === g ? "bg-primary text-primary-foreground" : "border-border")}>
                       {groupLabels[g]}
                     </Button>
@@ -841,7 +845,11 @@ export default function DashboardStatistics() {
                   {([50, 100, "all"] as PageSize[]).map(sz => (
                     <Button key={String(sz)} size="sm"
                       variant={pageSize === sz ? "default" : "outline"}
-                      onClick={() => setPageSize(sz)}
+                      onClick={() => {
+                        if (pageSize === sz) return;
+                        pendingScrollRef.current = window.scrollY;
+                        setPageSize(sz);
+                      }}
                       className={cn("min-w-[52px]", pageSize === sz ? "bg-primary text-primary-foreground" : "border-border")}>
                       {sz === "all" ? t("stats.rowsAll") : sz}
                     </Button>
