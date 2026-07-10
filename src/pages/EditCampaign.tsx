@@ -48,6 +48,7 @@ export default function EditCampaign() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [confirmMismatchOpen, setConfirmMismatchOpen] = useState(false);
+  const creativesEditorRef = useRef<CreativesEditorHandle>(null);
 
   useEffect(() => {
     if (campaign) {
