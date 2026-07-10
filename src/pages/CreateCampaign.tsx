@@ -396,20 +396,19 @@ export default function CreateCampaign() {
         </div>
       )}
 
-      <AlertDialog open={confirmMismatchOpen} onOpenChange={setConfirmMismatchOpen}>
-        <AlertDialogContent className="bg-card border-border">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("create.mismatchConfirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("create.mismatchConfirmBody")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("create.mismatchGoEdit")}</AlertDialogCancel>
-            <AlertDialogAction onClick={async () => { setConfirmMismatchOpen(false); await handleCreate(); }}>
-              {t("create.mismatchSaveAnyway")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AutoCropConfirmDialog
+        open={confirmMismatchOpen}
+        creatives={creatives}
+        target={getTargetDims(adFormat, bannerSize)}
+        onCancel={() => setConfirmMismatchOpen(false)}
+        onConfirm={async (next) => {
+          setCreatives(next);
+          setConfirmMismatchOpen(false);
+          // Defer so state updates before we submit; handleCreate reads from `creatives`
+          // via closure, but we pass explicit next to avoid stale state.
+          await handleCreateWith(next);
+        }}
+      />
     </div>
   );
 }
