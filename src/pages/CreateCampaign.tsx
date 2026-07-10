@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AutoCropConfirmDialog } from "@/components/dashboard/AutoCropConfirmDialog";
+import { getTargetDims } from "@/lib/creativeTarget";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type ListMode, type Creative, type Vertical, VERTICALS } from "@/contexts/CampaignContext";
@@ -166,7 +167,9 @@ export default function CreateCampaign() {
     setErrors({});
   };
 
-  const handleCreate = async () => {
+  const handleCreate = () => handleCreateWith(creatives);
+
+  const handleCreateWith = async (crvs: Creative[]) => {
     if (isCreating) return;
     setIsCreating(true);
     try {
@@ -175,7 +178,7 @@ export default function CreateCampaign() {
         name: name.trim(), status: "draft", format: formatLabels[adFormat] || adFormat,
         formatKey: adFormat, trafficType, verticals, budget: parseNum(totalBudget), dailyBudget: null,
         spent: 0, impressions: 0, clicks: 0, ctr: 0, pricingModel, priceValue: parseNum(priceValue),
-        trafficQuality, startDate, endDate, creatives,
+        trafficQuality, startDate, endDate, creatives: crvs,
         targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
         evenSpend, bannerSize: adFormat === "banner" ? bannerSize : undefined,
         brandName: showBrandName ? brandName : undefined,
@@ -395,20 +398,19 @@ export default function CreateCampaign() {
         </div>
       )}
 
-      <AlertDialog open={confirmMismatchOpen} onOpenChange={setConfirmMismatchOpen}>
-        <AlertDialogContent className="bg-card border-border">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("create.mismatchConfirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("create.mismatchConfirmBody")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("create.mismatchGoEdit")}</AlertDialogCancel>
-            <AlertDialogAction onClick={async () => { setConfirmMismatchOpen(false); await handleCreate(); }}>
-              {t("create.mismatchSaveAnyway")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AutoCropConfirmDialog
+        open={confirmMismatchOpen}
+        creatives={creatives}
+        target={getTargetDims(adFormat, bannerSize)}
+        onCancel={() => setConfirmMismatchOpen(false)}
+        onConfirm={async (next) => {
+          setCreatives(next);
+          setConfirmMismatchOpen(false);
+          // Defer so state updates before we submit; handleCreate reads from `creatives`
+          // via closure, but we pass explicit next to avoid stale state.
+          await handleCreateWith(next);
+        }}
+      />
     </div>
   );
 }

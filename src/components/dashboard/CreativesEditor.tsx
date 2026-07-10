@@ -49,16 +49,7 @@ const generateId = () => String(Date.now()) + Math.random().toString(36).slice(2
 const MAX_CREATIVES = 10;
 const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
 
-function getTargetDims(formatKey: string, bannerSize?: string): CropperTarget | null {
-  if (formatKey === "banner") {
-    if (!bannerSize || !/^\d+x\d+$/.test(bannerSize)) return null;
-    const [w, h] = bannerSize.split("x").map(Number);
-    return { w, h, mode: "fixed" };
-  }
-  if (formatKey === "push") return { w: 192, h: 192, mode: "fixed" };
-  if (formatKey === "native") return { w: 200, h: 200, mode: "square-resizable", minSide: 200 };
-  return null;
-}
+import { getTargetDims } from "@/lib/creativeTarget";
 
 export function CreativesEditor({ formatKey, bannerSize, creatives, onChange, errors = {}, onClearError }: CreativesEditorProps) {
   const { t } = useLanguage();

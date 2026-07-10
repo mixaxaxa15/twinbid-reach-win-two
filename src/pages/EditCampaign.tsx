@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AutoCropConfirmDialog } from "@/components/dashboard/AutoCropConfirmDialog";
+import { getTargetDims } from "@/lib/creativeTarget";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns, type TargetingState, type PricingModel, type TrafficQuality, type TrafficType, type Creative, type Vertical, VERTICALS } from "@/contexts/CampaignContext";
@@ -135,7 +136,8 @@ export default function EditCampaign() {
 
   const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
-  const handleSave = async (skipMismatchCheck = false) => {
+  const handleSave = async (skipMismatchCheck = false, overrideCreatives?: Creative[]) => {
+    const crvs = overrideCreatives ?? creatives;
     const e: Record<string, string> = {};
     const tb = parseNum(totalBudget);
     if (!totalBudget || isNaN(tb) || tb < 1) e.totalBudget = t("edit.errorBudgetMin");
@@ -165,7 +167,7 @@ export default function EditCampaign() {
     }
     if (!name.trim()) e.name = t("create.required");
 
-    creatives.forEach(c => {
+    crvs.forEach(c => {
       if (!c.name?.trim()) e[`creative_${c.id}_name`] = t("create.required");
       if (!c.url.trim()) e[`creative_${c.id}_url`] = t("create.required");
       if (campaign.formatKey !== "popunder" && !c.imageUrl) e[`creative_${c.id}_image`] = t("create.required");
@@ -181,7 +183,7 @@ export default function EditCampaign() {
       return;
     }
 
-    if (!skipMismatchCheck && creatives.some(c => c.sizeMismatch)) {
+    if (!skipMismatchCheck && crvs.some(c => c.sizeMismatch)) {
       setConfirmMismatchOpen(true);
       return;
     }
@@ -200,7 +202,7 @@ export default function EditCampaign() {
 
     try {
       await updateCampaign(campaign.id, {
-        name: name.trim(), creatives, trafficType, verticals,
+        name: name.trim(), creatives: crvs, trafficType, verticals,
         targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
         budget: tb, dailyBudget: null,
         priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
@@ -409,20 +411,18 @@ export default function EditCampaign() {
         );
       })()}
 
-      <AlertDialog open={confirmMismatchOpen} onOpenChange={setConfirmMismatchOpen}>
-        <AlertDialogContent className="bg-card border-border">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("create.mismatchConfirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("create.mismatchConfirmBody")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("create.mismatchGoEdit")}</AlertDialogCancel>
-            <AlertDialogAction onClick={async () => { setConfirmMismatchOpen(false); await handleSave(true); }}>
-              {t("create.mismatchSaveAnyway")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AutoCropConfirmDialog
+        open={confirmMismatchOpen}
+        creatives={creatives}
+        target={getTargetDims(campaign.formatKey, bannerSize)}
+        onCancel={() => setConfirmMismatchOpen(false)}
+        onConfirm={async (next) => {
+          setCreatives(next);
+          setConfirmMismatchOpen(false);
+          await handleSave(true, next);
+        }}
+      />
+
     </div>
   );
 }
