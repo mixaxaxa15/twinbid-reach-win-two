@@ -393,7 +393,7 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "create.imageFormatHint": "PNG, JPG o GIF, hasta 1 MB",
   "create.imageSizeError": "El tamaño del archivo no debe superar 1 MB",
   "create.creativeLimit": "Puedes añadir hasta {max} creativos por campaña",
-  "create.imageWrongSize": "El tamaño no coincide con el requerido ({w}×{h}). Recomendamos editarla.",
+  "create.imageWrongSize": "El tamaño no coincide con el requerido ({w}×{h}). Si no la recortas manualmente, se ajustará automáticamente al formato al guardar.",
   "create.editImage": "Editar",
   "create.previewCreative": "Vista previa",
   "create.previewTitle": "Cómo se verá el creativo en un sitio",
