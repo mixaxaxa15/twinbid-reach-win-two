@@ -115,9 +115,21 @@ export default function CreateCampaign() {
       if (adFormat === "banner" && type === "html") {
         if (!c.htmlCode?.trim()) e[`creative_${c.id}_html`] = t("create.required");
       } else if (adFormat === "banner" && type === "iframe") {
-        const u = (c.iframeUrl || "").trim();
-        if (!u) e[`creative_${c.id}_iframe`] = t("create.required");
-        else {
+        const mode = c.iframeMode || "url";
+        let u = "";
+        if (mode === "code") {
+          const snippet = (c.iframeCode || "").trim();
+          if (!snippet) { e[`creative_${c.id}_iframe`] = t("create.required"); }
+          else {
+            const m = snippet.match(/<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i);
+            u = m ? m[1] : "";
+            if (!u) e[`creative_${c.id}_iframe`] = t("create.iframeCodeNoSrc");
+          }
+        } else {
+          u = (c.iframeUrl || "").trim();
+          if (!u) e[`creative_${c.id}_iframe`] = t("create.required");
+        }
+        if (u && !e[`creative_${c.id}_iframe`]) {
           try { const p = new URL(u); if (p.protocol !== "https:") throw new Error(); }
           catch { e[`creative_${c.id}_iframe`] = t("create.iframeUrlInvalid"); }
         }
