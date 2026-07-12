@@ -190,16 +190,39 @@ export default function EditCampaign() {
 
     if (campaign.formatKey === "banner" && !bannerSize) e.bannerSize = t("create.required");
 
+    // Block save when a banner html/iframe creative has a size mismatch (no auto-crop for those).
+    if (campaign.formatKey === "banner") {
+      const bad = crvs.find(c => {
+        const type = c.creativeType || "image";
+        return (type === "html" || type === "iframe") && c.sizeMismatch;
+      });
+      if (bad) {
+        const key = bad.creativeType === "iframe" ? "iframe" : "html";
+        e[`creative_${bad.id}_${key}`] = t("create.required");
+        toast.error(
+          (bad.creativeType === "iframe"
+            ? t("create.iframeSizeMismatch")
+            : t("create.htmlSizeMismatch"))
+            .replace("{actualW}", "?").replace("{actualH}", "?")
+            .replace("{w}", String(bannerSize.split("x")[0] || "?"))
+            .replace("{h}", String(bannerSize.split("x")[1] || "?"))
+        );
+      }
+    }
+
     setErrors(e);
     if (Object.keys(e).length > 0) {
       if (e.totalBudget) setActiveTab("budget");
       return;
     }
 
-    if (!skipMismatchCheck && crvs.some(c => c.sizeMismatch)) {
+    // Only image creatives fall into the auto-crop confirm path.
+    if (!skipMismatchCheck && crvs.some(c => (c.creativeType || "image") === "image" && c.sizeMismatch)) {
       setConfirmMismatchOpen(true);
       return;
     }
+
+
 
 
     let newStatus = campaign.status;
