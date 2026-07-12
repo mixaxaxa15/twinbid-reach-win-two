@@ -129,9 +129,31 @@ export default function CreateCampaign() {
       if ((adFormat === "native" || adFormat === "push") && !c.description?.trim()) e[`creative_${c.id}_description`] = t("create.required");
     });
 
+    // Block advancing when a banner html/iframe creative has a size mismatch.
+    // (Image creatives keep their existing auto-crop confirm flow on the final step.)
+    if (adFormat === "banner") {
+      const badHtmlOrIframe = creatives.find(c => {
+        const type = c.creativeType || "image";
+        return (type === "html" || type === "iframe") && c.sizeMismatch;
+      });
+      if (badHtmlOrIframe) {
+        const key = (badHtmlOrIframe.creativeType === "iframe") ? "iframe" : "html";
+        e[`creative_${badHtmlOrIframe.id}_${key}`] = t("create.required");
+        toast.error(
+          (badHtmlOrIframe.creativeType === "iframe"
+            ? t("create.iframeSizeMismatch")
+            : t("create.htmlSizeMismatch"))
+            .replace("{actualW}", "?").replace("{actualH}", "?")
+            .replace("{w}", String(bannerSize.split("x")[0] || "?"))
+            .replace("{h}", String(bannerSize.split("x")[1] || "?"))
+        );
+      }
+    }
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
+
 
   const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
