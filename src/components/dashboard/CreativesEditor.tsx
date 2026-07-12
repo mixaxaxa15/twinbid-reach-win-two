@@ -334,6 +334,20 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
     } catch { return false; }
   };
 
+  /** Extract the `src` attribute from a raw <iframe ...> snippet. Returns "" if not found. */
+  const extractIframeSrc = (snippet: string): string => {
+    if (!snippet) return "";
+    const m = snippet.match(/<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i);
+    return m ? m[1] : "";
+  };
+
+  /** Effective iframe URL used for probe/preview, from either mode. */
+  const getEffectiveIframeUrl = (c: Creative): string => {
+    const mode = c.iframeMode || "url";
+    if (mode === "code") return extractIframeSrc(c.iframeCode || "");
+    return (c.iframeUrl || "").trim();
+  };
+
   const setCreativeType = (creativeId: string, type: CreativeType) => {
     const c = creatives.find(x => x.id === creativeId);
     if (!c) return;
