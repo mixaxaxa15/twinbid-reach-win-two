@@ -69,19 +69,32 @@ function BannerSlot({ size, creative }: { size: string; creative: Creative }) {
         style={{ width: w, height: h, transform: `scale(${scale})`, transformOrigin: "top left", border: "0" }}
       />
     );
-  } else if (type === "iframe" && creative.iframeUrl) {
-    content = (
-      <iframe
-        title="iframe-preview"
-        src={creative.iframeUrl}
-        sandbox="allow-scripts allow-same-origin"
-        style={{ width: w, height: h, transform: `scale(${scale})`, transformOrigin: "top left", border: "0" }}
-      />
-    );
-  } else if (creative.imageUrl) {
-    content = <img src={creative.imageUrl} alt="ad" className="w-full h-full object-cover" />;
-  } else {
-    content = <span>Advertisement {w}×{h}</span>;
+  } else if (type === "iframe") {
+    const mode = creative.iframeMode || "url";
+    let src = "";
+    if (mode === "code") {
+      const m = (creative.iframeCode || "").match(/<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i);
+      src = m ? m[1] : "";
+    } else {
+      src = creative.iframeUrl || "";
+    }
+    if (src) {
+      content = (
+        <iframe
+          title="iframe-preview"
+          src={src}
+          sandbox="allow-scripts allow-same-origin"
+          style={{ width: w, height: h, transform: `scale(${scale})`, transformOrigin: "top left", border: "0" }}
+        />
+      );
+    }
+  }
+  if (!content) {
+    if (creative.imageUrl) {
+      content = <img src={creative.imageUrl} alt="ad" className="w-full h-full object-cover" />;
+    } else {
+      content = <span>Advertisement {w}×{h}</span>;
+    }
   }
 
   return (
