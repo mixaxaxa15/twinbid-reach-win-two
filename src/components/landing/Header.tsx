@@ -42,7 +42,7 @@ export function Header() {
               <a
                 key={link.href}
                 href={link.href}
-                className="text-[11px] font-mono-eyebrow uppercase tracking-[0.22em] text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
+                className="text-[17px] font-mono-eyebrow uppercase tracking-[0.22em] text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
               >
                 {link.label}
               </a>
@@ -50,17 +50,17 @@ export function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <LanguageSelector />
+            <LanguageSelector className="text-[18px] h-10 px-3" />
             <AuthDialog
               trigger={
-                <button className="text-[11px] font-mono-eyebrow uppercase tracking-[0.22em] text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
+                <button className="text-[17px] font-mono-eyebrow uppercase tracking-[0.22em] text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
                   {t("nav.login")}
                 </button>
               }
               defaultTab="login"
             />
             <AuthDialog
-              trigger={<button className="pill pill-primary">{t("nav.register")}</button>}
+              trigger={<button className="pill pill-primary text-[20px]">{t("nav.register")}</button>}
               defaultTab="register"
             />
           </div>
@@ -74,14 +74,14 @@ export function Header() {
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <nav className="flex flex-col gap-2">
               {navLinks.map((link) => (
-                <a key={link.href} href={link.href} className="pill pill-ghost text-left" onClick={() => setIsMenuOpen(false)}>
+                <a key={link.href} href={link.href} className="pill pill-ghost text-left text-[20px]" onClick={() => setIsMenuOpen(false)}>
                   {link.label}
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <LanguageSelector />
-                <AuthDialog trigger={<button className="pill pill-ghost w-full justify-center">{t("nav.login")}</button>} defaultTab="login" />
-                <AuthDialog trigger={<button className="pill pill-primary w-full justify-center">{t("nav.register")}</button>} defaultTab="register" />
+                <LanguageSelector className="text-[18px] h-10 px-3 w-full justify-center" />
+                <AuthDialog trigger={<button className="pill pill-ghost w-full justify-center text-[20px]">{t("nav.login")}</button>} defaultTab="login" />
+                <AuthDialog trigger={<button className="pill pill-primary w-full justify-center text-[20px]">{t("nav.register")}</button>} defaultTab="register" />
               </div>
             </nav>
           </div>
