@@ -536,7 +536,18 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                     {t("create.htmlCodeHint").replace("{w}", String(target.w)).replace("{h}", String(target.h))}
                   </p>
                 )}
+                <input
+                  ref={el => { htmlFileInputRefs.current[creative.id] = el; }}
+                  type="file" accept=".html,.htm,text/html" className="hidden"
+                  onChange={e => handleHtmlFileUpload(creative.id, e)}
+                />
                 <div className="flex items-center gap-3 flex-wrap">
+                  <Button type="button" variant="outline"
+                    onClick={() => htmlFileInputRefs.current[creative.id]?.click()}
+                    className="border-border gap-2">
+                    <Upload className="h-4 w-4" />
+                    {t("create.uploadHtmlFile")}
+                  </Button>
                   {creative.htmlCode?.trim() && (
                     <Button type="button" variant="outline" onClick={() => setPreviewCreativeId(creative.id)} className="border-border gap-2">
                       <Eye className="h-4 w-4" />
