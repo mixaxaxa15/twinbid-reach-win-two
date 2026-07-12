@@ -83,8 +83,12 @@ export interface Creative {
   creativeType?: CreativeType;
   /** UI-only: raw HTML markup (creativeType === "html"). Not sent to API. */
   htmlCode?: string;
-  /** UI-only: iframe URL (creativeType === "iframe"). Not sent to API. */
+  /** UI-only: iframe URL (creativeType === "iframe", iframeMode === "url"). Not sent to API. */
   iframeUrl?: string;
+  /** UI-only: raw <iframe ...> snippet (creativeType === "iframe", iframeMode === "code"). Not sent to API. */
+  iframeCode?: string;
+  /** UI-only: sub-mode inside iframe creative type. Defaults to "url". Not sent to API. */
+  iframeMode?: "url" | "code";
   /** UI-only: user confirmed the cross-origin iframe matches the banner size. */
   iframeSizeConfirmed?: boolean;
 }
