@@ -170,13 +170,45 @@ export default function EditCampaign() {
 
     crvs.forEach(c => {
       if (!c.name?.trim()) e[`creative_${c.id}_name`] = t("create.required");
-      if (!c.url.trim()) e[`creative_${c.id}_url`] = t("create.required");
-      if (campaign.formatKey !== "popunder" && !c.imageUrl) e[`creative_${c.id}_image`] = t("create.required");
+      const type = campaign.formatKey === "banner" ? (c.creativeType || "image") : "image";
+      if (campaign.formatKey === "banner" && type === "html") {
+        if (!c.htmlCode?.trim()) e[`creative_${c.id}_html`] = t("create.required");
+      } else if (campaign.formatKey === "banner" && type === "iframe") {
+        const u = (c.iframeUrl || "").trim();
+        if (!u) e[`creative_${c.id}_iframe`] = t("create.required");
+        else {
+          try { const p = new URL(u); if (p.protocol !== "https:") throw new Error(); }
+          catch { e[`creative_${c.id}_iframe`] = t("create.iframeUrlInvalid"); }
+        }
+      } else {
+        if (!c.url.trim()) e[`creative_${c.id}_url`] = t("create.required");
+        if (campaign.formatKey !== "popunder" && !c.imageUrl) e[`creative_${c.id}_image`] = t("create.required");
+      }
       if ((campaign.formatKey === "native" || campaign.formatKey === "push") && !c.title?.trim()) e[`creative_${c.id}_title`] = t("create.required");
       if ((campaign.formatKey === "native" || campaign.formatKey === "push") && !c.description?.trim()) e[`creative_${c.id}_description`] = t("create.required");
     });
 
     if (campaign.formatKey === "banner" && !bannerSize) e.bannerSize = t("create.required");
+
+    // Block save when a banner html/iframe creative has a size mismatch (no auto-crop for those).
+    if (campaign.formatKey === "banner") {
+      const bad = crvs.find(c => {
+        const type = c.creativeType || "image";
+        return (type === "html" || type === "iframe") && c.sizeMismatch;
+      });
+      if (bad) {
+        const key = bad.creativeType === "iframe" ? "iframe" : "html";
+        e[`creative_${bad.id}_${key}`] = t("create.required");
+        toast.error(
+          (bad.creativeType === "iframe"
+            ? t("create.iframeSizeMismatch")
+            : t("create.htmlSizeMismatch"))
+            .replace("{actualW}", "?").replace("{actualH}", "?")
+            .replace("{w}", String(bannerSize.split("x")[0] || "?"))
+            .replace("{h}", String(bannerSize.split("x")[1] || "?"))
+        );
+      }
+    }
 
     setErrors(e);
     if (Object.keys(e).length > 0) {
@@ -184,10 +216,13 @@ export default function EditCampaign() {
       return;
     }
 
-    if (!skipMismatchCheck && crvs.some(c => c.sizeMismatch)) {
+    // Only image creatives fall into the auto-crop confirm path.
+    if (!skipMismatchCheck && crvs.some(c => (c.creativeType || "image") === "image" && c.sizeMismatch)) {
       setConfirmMismatchOpen(true);
       return;
     }
+
+
 
 
     let newStatus = campaign.status;

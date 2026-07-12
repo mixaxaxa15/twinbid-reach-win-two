@@ -64,6 +64,8 @@ export interface TargetingState {
   items: string[];
 }
 
+export type CreativeType = "image" | "html" | "iframe";
+
 export interface Creative {
   id: string;
   name?: string;
@@ -77,6 +79,14 @@ export interface Creative {
   description?: string;
   /** UI-only flag: the uploaded image dimensions don't match the required size. Not sent to API. */
   sizeMismatch?: boolean;
+  /** UI-only: banner creative content type. Only "image" is persisted to the backend today. */
+  creativeType?: CreativeType;
+  /** UI-only: raw HTML markup (creativeType === "html"). Not sent to API. */
+  htmlCode?: string;
+  /** UI-only: iframe URL (creativeType === "iframe"). Not sent to API. */
+  iframeUrl?: string;
+  /** UI-only: user confirmed the cross-origin iframe matches the banner size. */
+  iframeSizeConfirmed?: boolean;
 }
 
 export const VERTICALS = [

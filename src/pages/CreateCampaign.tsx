@@ -111,15 +111,49 @@ export default function CreateCampaign() {
     // Validate creatives
     creatives.forEach(c => {
       if (!c.name?.trim()) e[`creative_${c.id}_name`] = t("create.required");
-      if (!c.url.trim()) e[`creative_${c.id}_url`] = t("create.required");
-      if (adFormat !== "popunder" && !c.imageUrl) e[`creative_${c.id}_image`] = t("create.required");
+      const type = adFormat === "banner" ? (c.creativeType || "image") : "image";
+      if (adFormat === "banner" && type === "html") {
+        if (!c.htmlCode?.trim()) e[`creative_${c.id}_html`] = t("create.required");
+      } else if (adFormat === "banner" && type === "iframe") {
+        const u = (c.iframeUrl || "").trim();
+        if (!u) e[`creative_${c.id}_iframe`] = t("create.required");
+        else {
+          try { const p = new URL(u); if (p.protocol !== "https:") throw new Error(); }
+          catch { e[`creative_${c.id}_iframe`] = t("create.iframeUrlInvalid"); }
+        }
+      } else {
+        if (!c.url.trim()) e[`creative_${c.id}_url`] = t("create.required");
+        if (adFormat !== "popunder" && !c.imageUrl) e[`creative_${c.id}_image`] = t("create.required");
+      }
       if ((adFormat === "native" || adFormat === "push") && !c.title?.trim()) e[`creative_${c.id}_title`] = t("create.required");
       if ((adFormat === "native" || adFormat === "push") && !c.description?.trim()) e[`creative_${c.id}_description`] = t("create.required");
     });
 
+    // Block advancing when a banner html/iframe creative has a size mismatch.
+    // (Image creatives keep their existing auto-crop confirm flow on the final step.)
+    if (adFormat === "banner") {
+      const badHtmlOrIframe = creatives.find(c => {
+        const type = c.creativeType || "image";
+        return (type === "html" || type === "iframe") && c.sizeMismatch;
+      });
+      if (badHtmlOrIframe) {
+        const key = (badHtmlOrIframe.creativeType === "iframe") ? "iframe" : "html";
+        e[`creative_${badHtmlOrIframe.id}_${key}`] = t("create.required");
+        toast.error(
+          (badHtmlOrIframe.creativeType === "iframe"
+            ? t("create.iframeSizeMismatch")
+            : t("create.htmlSizeMismatch"))
+            .replace("{actualW}", "?").replace("{actualH}", "?")
+            .replace("{w}", String(bannerSize.split("x")[0] || "?"))
+            .replace("{h}", String(bannerSize.split("x")[1] || "?"))
+        );
+      }
+    }
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
+
 
   const parseNum = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
@@ -160,7 +194,7 @@ export default function CreateCampaign() {
     if (step === 1 && !validateStep1()) return;
     if (step === 3) { if (!validateStep3()) return; setStep(4); setErrors({}); return; }
     if (step === 4) {
-      if (creatives.some(c => c.sizeMismatch)) { setConfirmMismatchOpen(true); return; }
+      if (creatives.some(c => (c.creativeType || "image") === "image" && c.sizeMismatch)) { setConfirmMismatchOpen(true); return; }
       await handleCreate();
       return;
     }

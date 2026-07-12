@@ -52,31 +52,57 @@ function ArticleBody({ short = false }: { short?: boolean }) {
   );
 }
 
-function BannerSlot({ size, imageUrl }: { size: string; imageUrl?: string }) {
+function BannerSlot({ size, creative }: { size: string; creative: Creative }) {
   const [w, h] = size.split("x").map(Number);
-  const label = imageUrl ? "" : "Advertisement";
-  const scale = w > 400 ? 400 / w : 1; // shrink 728x90 to fit
+  const scale = w > 400 ? 400 / w : 1;
+  const displayW = w * scale;
+  const displayH = h * scale;
+  const type = creative.creativeType || "image";
+
+  let content: React.ReactNode;
+  if (type === "html" && creative.htmlCode) {
+    content = (
+      <iframe
+        title="html-preview"
+        srcDoc={creative.htmlCode}
+        sandbox="allow-scripts"
+        style={{ width: w, height: h, transform: `scale(${scale})`, transformOrigin: "top left", border: "0" }}
+      />
+    );
+  } else if (type === "iframe" && creative.iframeUrl) {
+    content = (
+      <iframe
+        title="iframe-preview"
+        src={creative.iframeUrl}
+        sandbox="allow-scripts allow-same-origin"
+        style={{ width: w, height: h, transform: `scale(${scale})`, transformOrigin: "top left", border: "0" }}
+      />
+    );
+  } else if (creative.imageUrl) {
+    content = <img src={creative.imageUrl} alt="ad" className="w-full h-full object-cover" />;
+  } else {
+    content = <span>Advertisement {w}×{h}</span>;
+  }
+
   return (
     <div className="my-3 flex justify-center">
       <div
         className="relative border border-slate-300 bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 overflow-hidden"
-        style={{ width: w * scale, height: h * scale }}
+        style={{ width: displayW, height: displayH }}
       >
-        {imageUrl
-          ? <img src={imageUrl} alt="ad" className="w-full h-full object-cover" />
-          : <span>{label} {w}×{h}</span>}
+        {content}
       </div>
     </div>
   );
 }
 
-function BannerPreview({ size, imageUrl }: { size: string; imageUrl?: string }) {
+function BannerPreview({ size, creative }: { size: string; creative: Creative }) {
   const [w, h] = size.split("x").map(Number);
   const isLeaderboard = w >= 468 && h <= 120;
-  const isSidebar = h >= w; // 300x250 or 300x600
+  const isSidebar = h >= w;
   const withSidebar = !isLeaderboard;
 
-  const sidebar = isSidebar ? <BannerSlot size={size} imageUrl={imageUrl} /> : (
+  const sidebar = isSidebar ? <BannerSlot size={size} creative={creative} /> : (
     <>
       <div className="rounded bg-slate-100 h-24" />
       <div className="rounded bg-slate-100 h-24" />
@@ -85,9 +111,9 @@ function BannerPreview({ size, imageUrl }: { size: string; imageUrl?: string }) 
 
   return (
     <FakeSite withSidebar={withSidebar} sidebar={sidebar}>
-      {isLeaderboard && <BannerSlot size={size} imageUrl={imageUrl} />}
+      {isLeaderboard && <BannerSlot size={size} creative={creative} />}
       <ArticleBody short={isSidebar && h > 400} />
-      {!isLeaderboard && !isSidebar && <BannerSlot size={size} imageUrl={imageUrl} />}
+      {!isLeaderboard && !isSidebar && <BannerSlot size={size} creative={creative} />}
     </FakeSite>
   );
 }
@@ -190,7 +216,7 @@ export function CreativePreviewDialog({ open, onClose, formatKey, bannerSize, cr
         </DialogHeader>
 
         {formatKey === "banner" && (
-          <BannerPreview size={size} imageUrl={creative.imageUrl} />
+          <BannerPreview size={size} creative={creative} />
         )}
 
         {formatKey === "push" && (
