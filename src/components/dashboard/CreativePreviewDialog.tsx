@@ -91,10 +91,10 @@ function BannerSlot({ size, creative }: { size: string; creative: Creative }) {
   }
   if (!content) {
     if (creative.imageUrl) {
-  } else if (creative.imageUrl) {
-    content = <img src={creative.imageUrl} alt="ad" className="w-full h-full object-cover" />;
-  } else {
-    content = <span>Advertisement {w}×{h}</span>;
+      content = <img src={creative.imageUrl} alt="ad" className="w-full h-full object-cover" />;
+    } else {
+      content = <span>Advertisement {w}×{h}</span>;
+    }
   }
 
   return (
