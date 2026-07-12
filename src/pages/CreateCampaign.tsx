@@ -194,7 +194,7 @@ export default function CreateCampaign() {
     if (step === 1 && !validateStep1()) return;
     if (step === 3) { if (!validateStep3()) return; setStep(4); setErrors({}); return; }
     if (step === 4) {
-      if (creatives.some(c => c.sizeMismatch)) { setConfirmMismatchOpen(true); return; }
+      if (creatives.some(c => (c.creativeType || "image") === "image" && c.sizeMismatch)) { setConfirmMismatchOpen(true); return; }
       await handleCreate();
       return;
     }
