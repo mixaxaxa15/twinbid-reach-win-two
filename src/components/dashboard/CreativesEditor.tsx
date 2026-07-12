@@ -623,21 +623,61 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
               </div>
             )}
 
-            {/* iframe URL */}
-            {isBanner && type === "iframe" && (
+            {/* iframe (URL or code snippet) */}
+            {isBanner && type === "iframe" && (() => {
+              const iframeMode = creative.iframeMode || "url";
+              const effUrl = getEffectiveIframeUrl(creative);
+              const hasValidEff = effUrl && isValidHttpsUrl(effUrl);
+              return (
               <div className="space-y-2">
-                <Label>{t("create.iframeUrl")}</Label>
-                <Input
-                  value={creative.iframeUrl || ""}
-                  onChange={e => {
-                    updateCreative(creative.id, { iframeUrl: e.target.value, iframeSizeConfirmed: false });
-                    if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_iframe`);
-                    // Reset measurement while URL changes
+                <Tabs
+                  value={iframeMode}
+                  onValueChange={(v) => {
+                    updateCreative(creative.id, { iframeMode: v as "url" | "code", iframeSizeConfirmed: false });
+                    onClearError?.(`creative_${creative.id}_iframe`);
                     setMeasured(prev => { const n = { ...prev }; delete n[creative.id]; return n; });
                   }}
-                  placeholder={t("create.iframeUrlPlaceholder")}
-                  className={`bg-background border-border ${errors[`creative_${creative.id}_iframe`] ? "border-destructive" : ""}`}
-                />
+                >
+                  <TabsList className="bg-background border border-border">
+                    <TabsTrigger value="url">{t("create.iframeModeUrl")}</TabsTrigger>
+                    <TabsTrigger value="code">{t("create.iframeModeCode")}</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                {iframeMode === "url" ? (
+                  <>
+                    <Label>{t("create.iframeUrl")}</Label>
+                    <Input
+                      value={creative.iframeUrl || ""}
+                      onChange={e => {
+                        updateCreative(creative.id, { iframeUrl: e.target.value, iframeSizeConfirmed: false });
+                        if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_iframe`);
+                        setMeasured(prev => { const n = { ...prev }; delete n[creative.id]; return n; });
+                      }}
+                      placeholder={t("create.iframeUrlPlaceholder")}
+                      className={`bg-background border-border ${errors[`creative_${creative.id}_iframe`] ? "border-destructive" : ""}`}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Label>{t("create.iframeCode")}</Label>
+                    <Textarea
+                      value={creative.iframeCode || ""}
+                      onChange={e => {
+                        updateCreative(creative.id, { iframeCode: e.target.value, iframeSizeConfirmed: false });
+                        if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_iframe`);
+                        setMeasured(prev => { const n = { ...prev }; delete n[creative.id]; return n; });
+                      }}
+                      placeholder={t("create.iframeCodePlaceholder")}
+                      rows={5}
+                      className={`bg-background border-border font-mono text-xs ${errors[`creative_${creative.id}_iframe`] ? "border-destructive" : ""}`}
+                    />
+                    {creative.iframeCode?.trim() && !extractIframeSrc(creative.iframeCode) && (
+                      <p className="text-xs text-destructive">{t("create.iframeCodeNoSrc")}</p>
+                    )}
+                  </>
+                )}
+
                 {target && target.mode === "fixed" && (
                   <p className="text-xs text-muted-foreground">
                     {t("create.iframeUrlHint").replace("{w}", String(target.w)).replace("{h}", String(target.h))}
@@ -648,7 +688,8 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                   <Info className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
                   <p className="text-xs text-yellow-500">{t("create.iframeTrackingWarning")}</p>
                 </div>
-                {creative.iframeUrl && isValidHttpsUrl(creative.iframeUrl) && (
+
+                {hasValidEff && (
                   <>
                     <div className="flex items-center gap-3 flex-wrap">
                       <Button type="button" variant="outline" onClick={() => setPreviewCreativeId(creative.id)} className="border-border gap-2">
@@ -658,13 +699,12 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                     </div>
                     {target && target.mode === "fixed" && (
                       <HiddenSizeProbe
-                        url={creative.iframeUrl}
+                        url={effUrl}
                         targetW={target.w}
                         targetH={target.h}
                         onMeasured={(res) => setMeasured(prev => ({ ...prev, [creative.id]: res }))}
                       />
                     )}
-                    {/* Cross-origin: require explicit confirmation */}
                     {target && target.mode === "fixed" && meas?.crossOrigin && (
                       <>
                         <p className="text-xs text-muted-foreground">{t("create.iframeSizeUnknown")}</p>
@@ -679,7 +719,6 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                         </label>
                       </>
                     )}
-                    {/* Same-origin measured mismatch */}
                     {creative.sizeMismatch && target && target.mode === "fixed" && meas && !meas.crossOrigin && (
                       <div className="flex items-start gap-2 p-2 rounded border border-yellow-500/30 bg-yellow-500/10">
                         <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
@@ -694,12 +733,17 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                     )}
                   </>
                 )}
-                {creative.iframeUrl && !isValidHttpsUrl(creative.iframeUrl) && (
+                {iframeMode === "url" && creative.iframeUrl && !isValidHttpsUrl(creative.iframeUrl) && (
+                  <p className="text-xs text-destructive">{t("create.iframeUrlInvalid")}</p>
+                )}
+                {iframeMode === "code" && effUrl && !isValidHttpsUrl(effUrl) && (
                   <p className="text-xs text-destructive">{t("create.iframeUrlInvalid")}</p>
                 )}
                 {errors[`creative_${creative.id}_iframe`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_iframe`]}</p>}
               </div>
-            )}
+              );
+            })()}
+
 
             {/* URL + macros for non-banner formats (push/native), or popunder URL */}
             {!isBanner && (
