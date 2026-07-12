@@ -216,7 +216,7 @@ export function CreativePreviewDialog({ open, onClose, formatKey, bannerSize, cr
         </DialogHeader>
 
         {formatKey === "banner" && (
-          <BannerPreview size={size} imageUrl={creative.imageUrl} />
+          <BannerPreview size={size} creative={creative} />
         )}
 
         {formatKey === "push" && (
