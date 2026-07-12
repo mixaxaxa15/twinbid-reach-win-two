@@ -170,8 +170,20 @@ export default function EditCampaign() {
 
     crvs.forEach(c => {
       if (!c.name?.trim()) e[`creative_${c.id}_name`] = t("create.required");
-      if (!c.url.trim()) e[`creative_${c.id}_url`] = t("create.required");
-      if (campaign.formatKey !== "popunder" && !c.imageUrl) e[`creative_${c.id}_image`] = t("create.required");
+      const type = campaign.formatKey === "banner" ? (c.creativeType || "image") : "image";
+      if (campaign.formatKey === "banner" && type === "html") {
+        if (!c.htmlCode?.trim()) e[`creative_${c.id}_html`] = t("create.required");
+      } else if (campaign.formatKey === "banner" && type === "iframe") {
+        const u = (c.iframeUrl || "").trim();
+        if (!u) e[`creative_${c.id}_iframe`] = t("create.required");
+        else {
+          try { const p = new URL(u); if (p.protocol !== "https:") throw new Error(); }
+          catch { e[`creative_${c.id}_iframe`] = t("create.iframeUrlInvalid"); }
+        }
+      } else {
+        if (!c.url.trim()) e[`creative_${c.id}_url`] = t("create.required");
+        if (campaign.formatKey !== "popunder" && !c.imageUrl) e[`creative_${c.id}_image`] = t("create.required");
+      }
       if ((campaign.formatKey === "native" || campaign.formatKey === "push") && !c.title?.trim()) e[`creative_${c.id}_title`] = t("create.required");
       if ((campaign.formatKey === "native" || campaign.formatKey === "push") && !c.description?.trim()) e[`creative_${c.id}_description`] = t("create.required");
     });
