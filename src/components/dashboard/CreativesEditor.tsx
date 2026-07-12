@@ -121,6 +121,35 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
 ) {
   const { t } = useLanguage();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const htmlFileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const MAX_HTML_BYTES = 1 * 1024 * 1024;
+  const handleHtmlFileUpload = async (creativeId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const name = file.name.toLowerCase();
+    if (!name.endsWith(".html") && !name.endsWith(".htm") && file.type && !file.type.includes("html")) {
+      toast.error(t("create.htmlFileFormatError"));
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MAX_HTML_BYTES) {
+      toast.error(t("create.htmlFileSizeError"));
+      e.target.value = "";
+      return;
+    }
+    try {
+      const text = await file.text();
+      updateCreative(creativeId, { htmlCode: text });
+      onClearError?.(`creative_${creativeId}_html`);
+      toast.success(t("create.htmlFileUploaded"));
+    } catch (err) {
+      console.error("HTML upload error:", err);
+      toast.error(t("create.htmlFileFormatError"));
+    } finally {
+      e.target.value = "";
+    }
+  };
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   // Original source per creative (for re-opening cropper)
@@ -536,7 +565,18 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                     {t("create.htmlCodeHint").replace("{w}", String(target.w)).replace("{h}", String(target.h))}
                   </p>
                 )}
+                <input
+                  ref={el => { htmlFileInputRefs.current[creative.id] = el; }}
+                  type="file" accept=".html,.htm,text/html" className="hidden"
+                  onChange={e => handleHtmlFileUpload(creative.id, e)}
+                />
                 <div className="flex items-center gap-3 flex-wrap">
+                  <Button type="button" variant="outline"
+                    onClick={() => htmlFileInputRefs.current[creative.id]?.click()}
+                    className="border-border gap-2">
+                    <Upload className="h-4 w-4" />
+                    {t("create.uploadHtmlFile")}
+                  </Button>
                   {creative.htmlCode?.trim() && (
                     <Button type="button" variant="outline" onClick={() => setPreviewCreativeId(creative.id)} className="border-border gap-2">
                       <Eye className="h-4 w-4" />
