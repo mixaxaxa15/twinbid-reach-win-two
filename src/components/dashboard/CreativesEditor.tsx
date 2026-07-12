@@ -383,7 +383,8 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
         return c;
       }
       if (type === "iframe") {
-        if (!c.iframeUrl || !isValidHttpsUrl(c.iframeUrl)) {
+        const eff = getEffectiveIframeUrl(c);
+        if (!eff || !isValidHttpsUrl(eff)) {
           if (c.sizeMismatch) { changed = true; return { ...c, sizeMismatch: false }; }
           return c;
         }
@@ -402,7 +403,7 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
     });
     if (changed) onChange(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [measured, formatKey, bannerSize, creatives.map(c => `${c.id}:${c.creativeType}:${c.htmlCode}:${c.iframeUrl}:${c.iframeSizeConfirmed}`).join("|")]);
+  }, [measured, formatKey, bannerSize, creatives.map(c => `${c.id}:${c.creativeType}:${c.iframeMode}:${c.htmlCode}:${c.iframeUrl}:${c.iframeCode}:${c.iframeSizeConfirmed}`).join("|")]);
 
   return (
     <>
