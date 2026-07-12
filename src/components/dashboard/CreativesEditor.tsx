@@ -121,6 +121,35 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
 ) {
   const { t } = useLanguage();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const htmlFileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const MAX_HTML_BYTES = 1 * 1024 * 1024;
+  const handleHtmlFileUpload = async (creativeId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const name = file.name.toLowerCase();
+    if (!name.endsWith(".html") && !name.endsWith(".htm") && file.type && !file.type.includes("html")) {
+      toast.error(t("create.htmlFileFormatError"));
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MAX_HTML_BYTES) {
+      toast.error(t("create.htmlFileSizeError"));
+      e.target.value = "";
+      return;
+    }
+    try {
+      const text = await file.text();
+      updateCreative(creativeId, { htmlCode: text });
+      onClearError?.(`creative_${creativeId}_html`);
+      toast.success(t("create.htmlFileUploaded"));
+    } catch (err) {
+      console.error("HTML upload error:", err);
+      toast.error(t("create.htmlFileFormatError"));
+    } finally {
+      e.target.value = "";
+    }
+  };
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   // Original source per creative (for re-opening cropper)
