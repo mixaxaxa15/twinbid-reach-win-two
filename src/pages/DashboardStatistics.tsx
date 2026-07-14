@@ -923,33 +923,63 @@ export default function DashboardStatistics() {
                 <div className="py-16 text-center text-muted-foreground"><p>{t("stats.noData")}</p></div>
               ) : (
                 <div className="overflow-x-auto overflow-y-hidden">
-                  <table className="w-full table-fixed">
+                  {(() => {
+                    const costCols = 1 + (showCpm ? 1 : 0) + (showCpc ? 1 : 0);
+                    const convCols = showConversions ? (2 + (showConfirmedConversions ? 1 : 0) + (showConfirmedIncome ? 1 : 0) + 1) : 0;
+                    const stickyCell = "sticky left-0 z-10";
+                    const stickyHead = `${stickyCell} bg-card`;
+                    const stickyBody = `${stickyCell} bg-card`;
+                    const stickyAlt  = `${stickyCell} bg-[hsl(var(--muted)/0.3)]`;
+                    // subtle vertical separator between column groups
+                    const sep = "border-l border-border/60";
+                    const fmtMoney = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    const cpmOf = (r: { spent: number; impressions: number }) => r.impressions > 0 ? r.spent / r.impressions * 1000 : 0;
+                    const cpcOf = (r: { spent: number; clicks: number }) => r.clicks > 0 ? r.spent / r.clicks : 0;
+                    return (
+                  <table className="w-full border-collapse">
                     <thead>
+                      {/* Group header row */}
+                      <tr className="border-b border-border/60 text-[11px] uppercase tracking-wide text-muted-foreground/70">
+                        <th className={cn("py-2 px-4 text-left", stickyHead)}></th>
+                        <th colSpan={3} className="py-2 px-4 text-left">{t("stats.groupTraffic")}</th>
+                        <th colSpan={costCols} className={cn("py-2 px-4 text-left", sep)}>{t("stats.groupCost")}</th>
+                        {showConversions && (
+                          <th colSpan={convCols} className={cn("py-2 px-4 text-left", sep)}>{t("stats.groupConversions")}</th>
+                        )}
+                      </tr>
                       <tr className="border-b border-border">
-                        <th className={cn("text-left py-3 px-4 text-sm font-medium text-muted-foreground w-[200px]", canSortByLabel && "cursor-pointer select-none")}
+                        <th className={cn("text-left py-3 px-4 text-sm font-medium text-muted-foreground min-w-[200px] whitespace-nowrap", stickyHead, canSortByLabel && "cursor-pointer select-none")}
                           onClick={() => canSortByLabel && toggleSort("label")}>
                           {labelHeader} {canSortByLabel && <SortIcon col="label" />}
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("impressions")}>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none min-w-[130px] whitespace-nowrap" onClick={() => toggleSort("impressions")}>
                           {t("stats.impressions")} <SortIcon col="impressions" />
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[120px]" onClick={() => toggleSort("clicks")}>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none min-w-[110px] whitespace-nowrap" onClick={() => toggleSort("clicks")}>
                           {t("stats.clicks")} <SortIcon col="clicks" />
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground w-[100px]">{t("stats.ctr")}</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("spent")}>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground min-w-[90px] whitespace-nowrap">{t("stats.ctr")}</th>
+                        <th className={cn("text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none min-w-[130px] whitespace-nowrap", sep)} onClick={() => toggleSort("spent")}>
                           {t("stats.spent")} <SortIcon col="spent" />
                         </th>
+                        {showCpm && <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground min-w-[100px] whitespace-nowrap">{t("stats.cpm")}</th>}
+                        {showCpc && <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground min-w-[100px] whitespace-nowrap">{t("stats.cpc")}</th>}
                         {showConversions && (
                           <>
-                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[130px]" onClick={() => toggleSort("conversions")}>
+                            <th className={cn("text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none min-w-[120px] whitespace-nowrap", sep)} onClick={() => toggleSort("conversions")}>
                               {t("stats.conversions")} <SortIcon col="conversions" />
                             </th>
-                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground w-[100px]">{t("stats.cr")}</th>
-                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none w-[140px]" onClick={() => toggleSort("income")}>
+                            {showConfirmedConversions && (
+                              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground min-w-[130px] whitespace-nowrap">{t("stats.confirmed")}</th>
+                            )}
+                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground min-w-[90px] whitespace-nowrap">{t("stats.cr")}</th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none min-w-[130px] whitespace-nowrap" onClick={() => toggleSort("income")}>
                               {t("stats.income")} <SortIcon col="income" />
                             </th>
-                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground w-[110px]">{t("stats.roi")}</th>
+                            {showConfirmedIncome && (
+                              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground min-w-[140px] whitespace-nowrap">{t("stats.confirmed")}</th>
+                            )}
+                            <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground min-w-[100px] whitespace-nowrap">{t("stats.roi")}</th>
                           </>
                         )}
                       </tr>
@@ -960,47 +990,57 @@ export default function DashboardStatistics() {
                         const roiNum = row.spent > 0 ? ((row.income - row.spent) / row.spent) * 100 : 0;
                         const roi = row.spent > 0 ? roiNum.toFixed(2) : "0.00";
                         return (
-                        <tr key={row.label} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                          <td className="py-3 px-4 font-medium truncate">
+                        <tr key={row.label} className="group border-b border-border/50 hover:bg-muted/50 transition-colors">
+                          <td className={cn("py-3 px-4 font-medium whitespace-nowrap", stickyBody, "group-hover:bg-muted/50")}>
                             {appliedGroupBy === "country" ? formatCountryLabel(row.label, lang) : row.label}
                           </td>
-                          <td className="py-3 px-4">{row.impressions.toLocaleString()}</td>
-                          <td className="py-3 px-4">{row.clicks.toLocaleString()}</td>
-                          <td className="py-3 px-4">{row.impressions > 0 ? ((row.clicks / row.impressions) * 100).toFixed(2) : "0.00"}%</td>
-                          <td className="py-3 px-4">${row.spent.toLocaleString()}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{row.impressions.toLocaleString()}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{row.clicks.toLocaleString()}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{row.impressions > 0 ? ((row.clicks / row.impressions) * 100).toFixed(2) : "0.00"}%</td>
+                          <td className={cn("py-3 px-4 whitespace-nowrap", sep)}>{fmtMoney(row.spent)}</td>
+                          {showCpm && <td className="py-3 px-4 whitespace-nowrap">{fmtMoney(cpmOf(row))}</td>}
+                          {showCpc && <td className="py-3 px-4 whitespace-nowrap">{fmtMoney(cpcOf(row))}</td>}
                           {showConversions && (
                             <>
-                              <td className="py-3 px-4">{row.conversions.toLocaleString()}</td>
-                              <td className="py-3 px-4">{cr}%</td>
-                              <td className="py-3 px-4">${row.income.toLocaleString()}</td>
-                              <td className={cn("py-3 px-4 font-medium", roiNum > 0 ? "text-emerald-500" : roiNum < 0 ? "text-red-500" : "")}>{roi}%</td>
+                              <td className={cn("py-3 px-4 whitespace-nowrap", sep)}>{row.conversions.toLocaleString()}</td>
+                              {showConfirmedConversions && <td className="py-3 px-4 whitespace-nowrap">{row.confirmedConversions.toLocaleString()}</td>}
+                              <td className="py-3 px-4 whitespace-nowrap">{cr}%</td>
+                              <td className="py-3 px-4 whitespace-nowrap">{fmtMoney(row.income)}</td>
+                              {showConfirmedIncome && <td className="py-3 px-4 whitespace-nowrap">{fmtMoney(row.confirmedIncome)}</td>}
+                              <td className={cn("py-3 px-4 whitespace-nowrap font-medium", roiNum > 0 ? "text-emerald-500" : roiNum < 0 ? "text-red-500" : "")}>{roi}%</td>
                             </>
                           )}
                         </tr>
                         );
                       })}
                       <tr className="bg-muted/30 font-semibold">
-                        <td className="py-3 px-4">{t("stats.total")}</td>
-                        <td className="py-3 px-4">{totals.impressions.toLocaleString()}</td>
-                        <td className="py-3 px-4">{totals.clicks.toLocaleString()}</td>
-                        <td className="py-3 px-4">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
-                        <td className="py-3 px-4">${totals.spent.toLocaleString()}</td>
+                        <td className={cn("py-3 px-4 whitespace-nowrap", stickyAlt)}>{t("stats.total")}</td>
+                        <td className="py-3 px-4 whitespace-nowrap">{totals.impressions.toLocaleString()}</td>
+                        <td className="py-3 px-4 whitespace-nowrap">{totals.clicks.toLocaleString()}</td>
+                        <td className="py-3 px-4 whitespace-nowrap">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
+                        <td className={cn("py-3 px-4 whitespace-nowrap", sep)}>{fmtMoney(totals.spent)}</td>
+                        {showCpm && <td className="py-3 px-4 whitespace-nowrap">{fmtMoney(cpmOf(totals))}</td>}
+                        {showCpc && <td className="py-3 px-4 whitespace-nowrap">{fmtMoney(cpcOf(totals))}</td>}
                         {showConversions && (() => {
                           const cr = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) : "0.00";
                           const roiNum = totals.spent > 0 ? ((totals.income - totals.spent) / totals.spent) * 100 : 0;
                           const roi = totals.spent > 0 ? roiNum.toFixed(2) : "0.00";
                           return (
                             <>
-                              <td className="py-3 px-4">{totals.conversions.toLocaleString()}</td>
-                              <td className="py-3 px-4">{cr}%</td>
-                              <td className="py-3 px-4">${totals.income.toLocaleString()}</td>
-                              <td className={cn("py-3 px-4", roiNum > 0 ? "text-emerald-500" : roiNum < 0 ? "text-red-500" : "")}>{roi}%</td>
+                              <td className={cn("py-3 px-4 whitespace-nowrap", sep)}>{totals.conversions.toLocaleString()}</td>
+                              {showConfirmedConversions && <td className="py-3 px-4 whitespace-nowrap">{totals.confirmedConversions.toLocaleString()}</td>}
+                              <td className="py-3 px-4 whitespace-nowrap">{cr}%</td>
+                              <td className="py-3 px-4 whitespace-nowrap">{fmtMoney(totals.income)}</td>
+                              {showConfirmedIncome && <td className="py-3 px-4 whitespace-nowrap">{fmtMoney(totals.confirmedIncome)}</td>}
+                              <td className={cn("py-3 px-4 whitespace-nowrap", roiNum > 0 ? "text-emerald-500" : roiNum < 0 ? "text-red-500" : "")}>{roi}%</td>
                             </>
                           );
                         })()}
                       </tr>
                     </tbody>
                   </table>
+                    );
+                  })()}
                 </div>
               )}
             </CardContent>
