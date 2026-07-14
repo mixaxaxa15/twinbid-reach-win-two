@@ -62,7 +62,7 @@ export default function CreateCampaign() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [evenSpend, setEvenSpend] = useState(false);
-  const [conversionPayout, setConversionPayout] = useState("");
+  
   const savedAsDraft = useRef(false);
   const [isCreating, setIsCreating] = useState(false);
   const [confirmMismatchOpen, setConfirmMismatchOpen] = useState(false);
