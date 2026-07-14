@@ -1017,8 +1017,8 @@ export default function DashboardStatistics() {
                           <td className="py-2 px-2 whitespace-nowrap">{row.clicks.toLocaleString()}</td>
                           <td className="py-2 px-2 whitespace-nowrap">{row.impressions > 0 ? ((row.clicks / row.impressions) * 100).toFixed(2) : "0.00"}%</td>
                           <td className={cn("py-2 px-2 whitespace-nowrap", sep)}>{fmtMoney(row.spent)}</td>
-                          {showCpm && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney4(cpmOf(row))}</td>}
-                          {showCpc && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney4(cpcOf(row))}</td>}
+                          {showCpm && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney2(cpmOf(row))}</td>}
+                          {showCpc && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney5(cpcOf(row))}</td>}
                           {showConversions && (
                             <>
                               <td className={cn("py-2 px-2 whitespace-nowrap", sep)}>{row.conversions.toLocaleString()}</td>
