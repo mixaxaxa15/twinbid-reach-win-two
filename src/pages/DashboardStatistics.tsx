@@ -972,8 +972,16 @@ export default function DashboardStatistics() {
                         <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", sep)} onClick={() => toggleSort("spent")}>
                           {t("stats.spent")} <SortIcon col="spent" />
                         </th>
-                        {showCpm && <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap">{t("stats.cpm")}</th>}
-                        {showCpc && <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap">{t("stats.cpc")}</th>}
+                        {showCpm && (
+                          <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("cpm")}>
+                            {t("stats.cpm")} <SortIcon col="cpm" />
+                          </th>
+                        )}
+                        {showCpc && (
+                          <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("cpc")}>
+                            {t("stats.cpc")} <SortIcon col="cpc" />
+                          </th>
+                        )}
                         {showConversions && (
                           <>
                             <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", sep)} onClick={() => toggleSort("conversions")}>
