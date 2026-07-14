@@ -31,7 +31,7 @@ type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "c
 type SortKey = "label" | "impressions" | "clicks" | "spent" | "conversions" | "income";
 type SortDir = "asc" | "desc";
 
-interface UiRow { label: string; impressions: number; clicks: number; spent: number; conversions: number; income: number; }
+interface UiRow { label: string; impressions: number; clicks: number; spent: number; conversions: number; income: number; confirmedConversions: number; confirmedIncome: number; }
 
 // UI groupBy → ClickHouse group_by + bucket key in the response row.
 const GROUP_MAP: Record<GroupBy, { api: StatsGroupBy }> = {
@@ -147,6 +147,10 @@ export default function DashboardStatistics() {
     appliedFilterDevice, setAppliedFilterDevice,
     appliedFilterOS, setAppliedFilterOS,
     showConversions, setShowConversions,
+    showCpm, setShowCpm,
+    showCpc, setShowCpc,
+    showConfirmedConversions, setShowConfirmedConversions,
+    showConfirmedIncome, setShowConfirmedIncome,
   } = useStatistics();
 
   const appliedGroupBy = groupBy;
@@ -299,18 +303,20 @@ export default function DashboardStatistics() {
       })
       .then(res => {
       if (cancelled || !res) return;
-      const byKey = new Map<string, { impressions: number; clicks: number; spent: number; conversions: number; income: number }>();
+      const byKey = new Map<string, { impressions: number; clicks: number; spent: number; conversions: number; income: number; confirmedConversions: number; confirmedIncome: number }>();
       for (const [key, m] of Object.entries(res.rows)) {
-        const extra = m as unknown as { conversions?: number; income?: number; revenue?: number };
+        const extra = m as unknown as { conversions?: number; income?: number; revenue?: number; confirmed_conversions?: number; confirmed_income?: number; confirmed_revenue?: number };
         byKey.set(key, {
           impressions: Number(m.impressions) || 0,
           clicks: Number(m.clicks) || 0,
           spent: Number(m.spent) || 0,
           conversions: Number(extra.conversions) || 0,
           income: Number(extra.income ?? extra.revenue) || 0,
+          confirmedConversions: Number(extra.confirmed_conversions) || 0,
+          confirmedIncome: Number(extra.confirmed_income ?? extra.confirmed_revenue) || 0,
         });
       }
-      const empty = { impressions: 0, clicks: 0, spent: 0, conversions: 0, income: 0 };
+      const empty = { impressions: 0, clicks: 0, spent: 0, conversions: 0, income: 0, confirmedConversions: 0, confirmedIncome: 0 };
       let rows: UiRow[];
       if (apiGroup === "hour") {
         const keys: string[] = [];
@@ -362,6 +368,8 @@ export default function DashboardStatistics() {
             acc.spent += m.spent;
             acc.conversions += m.conversions;
             acc.income += m.income;
+            acc.confirmedConversions += m.confirmedConversions;
+            acc.confirmedIncome += m.confirmedIncome;
             grouped.set(groupKey, acc);
           }
           rows = Array.from(grouped.entries())
@@ -493,6 +501,8 @@ export default function DashboardStatistics() {
     spent: sortedData.reduce((s, r) => s + r.spent, 0),
     conversions: sortedData.reduce((s, r) => s + r.conversions, 0),
     income: sortedData.reduce((s, r) => s + r.income, 0),
+    confirmedConversions: sortedData.reduce((s, r) => s + r.confirmedConversions, 0),
+    confirmedIncome: sortedData.reduce((s, r) => s + r.confirmedIncome, 0),
   }), [sortedData]);
 
   const labelHeader = appliedGroupBy === "dates" ? t("stats.date") : appliedGroupBy === "hours" ? t("stats.dateAndHour") : appliedGroupBy === "browsers" ? t("stats.browser") : appliedGroupBy === "siteid" ? "SiteID" : appliedGroupBy === "os" ? t("stats.os") : appliedGroupBy === "country" ? t("stats.country") : t("stats.device");
