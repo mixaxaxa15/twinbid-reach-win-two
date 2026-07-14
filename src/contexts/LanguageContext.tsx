@@ -525,6 +525,15 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "stats.cr": { ru: "CR", en: "CR" },
   "stats.income": { ru: "Доход", en: "Income" },
   "stats.roi": { ru: "ROI", en: "ROI" },
+  "stats.cpm": { ru: "CPM", en: "CPM" },
+  "stats.cpc": { ru: "CPC", en: "CPC" },
+  "stats.confirmed": { ru: "Подтв.", en: "Confirmed" },
+  "stats.confirmedConversions": { ru: "Подтв. конверсии", en: "Confirmed conversions" },
+  "stats.confirmedIncome": { ru: "Подтв. доход", en: "Confirmed income" },
+  "stats.columns": { ru: "Колонки", en: "Columns" },
+  "stats.groupTraffic": { ru: "Трафик", en: "Traffic" },
+  "stats.groupCost": { ru: "Стоимость", en: "Cost" },
+  "stats.groupConversions": { ru: "Конверсии", en: "Conversions" },
 
   // Edit Campaign
   "edit.title": { ru: "Редактирование кампании", en: "Edit campaign" },

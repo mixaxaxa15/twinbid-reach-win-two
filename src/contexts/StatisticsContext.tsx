@@ -47,6 +47,14 @@ interface StatisticsState {
   setAppliedFilterOS: React.Dispatch<React.SetStateAction<Set<string>>>;
   showConversions: boolean;
   setShowConversions: React.Dispatch<React.SetStateAction<boolean>>;
+  showCpm: boolean;
+  setShowCpm: React.Dispatch<React.SetStateAction<boolean>>;
+  showCpc: boolean;
+  setShowCpc: React.Dispatch<React.SetStateAction<boolean>>;
+  showConfirmedConversions: boolean;
+  setShowConfirmedConversions: React.Dispatch<React.SetStateAction<boolean>>;
+  showConfirmedIncome: boolean;
+  setShowConfirmedIncome: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const StatisticsContext = createContext<StatisticsState | null>(null);
@@ -72,6 +80,10 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
   const [appliedFilterDevice, setAppliedFilterDevice] = useState<Set<string>>(new Set());
   const [appliedFilterOS, setAppliedFilterOS] = useState<Set<string>>(new Set());
   const [showConversions, setShowConversions] = useState(false);
+  const [showCpm, setShowCpm] = useState(true);
+  const [showCpc, setShowCpc] = useState(true);
+  const [showConfirmedConversions, setShowConfirmedConversions] = useState(true);
+  const [showConfirmedIncome, setShowConfirmedIncome] = useState(true);
 
   return (
     <StatisticsContext.Provider value={{
@@ -95,6 +107,10 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
       appliedFilterDevice, setAppliedFilterDevice,
       appliedFilterOS, setAppliedFilterOS,
       showConversions, setShowConversions,
+      showCpm, setShowCpm,
+      showCpc, setShowCpc,
+      showConfirmedConversions, setShowConfirmedConversions,
+      showConfirmedIncome, setShowConfirmedIncome,
     }}>
       {children}
     </StatisticsContext.Provider>
