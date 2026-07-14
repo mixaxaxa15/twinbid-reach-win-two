@@ -256,7 +256,7 @@ export default function EditCampaign() {
         priceValue: pv, pricingModel, trafficQuality, startDate, endDate, evenSpend, status: newStatus,
         bannerSize: showBannerSize ? bannerSize : undefined,
         brandName: showBrandName ? brandName : undefined,
-        conversionPayout: conversionPayout ? parseNum(conversionPayout) : null,
+        
       });
     } catch (err: any) {
       toast.error(`${t("edit.saveFailed") || "Failed to save campaign"}: ${err?.message || err}`);
