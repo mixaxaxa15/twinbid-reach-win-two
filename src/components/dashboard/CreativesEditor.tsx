@@ -471,8 +471,8 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
               </div>
             )}
 
-            {/* URL + macros: only for image type (banner) and for non-banner formats. */}
-            {type === "image" && (
+            {/* URL + macros for banner image type. Non-banner formats render URL in the block below. */}
+            {isBanner && type === "image" && (
               <div className="space-y-2">
                 <Label>{t("create.creativeUrl")} *</Label>
                 <Input value={creative.url} onChange={e => { updateCreative(creative.id, { url: e.target.value }); if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_url`); }}
