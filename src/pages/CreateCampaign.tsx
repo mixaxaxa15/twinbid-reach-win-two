@@ -62,7 +62,7 @@ export default function CreateCampaign() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [evenSpend, setEvenSpend] = useState(false);
-  const [conversionPayout, setConversionPayout] = useState("");
+  
   const savedAsDraft = useRef(false);
   const [isCreating, setIsCreating] = useState(false);
   const [confirmMismatchOpen, setConfirmMismatchOpen] = useState(false);
@@ -229,7 +229,6 @@ export default function CreateCampaign() {
         targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
         evenSpend, bannerSize: adFormat === "banner" ? bannerSize : undefined,
         brandName: showBrandName ? brandName : undefined,
-        conversionPayout: conversionPayout ? parseNum(conversionPayout) : null,
       });
       if (!id) {
         toast.error(t("create.failed") || "Failed to create campaign");
@@ -267,7 +266,6 @@ export default function CreateCampaign() {
         targeting: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, { mode: v.mode, items: v.items }])),
         evenSpend, bannerSize: adFormat === "banner" ? bannerSize : undefined,
         brandName: showBrandName ? brandName : undefined,
-        conversionPayout: conversionPayout ? parseNum(conversionPayout) : null,
       });
     } catch (e: any) {
       toast.error(`${t("create.failed") || "Failed to save draft"}: ${e?.message || e}`);
@@ -421,7 +419,7 @@ export default function CreateCampaign() {
             />
           )}
 
-          {step === 4 && <PostbackSection payout={conversionPayout} onPayoutChange={setConversionPayout} />}
+          {step === 4 && <PostbackSection />}
         </CardContent>
       </Card>
 
