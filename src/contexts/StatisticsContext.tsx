@@ -3,7 +3,7 @@ import type { DateRange } from "react-day-picker";
 
 type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "country";
 type ChartMetric = "impressions" | "clicks" | "spent";
-type SortKey = "label" | "impressions" | "clicks" | "spent" | "conversions" | "income";
+type SortKey = "label" | "impressions" | "clicks" | "spent" | "cpm" | "cpc" | "conversions" | "income";
 type SortDir = "asc" | "desc";
 
 interface StatisticsState {

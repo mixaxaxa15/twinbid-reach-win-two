@@ -28,7 +28,7 @@ import { api } from "@/api";
 import type { StatsGroupBy, StatsFilterBy } from "@/api/types";
 
 type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "country";
-type SortKey = "label" | "impressions" | "clicks" | "spent" | "conversions" | "income";
+type SortKey = "label" | "impressions" | "clicks" | "spent" | "cpm" | "cpc" | "conversions" | "income";
 type SortDir = "asc" | "desc";
 
 interface UiRow { label: string; impressions: number; clicks: number; spent: number; conversions: number; income: number; confirmedConversions: number; confirmedIncome: number; }
@@ -475,9 +475,18 @@ export default function DashboardStatistics() {
   }, [data, appliedGroupBy]);
 
   const sortedData = useMemo(() => {
+    if (sortKey === "label") {
+      return [...data].sort((a, b) => sortDir === "asc" ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label));
+    }
+    const valueOf = (r: UiRow): number => {
+      if (sortKey === "cpm") return r.impressions > 0 ? r.spent / r.impressions * 1000 : 0;
+      if (sortKey === "cpc") return r.clicks > 0 ? r.spent / r.clicks : 0;
+      return r[sortKey];
+    };
     return [...data].sort((a, b) => {
-      if (sortKey === "label") return sortDir === "asc" ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label);
-      return sortDir === "desc" ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey];
+      const av = valueOf(a);
+      const bv = valueOf(b);
+      return sortDir === "desc" ? bv - av : av - bv;
     });
   }, [data, sortKey, sortDir]);
 
@@ -963,8 +972,16 @@ export default function DashboardStatistics() {
                         <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", sep)} onClick={() => toggleSort("spent")}>
                           {t("stats.spent")} <SortIcon col="spent" />
                         </th>
-                        {showCpm && <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap">{t("stats.cpm")}</th>}
-                        {showCpc && <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap">{t("stats.cpc")}</th>}
+                        {showCpm && (
+                          <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("cpm")}>
+                            {t("stats.cpm")} <SortIcon col="cpm" />
+                          </th>
+                        )}
+                        {showCpc && (
+                          <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("cpc")}>
+                            {t("stats.cpc")} <SortIcon col="cpc" />
+                          </th>
+                        )}
                         {showConversions && (
                           <>
                             <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", sep)} onClick={() => toggleSort("conversions")}>
