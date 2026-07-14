@@ -419,7 +419,7 @@ export default function CreateCampaign() {
             />
           )}
 
-          {step === 4 && <PostbackSection payout={conversionPayout} onPayoutChange={setConversionPayout} />}
+          {step === 4 && <PostbackSection />}
         </CardContent>
       </Card>
 
