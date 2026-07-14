@@ -1,84 +1,72 @@
-## Что добавить
+## Goal
 
-В создание/редактирование **баннерного** креатива добавить выбор типа контента и превью, только на фронте (без изменений API).
+Add four new metrics as **real columns** in the Statistics table (visible for every grouping), without cards:
 
-### 1. Переключатель типа креатива (только для формата `banner`)
+- **CPM** = spent / impressions × 1000
+- **CPC** = spent / clicks
+- **Confirmed conversions** (subset of conversions, only in conversion mode)
+- **Confirmed income** (subset of income, only in conversion mode)
 
-В `CreativesEditor.tsx` — Tabs / SegmentedControl над полями:
-- **Изображение** (текущее поведение: URL + макросы + загрузка картинки)
-- **HTML-код**
-- **iframe**
+## Anti-clutter strategy
 
-Тип хранится в поле `creativeType: "image" | "html" | "iframe"` в интерфейсе `Creative` (`CampaignContext.tsx`). Все новые поля — UI-only, в API не отправляются.
+Base mode goes from 5 → 7 columns, conversion mode from 9 → 13. To keep it readable:
 
-### 2. Поля для каждого типа
+1. **Sticky first column** (`label`) so scrolling right keeps context.
+2. **Horizontal scroll** on the table wrapper (already `overflow-x-auto`) — remove `table-fixed` and let columns size to content; set sensible `min-w-*` per column instead of hard `w-[...]` so wide screens still fit everything.
+3. **Column groups in the header**: add a thin second header row that groups columns:
+   - `Traffic` → Impressions, Clicks, CTR
+   - `Cost` → Spent, CPM, CPC
+   - `Conversions` (only in conversion mode) → Conversions, Confirmed, CR, Income, Confirmed income, ROI
 
-Общее для всех типов: **Название креатива** (как сейчас).
+   Visual separator (subtle vertical border) between groups so the eye parses blocks instead of a wall of numbers.
+4. **Compact numeric formatting**: CPM/CPC use `$0.00` (2 decimals). Confirmed columns share the same formatting as their parent (`toLocaleString()` / `$`).
+5. **Column picker** (small "Columns" popover next to the "Rows" selector) to hide/show CPM, CPC, Confirmed conversions, Confirmed income individually. Defaults: all on. Preference persisted in `StatisticsContext` so it survives navigation like the other filters. This lets power users trim the table if they don't want everything.
+6. KPI cards stay untouched (user explicitly asked to keep them out).
 
-**Изображение (без изменений):**
-- URL лендинга + макросы (`{click_id}` и т.д.) + загрузка/кроп картинки.
+```text
+┌──────────┬──── Traffic ────┬──── Cost ────┬──────── Conversions ────────┐
+│ Date     │ Impr  Clicks CTR │ Spent CPM CPC│ Conv Confirmed CR Income Confirmed ROI │
+└──────────┴─────────────────┴──────────────┴─────────────────────────────┘
+```
 
-**HTML-код:**
-- Только `<Textarea>` для HTML-кода (моно-шрифт, min 8 строк).
-- Хинт: `Вставьте полный HTML-код баннера. Убедитесь, что размер контента совпадает с {w}×{h}px`.
-- **URL лендинга и блок макросов НЕ показываются.**
-- Поле `htmlCode: string`.
+## Scope (frontend only, presentation)
 
-**iframe:**
-- Только `<Input>` для URL iframe (валидация https).
-- **URL лендинга и блок макросов НЕ показываются.**
-- Поле `iframeUrl: string`.
-- Жёлтый info-блок:
-  > Клики внутри iframe не отслеживаются TwinBid и не будут отображаться в статистике кампании. Для настройки отслеживания через редиректы на нашу ссылку обратитесь к менеджеру.
+### 1. `src/pages/DashboardStatistics.tsx`
 
-### 3. Валидация размера (для html / iframe)
+- Extend `UiRow` (line 34) with `confirmedConversions?: number`, `confirmedIncome?: number`. CPM/CPC are derived, not stored.
+- Response parser (lines 302–312): read `confirmed_conversions` / `confirmed_income` (with `confirmed_revenue` alias), default `0`.
+- Grouped aggregation (lines 356–365) and hour/date fill loops: sum the two new fields alongside `conversions`/`income`.
+- `totals` memo (lines 490–496): sum the two new fields.
+- Table (lines 865–946):
+  - Remove `table-fixed`; give each `<th>` a `min-w-*` and `whitespace-nowrap`.
+  - First column becomes sticky: `sticky left-0 bg-card z-10` (and `bg-muted/30` variant for the totals row) so it stays put during horizontal scroll.
+  - Add a small header group row (Traffic / Cost / Conversions) using `colspan`.
+  - New columns:
+    - **CPM** — `${(spent / impressions * 1000).toFixed(2)}` (or `$0.00`), placed after Spent.
+    - **CPC** — `${(spent / clicks).toFixed(2)}`, after CPM.
+    - **Confirmed** (conversions) — after Conversions.
+    - **Confirmed income** — after Income.
+  - Totals row mirrors all new cells.
+- Add small **Columns** popover next to the "Rows" selector (lines 843–857) with four checkboxes: CPM, CPC, Confirmed conv., Confirmed income. Each column render is gated by its flag.
+- CSV export: mirror the visible columns (all of them when all toggles are on), so exports match what the user sees.
 
-Рендерим контент во внеэкранном контейнере фиксированного размера баннера и измеряем реальный размер:
+### 2. `src/contexts/StatisticsContext.tsx`
 
-- **HTML**: `<iframe srcDoc={htmlCode} sandbox="allow-scripts">`; после `load` берём `contentDocument.documentElement.scrollWidth/scrollHeight`.
-- **iframe**: пробуем то же; если cross-origin (нет доступа к DOM) — просим явное подтверждение чекбоксом «Мой iframe имеет размер {w}×{h}px» (иначе `sizeMismatch=true`).
+- Add persisted flags: `showCpm`, `showCpc`, `showConfirmedConversions`, `showConfirmedIncome` (default `true` each) with matching setters, wired the same way as `showConversions`.
 
-Существующая блокировка «Далее» при `creatives.some(c => c.sizeMismatch)` уже сработает.
+### 3. Translations — `src/contexts/LanguageContext.tsx` + `src/lib/translations-es.ts`
 
-Валидация обязательности:
-- `image`: как сейчас (`imageUrl` + `url`).
-- `html`: `htmlCode` не пуст; `url` и `imageUrl` не проверяются.
-- `iframe`: `iframeUrl` валидный https-URL; `url` и `imageUrl` не проверяются.
+New keys: `stats.cpm`, `stats.cpc`, `stats.confirmed` (short "Confirmed" / "Подтв." / "Confirm."), `stats.confirmedIncome`, `stats.columns`, `stats.groupTraffic`, `stats.groupCost`, `stats.groupConversions`. EN / RU / ES.
 
-Кнопки «Обрезать» и AutoCropConfirmDialog доступны только для `image`.
+### 4. Files touched
 
-### 4. Превью
+- `src/pages/DashboardStatistics.tsx`
+- `src/contexts/StatisticsContext.tsx`
+- `src/contexts/LanguageContext.tsx`
+- `src/lib/translations-es.ts`
 
-В `CreativePreviewDialog.tsx` расширяем `BannerSlot`, чтобы принимать `creative` целиком:
-- `image` → `<img>` (текущее).
-- `html` → `<iframe srcDoc={htmlCode} sandbox="allow-scripts">` фиксированного размера баннера.
-- `iframe` → `<iframe src={iframeUrl} sandbox="allow-scripts allow-same-origin">`.
+## Out of scope
 
-Кнопка «Предпросмотр» доступна для всех трёх типов, когда соответствующее поле заполнено.
-
-### 5. Переводы (EN/RU/ES)
-
-`LanguageContext.tsx` и `translations-es.ts`:
-- `create.creativeTypeImage/Html/Iframe`
-- `create.htmlCode`, `create.htmlCodeHint`, `create.htmlCodeRequired`
-- `create.iframeUrl`, `create.iframeUrlHint`, `create.iframeUrlInvalid`
-- `create.iframeTrackingWarning` (полный текст про статистику и менеджера)
-- `create.iframeSizeConfirm`
-- `create.htmlSizeMismatch` / `create.iframeSizeMismatch`
-
-### 6. Что НЕ меняется
-
-- API-контракт, `CampaignContext` mapping в/из API (новые поля живут только в памяти UI).
-- Форматы `push` / `native` / `popunder` — только `banner`.
-- Существующая логика image cropper и требований к размеру картинки.
-
-## Технические детали
-
-**Файлы:**
-- `src/contexts/CampaignContext.tsx` — расширить `Creative`: `creativeType?`, `htmlCode?`, `iframeUrl?`, `iframeSizeConfirmed?`.
-- `src/components/dashboard/CreativesEditor.tsx` — Tabs типа, условный рендер (URL + макросы + картинка / textarea / iframe input), измерение размера через скрытый iframe, обновление `sizeMismatch`.
-- `src/components/dashboard/CreativePreviewDialog.tsx` — расширить `BannerSlot` для html/iframe.
-- `src/pages/CreateCampaign.tsx` и `src/pages/EditCampaign.tsx` — обновить `validate()`: ветвление по `creativeType`.
-- `src/contexts/LanguageContext.tsx`, `src/lib/translations-es.ts` — переводы.
-
-**Безопасность:** iframe всегда с `sandbox`; для user-HTML — без `allow-same-origin` в превью (только для измерения размера временный `allow-same-origin`). Никакого `dangerouslySetInnerHTML`.
+- Backend / ClickHouse changes. Frontend reads new fields opportunistically; until backend supplies them, Confirmed columns render `0` — the layout is what the user wants to see now.
+- Sorting on CPM / CPC / Confirmed (derived values). Existing sort keys stay.
+- Overview / Campaigns pages.
