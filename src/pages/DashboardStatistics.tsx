@@ -511,27 +511,49 @@ export default function DashboardStatistics() {
   const handleDownloadCsv = useCallback(() => {
     if (!sortedData.length) return;
     const baseHeaders = [labelHeader, t("stats.impressions"), t("stats.clicks"), t("stats.ctr"), t("stats.spent")];
-    const convHeaders = [t("stats.conversions"), t("stats.cr"), t("stats.income"), t("stats.roi")];
+    if (showCpm) baseHeaders.push(t("stats.cpm"));
+    if (showCpc) baseHeaders.push(t("stats.cpc"));
+    const convHeaders: string[] = [t("stats.conversions")];
+    if (showConfirmedConversions) convHeaders.push(t("stats.confirmedConversions"));
+    convHeaders.push(t("stats.cr"), t("stats.income"));
+    if (showConfirmedIncome) convHeaders.push(t("stats.confirmedIncome"));
+    convHeaders.push(t("stats.roi"));
     const headers = showConversions ? [...baseHeaders, ...convHeaders] : baseHeaders;
     const escape = (v: string | number) => {
       const s = String(v);
       return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
+    const cpmOf = (r: { spent: number; impressions: number }) => r.impressions > 0 ? (r.spent / r.impressions * 1000).toFixed(2) : "0.00";
+    const cpcOf = (r: { spent: number; clicks: number }) => r.clicks > 0 ? (r.spent / r.clicks).toFixed(2) : "0.00";
     const rows = sortedData.map(r => {
       const label = appliedGroupBy === "country" ? formatCountryLabel(r.label, lang) : r.label;
       const ctr = r.impressions > 0 ? ((r.clicks / r.impressions) * 100).toFixed(2) + "%" : "0.00%";
-      const base = [label, r.impressions, r.clicks, ctr, r.spent.toFixed(2)];
+      const base: (string | number)[] = [label, r.impressions, r.clicks, ctr, r.spent.toFixed(2)];
+      if (showCpm) base.push(cpmOf(r));
+      if (showCpc) base.push(cpcOf(r));
       if (!showConversions) return base.map(escape).join(",");
       const cr = r.clicks > 0 ? ((r.conversions / r.clicks) * 100).toFixed(2) + "%" : "0.00%";
       const roi = r.spent > 0 ? (((r.income - r.spent) / r.spent) * 100).toFixed(2) + "%" : "0.00%";
-      return [...base, r.conversions, cr, r.income.toFixed(2), roi].map(escape).join(",");
+      const conv: (string | number)[] = [r.conversions];
+      if (showConfirmedConversions) conv.push(r.confirmedConversions);
+      conv.push(cr, r.income.toFixed(2));
+      if (showConfirmedIncome) conv.push(r.confirmedIncome.toFixed(2));
+      conv.push(roi);
+      return [...base, ...conv].map(escape).join(",");
     });
     const ctrTotal = totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) + "%" : "0.00%";
-    const baseTotal = [t("stats.total"), totals.impressions, totals.clicks, ctrTotal, totals.spent.toFixed(2)];
+    const baseTotal: (string | number)[] = [t("stats.total"), totals.impressions, totals.clicks, ctrTotal, totals.spent.toFixed(2)];
+    if (showCpm) baseTotal.push(cpmOf(totals));
+    if (showCpc) baseTotal.push(cpcOf(totals));
     const crTotal = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) + "%" : "0.00%";
     const roiTotal = totals.spent > 0 ? (((totals.income - totals.spent) / totals.spent) * 100).toFixed(2) + "%" : "0.00%";
+    const convTotal: (string | number)[] = [totals.conversions];
+    if (showConfirmedConversions) convTotal.push(totals.confirmedConversions);
+    convTotal.push(crTotal, totals.income.toFixed(2));
+    if (showConfirmedIncome) convTotal.push(totals.confirmedIncome.toFixed(2));
+    convTotal.push(roiTotal);
     const totalsRow = (showConversions
-      ? [...baseTotal, totals.conversions, crTotal, totals.income.toFixed(2), roiTotal]
+      ? [...baseTotal, ...convTotal]
       : baseTotal
     ).map(escape).join(",");
     const csv = "\uFEFF" + [headers.map(escape).join(","), ...rows, totalsRow].join("\n");
@@ -545,7 +567,7 @@ export default function DashboardStatistics() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [sortedData, totals, labelHeader, appliedGroupBy, lang, t, showConversions]);
+  }, [sortedData, totals, labelHeader, appliedGroupBy, lang, t, showConversions, showCpm, showCpc, showConfirmedConversions, showConfirmedIncome]);
 
   // Custom tooltip for hours chart
   const HoursTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value?: number }>; label?: string }) => {
