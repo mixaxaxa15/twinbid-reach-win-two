@@ -624,6 +624,15 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "stats.cr": "CR",
   "stats.income": "Ingresos",
   "stats.roi": "ROI",
+  "stats.cpm": "CPM",
+  "stats.cpc": "CPC",
+  "stats.confirmed": "Confirm.",
+  "stats.confirmedConversions": "Conversiones confirmadas",
+  "stats.confirmedIncome": "Ingresos confirmados",
+  "stats.columns": "Columnas",
+  "stats.groupTraffic": "Tráfico",
+  "stats.groupCost": "Coste",
+  "stats.groupConversions": "Conversiones",
 
   // Server error translations
   "balance.toast.submitError": "Error de recarga",
