@@ -475,9 +475,16 @@ export default function DashboardStatistics() {
   }, [data, appliedGroupBy]);
 
   const sortedData = useMemo(() => {
+    const valueOf = (r: UiRow) => {
+      if (sortKey === "cpm") return r.impressions > 0 ? r.spent / r.impressions * 1000 : 0;
+      if (sortKey === "cpc") return r.clicks > 0 ? r.spent / r.clicks : 0;
+      return r[sortKey];
+    };
     return [...data].sort((a, b) => {
       if (sortKey === "label") return sortDir === "asc" ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label);
-      return sortDir === "desc" ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey];
+      const av = valueOf(a);
+      const bv = valueOf(b);
+      return sortDir === "desc" ? bv - av : av - bv;
     });
   }, [data, sortKey, sortDir]);
 
