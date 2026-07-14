@@ -509,8 +509,8 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
               </div>
             )}
 
-            {/* Image upload (only for image type of banner, or for other formats' image field). */}
-            {showImage && type === "image" && (
+            {/* Image upload for banner image type. Non-banner formats render their image block below. */}
+            {showImage && isBanner && type === "image" && (
               <div className="space-y-2">
                 <Label>{t("create.uploadImage")} *</Label>
                 <input
@@ -537,7 +537,7 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                       {t("create.editImage")}
                     </Button>
                   )}
-                  {creative.imageUrl && formatKey !== "popunder" && (
+                  {creative.imageUrl && (
                     <Button type="button" variant="outline" onClick={() => setPreviewCreativeId(creative.id)} className="border-border gap-2">
                       <Eye className="h-4 w-4" />
                       {t("create.previewCreative")}
