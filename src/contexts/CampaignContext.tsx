@@ -458,9 +458,6 @@ function buildApiCampaignPatch(updates: Partial<Campaign>): Partial<ApiCampaign>
     Object.assign(p, buildApiTargeting(updates.targeting));
     p.active_intervals = scheduleToActiveIntervals(updates.targeting.schedule);
   }
-  if (updates.conversionPayout !== undefined) {
-    p.payout = updates.conversionPayout;
-  }
   return p;
 }
 
