@@ -537,7 +537,11 @@ export default function DashboardStatistics() {
       const v = r.spent / r.impressions * 1000;
       return (Math.floor(v * 100) / 100).toFixed(2);
     };
-    const cpcOf = (r: { spent: number; clicks: number }) => r.clicks > 0 ? (r.spent / r.clicks).toFixed(5) : "0.00000";
+    const cpcOf = (r: { spent: number; clicks: number }) => {
+      if (r.clicks === 0) return "0.00000";
+      const v = r.spent / r.clicks;
+      return (Math.floor(v * 100000) / 100000).toFixed(5);
+    };
     const rows = sortedData.map(r => {
       const label = appliedGroupBy === "country" ? formatCountryLabel(r.label, lang) : r.label;
       const ctr = r.impressions > 0 ? ((r.clicks / r.impressions) * 100).toFixed(2) + "%" : "0.00%";
@@ -947,7 +951,7 @@ export default function DashboardStatistics() {
                     const sep = "border-l border-border/60";
                     const fmtMoney = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     const fmtMoney2 = (n: number) => `$${(Math.floor(n * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                    const fmtMoney5 = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 5, maximumFractionDigits: 5 })}`;
+                    const fmtMoney5 = (n: number) => `$${(Math.floor(n * 100000) / 100000).toLocaleString(undefined, { minimumFractionDigits: 5, maximumFractionDigits: 5 })}`;
                     const cpmOf = (r: { spent: number; impressions: number }) => r.impressions > 0 ? r.spent / r.impressions * 1000 : 0;
                     const cpcOf = (r: { spent: number; clicks: number }) => r.clicks > 0 ? r.spent / r.clicks : 0;
                     return (
