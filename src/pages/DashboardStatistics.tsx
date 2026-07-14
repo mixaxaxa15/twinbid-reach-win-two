@@ -523,8 +523,8 @@ export default function DashboardStatistics() {
       const s = String(v);
       return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
-    const cpmOf = (r: { spent: number; impressions: number }) => r.impressions > 0 ? (r.spent / r.impressions * 1000).toFixed(2) : "0.00";
-    const cpcOf = (r: { spent: number; clicks: number }) => r.clicks > 0 ? (r.spent / r.clicks).toFixed(2) : "0.00";
+    const cpmOf = (r: { spent: number; impressions: number }) => r.impressions > 0 ? (r.spent / r.impressions * 1000).toFixed(4) : "0.0000";
+    const cpcOf = (r: { spent: number; clicks: number }) => r.clicks > 0 ? (r.spent / r.clicks).toFixed(4) : "0.0000";
     const rows = sortedData.map(r => {
       const label = appliedGroupBy === "country" ? formatCountryLabel(r.label, lang) : r.label;
       const ctr = r.impressions > 0 ? ((r.clicks / r.impressions) * 100).toFixed(2) + "%" : "0.00%";
