@@ -509,8 +509,8 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
               </div>
             )}
 
-            {/* Image upload (only for image type of banner, or for other formats' image field). */}
-            {showImage && type === "image" && (
+            {/* Image upload for banner image type. Non-banner formats render their image block below. */}
+            {showImage && isBanner && type === "image" && (
               <div className="space-y-2">
                 <Label>{t("create.uploadImage")} *</Label>
                 <input
