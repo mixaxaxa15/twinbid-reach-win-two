@@ -28,7 +28,7 @@ import { api } from "@/api";
 import type { StatsGroupBy, StatsFilterBy } from "@/api/types";
 
 type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "country";
-type SortKey = "label" | "impressions" | "clicks" | "spent" | "conversions" | "income";
+type SortKey = "label" | "impressions" | "clicks" | "spent" | "cpm" | "cpc" | "conversions" | "income";
 type SortDir = "asc" | "desc";
 
 interface UiRow { label: string; impressions: number; clicks: number; spent: number; conversions: number; income: number; confirmedConversions: number; confirmedIncome: number; }
