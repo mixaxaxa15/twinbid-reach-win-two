@@ -409,7 +409,7 @@ export default function EditCampaign() {
         <TabsContent value="conversion">
           <Card className="bg-card border-border">
             <CardHeader><CardTitle className="text-lg">{t("edit.conversion")}</CardTitle></CardHeader>
-            <CardContent><PostbackSection payout={conversionPayout} onPayoutChange={setConversionPayout} /></CardContent>
+            <CardContent><PostbackSection /></CardContent>
           </Card>
         </TabsContent>
       </Tabs>
