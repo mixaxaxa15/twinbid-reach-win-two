@@ -1038,8 +1038,8 @@ export default function DashboardStatistics() {
                         <td className="py-2 px-2 whitespace-nowrap">{totals.clicks.toLocaleString()}</td>
                         <td className="py-2 px-2 whitespace-nowrap">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
                         <td className={cn("py-2 px-2 whitespace-nowrap", sep)}>{fmtMoney(totals.spent)}</td>
-                        {showCpm && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney4(cpmOf(totals))}</td>}
-                        {showCpc && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney4(cpcOf(totals))}</td>}
+                        {showCpm && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney2(cpmOf(totals))}</td>}
+                        {showCpc && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney5(cpcOf(totals))}</td>}
                         {showConversions && (() => {
                           const cr = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) : "0.00";
                           const roiNum = totals.spent > 0 ? ((totals.income - totals.spent) / totals.spent) * 100 : 0;
