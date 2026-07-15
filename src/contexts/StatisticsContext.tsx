@@ -47,14 +47,30 @@ interface StatisticsState {
   setAppliedFilterOS: React.Dispatch<React.SetStateAction<Set<string>>>;
   showConversions: boolean;
   setShowConversions: React.Dispatch<React.SetStateAction<boolean>>;
+  showImpressions: boolean;
+  setShowImpressions: React.Dispatch<React.SetStateAction<boolean>>;
+  showClicks: boolean;
+  setShowClicks: React.Dispatch<React.SetStateAction<boolean>>;
+  showCtr: boolean;
+  setShowCtr: React.Dispatch<React.SetStateAction<boolean>>;
+  showSpent: boolean;
+  setShowSpent: React.Dispatch<React.SetStateAction<boolean>>;
   showCpm: boolean;
   setShowCpm: React.Dispatch<React.SetStateAction<boolean>>;
   showCpc: boolean;
   setShowCpc: React.Dispatch<React.SetStateAction<boolean>>;
+  showConversionsCol: boolean;
+  setShowConversionsCol: React.Dispatch<React.SetStateAction<boolean>>;
   showConfirmedConversions: boolean;
   setShowConfirmedConversions: React.Dispatch<React.SetStateAction<boolean>>;
+  showCr: boolean;
+  setShowCr: React.Dispatch<React.SetStateAction<boolean>>;
+  showIncome: boolean;
+  setShowIncome: React.Dispatch<React.SetStateAction<boolean>>;
   showConfirmedIncome: boolean;
   setShowConfirmedIncome: React.Dispatch<React.SetStateAction<boolean>>;
+  showRoi: boolean;
+  setShowRoi: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const StatisticsContext = createContext<StatisticsState | null>(null);
