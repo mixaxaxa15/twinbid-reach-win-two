@@ -131,10 +131,18 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
       appliedFilterDevice, setAppliedFilterDevice,
       appliedFilterOS, setAppliedFilterOS,
       showConversions, setShowConversions,
+      showImpressions, setShowImpressions,
+      showClicks, setShowClicks,
+      showCtr, setShowCtr,
+      showSpent, setShowSpent,
       showCpm, setShowCpm,
       showCpc, setShowCpc,
+      showConversionsCol, setShowConversionsCol,
       showConfirmedConversions, setShowConfirmedConversions,
+      showCr, setShowCr,
+      showIncome, setShowIncome,
       showConfirmedIncome, setShowConfirmedIncome,
+      showRoi, setShowRoi,
     }}>
       {children}
     </StatisticsContext.Provider>
