@@ -147,10 +147,18 @@ export default function DashboardStatistics() {
     appliedFilterDevice, setAppliedFilterDevice,
     appliedFilterOS, setAppliedFilterOS,
     showConversions, setShowConversions,
+    showImpressions, setShowImpressions,
+    showClicks, setShowClicks,
+    showCtr, setShowCtr,
+    showSpent, setShowSpent,
     showCpm, setShowCpm,
     showCpc, setShowCpc,
+    showConversionsCol, setShowConversionsCol,
     showConfirmedConversions, setShowConfirmedConversions,
+    showCr, setShowCr,
+    showIncome, setShowIncome,
     showConfirmedIncome, setShowConfirmedIncome,
+    showRoi, setShowRoi,
   } = useStatistics();
 
   const appliedGroupBy = groupBy;
