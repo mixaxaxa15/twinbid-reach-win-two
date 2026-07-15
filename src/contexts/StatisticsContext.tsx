@@ -96,10 +96,18 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
   const [appliedFilterDevice, setAppliedFilterDevice] = useState<Set<string>>(new Set());
   const [appliedFilterOS, setAppliedFilterOS] = useState<Set<string>>(new Set());
   const [showConversions, setShowConversions] = useState(false);
+  const [showImpressions, setShowImpressions] = useState(true);
+  const [showClicks, setShowClicks] = useState(true);
+  const [showCtr, setShowCtr] = useState(true);
+  const [showSpent, setShowSpent] = useState(true);
   const [showCpm, setShowCpm] = useState(true);
   const [showCpc, setShowCpc] = useState(true);
+  const [showConversionsCol, setShowConversionsCol] = useState(true);
   const [showConfirmedConversions, setShowConfirmedConversions] = useState(true);
+  const [showCr, setShowCr] = useState(true);
+  const [showIncome, setShowIncome] = useState(true);
   const [showConfirmedIncome, setShowConfirmedIncome] = useState(true);
+  const [showRoi, setShowRoi] = useState(true);
 
   return (
     <StatisticsContext.Provider value={{
