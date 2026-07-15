@@ -1,72 +1,60 @@
 ## Goal
 
-Add four new metrics as **real columns** in the Statistics table (visible for every grouping), without cards:
+Extend the existing "Columns" popover in the Statistics table so the user can hide/show **every** metric column, not just CPM / CPC / Confirmed. The first column (grouping label — Date, Country, Campaign, etc.) stays always visible as an anchor.
 
-- **CPM** = spent / impressions × 1000
-- **CPC** = spent / clicks
-- **Confirmed conversions** (subset of conversions, only in conversion mode)
-- **Confirmed income** (subset of income, only in conversion mode)
+## Toggleable columns
 
-## Anti-clutter strategy
+Grouped exactly like the existing header groups:
 
-Base mode goes from 5 → 7 columns, conversion mode from 9 → 13. To keep it readable:
+- **Traffic**: Impressions, Clicks, CTR
+- **Cost**: Spent, CPM, CPC
+- **Conversions** (only when conversion mode is on): Conversions, Confirmed conversions, CR, Income, Confirmed income, ROI
 
-1. **Sticky first column** (`label`) so scrolling right keeps context.
-2. **Horizontal scroll** on the table wrapper (already `overflow-x-auto`) — remove `table-fixed` and let columns size to content; set sensible `min-w-*` per column instead of hard `w-[...]` so wide screens still fit everything.
-3. **Column groups in the header**: add a thin second header row that groups columns:
-   - `Traffic` → Impressions, Clicks, CTR
-   - `Cost` → Spent, CPM, CPC
-   - `Conversions` (only in conversion mode) → Conversions, Confirmed, CR, Income, Confirmed income, ROI
+All checkboxes default to **on**. State is persisted in `StatisticsContext` alongside the current `showCpm` / `showCpc` / `showConfirmedConversions` / `showConfirmedIncome` flags so it survives navigation, just like the existing ones.
 
-   Visual separator (subtle vertical border) between groups so the eye parses blocks instead of a wall of numbers.
-4. **Compact numeric formatting**: CPM/CPC use `$0.00` (2 decimals). Confirmed columns share the same formatting as their parent (`toLocaleString()` / `$`).
-5. **Column picker** (small "Columns" popover next to the "Rows" selector) to hide/show CPM, CPC, Confirmed conversions, Confirmed income individually. Defaults: all on. Preference persisted in `StatisticsContext` so it survives navigation like the other filters. This lets power users trim the table if they don't want everything.
-6. KPI cards stay untouched (user explicitly asked to keep them out).
+## UX
 
-```text
-┌──────────┬──── Traffic ────┬──── Cost ────┬──────── Conversions ────────┐
-│ Date     │ Impr  Clicks CTR │ Spent CPM CPC│ Conv Confirmed CR Income Confirmed ROI │
-└──────────┴─────────────────┴──────────────┴─────────────────────────────┘
-```
+- Same "Columns" popover next to the "Rows" selector (no new button).
+- Popover content becomes a grouped list with small group headings (Traffic / Cost / Conversions) matching the table's group header, so users map checkbox → column visually.
+- Conversion-group checkboxes stay disabled/greyed when conversion mode is off (same pattern as today's Confirmed toggles).
+- Reset guard: if a user unchecks every column in a group, that group's header cell simply collapses (colspan recomputed). If literally all metric columns are hidden, the table still shows the sticky label column plus totals row for that label — no crash.
+- Column group header row hides a group entirely when all its columns are off.
 
-## Scope (frontend only, presentation)
+## Scope (frontend only)
 
-### 1. `src/pages/DashboardStatistics.tsx`
+### 1. `src/contexts/StatisticsContext.tsx`
+Add persisted boolean flags + setters (all default `true`):
+`showImpressions`, `showClicks`, `showCtr`, `showSpent`, `showConversionsCol`, `showCr`, `showIncome`, `showRoi`.
+(Existing `showConversions` stays as the conversion-mode master switch; the new `showConversionsCol` toggles only the "Conversions" count column within that mode.)
 
-- Extend `UiRow` (line 34) with `confirmedConversions?: number`, `confirmedIncome?: number`. CPM/CPC are derived, not stored.
-- Response parser (lines 302–312): read `confirmed_conversions` / `confirmed_income` (with `confirmed_revenue` alias), default `0`.
-- Grouped aggregation (lines 356–365) and hour/date fill loops: sum the two new fields alongside `conversions`/`income`.
-- `totals` memo (lines 490–496): sum the two new fields.
-- Table (lines 865–946):
-  - Remove `table-fixed`; give each `<th>` a `min-w-*` and `whitespace-nowrap`.
-  - First column becomes sticky: `sticky left-0 bg-card z-10` (and `bg-muted/30` variant for the totals row) so it stays put during horizontal scroll.
-  - Add a small header group row (Traffic / Cost / Conversions) using `colspan`.
-  - New columns:
-    - **CPM** — `${(spent / impressions * 1000).toFixed(2)}` (or `$0.00`), placed after Spent.
-    - **CPC** — `${(spent / clicks).toFixed(2)}`, after CPM.
-    - **Confirmed** (conversions) — after Conversions.
-    - **Confirmed income** — after Income.
-  - Totals row mirrors all new cells.
-- Add small **Columns** popover next to the "Rows" selector (lines 843–857) with four checkboxes: CPM, CPC, Confirmed conv., Confirmed income. Each column render is gated by its flag.
-- CSV export: mirror the visible columns (all of them when all toggles are on), so exports match what the user sees.
-
-### 2. `src/contexts/StatisticsContext.tsx`
-
-- Add persisted flags: `showCpm`, `showCpc`, `showConfirmedConversions`, `showConfirmedIncome` (default `true` each) with matching setters, wired the same way as `showConversions`.
+### 2. `src/pages/DashboardStatistics.tsx`
+- Read the new flags from context.
+- Gate each `<th>` and `<td>` (data rows + totals row) on its flag, matching the pattern already used for CPM/CPC/Confirmed.
+- Recompute `costCols` / `trafficCols` / `convCols` colspans from the flags so the group header row stays aligned; skip a group header cell when its count is 0.
+- Extend the "Columns" popover with the new checkboxes, grouped visually:
+  ```
+  Traffic
+    ☑ Impressions
+    ☑ Clicks
+    ☑ CTR
+  Cost
+    ☑ Spent
+    ☑ CPM
+    ☑ CPC
+  Conversions            (disabled group when conversion mode off)
+    ☑ Conversions
+    ☑ Confirmed conv.
+    ☑ CR
+    ☑ Income
+    ☑ Confirmed income
+    ☑ ROI
+  ```
+- CSV export: keep exporting all metrics regardless of visibility (visibility is a view preference, not a data filter). If you'd prefer CSV to mirror visible columns, say so and I'll switch it.
 
 ### 3. Translations — `src/contexts/LanguageContext.tsx` + `src/lib/translations-es.ts`
-
-New keys: `stats.cpm`, `stats.cpc`, `stats.confirmed` (short "Confirmed" / "Подтв." / "Confirm."), `stats.confirmedIncome`, `stats.columns`, `stats.groupTraffic`, `stats.groupCost`, `stats.groupConversions`. EN / RU / ES.
-
-### 4. Files touched
-
-- `src/pages/DashboardStatistics.tsx`
-- `src/contexts/StatisticsContext.tsx`
-- `src/contexts/LanguageContext.tsx`
-- `src/lib/translations-es.ts`
+Add short group-label keys for the popover if not already present: `stats.groupTraffic`, `stats.groupCost`, `stats.groupConversions` (already exist per plan.md — reuse). No new labels needed for individual metrics — reuse existing `stats.impressions`, `stats.clicks`, `stats.ctr`, `stats.spent`, `stats.conversions`, `stats.cr`, `stats.income`, `stats.roi`.
 
 ## Out of scope
 
-- Backend / ClickHouse changes. Frontend reads new fields opportunistically; until backend supplies them, Confirmed columns render `0` — the layout is what the user wants to see now.
-- Sorting on CPM / CPC / Confirmed (derived values). Existing sort keys stay.
-- Overview / Campaigns pages.
+- Backend, sorting behaviour, KPI cards, chart. Hiding a column doesn't remove it from sort options or from the chart metric selector.
+- Per-user server-side persistence — flags live in context/memory like the current ones.

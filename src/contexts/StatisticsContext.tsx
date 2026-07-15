@@ -47,14 +47,30 @@ interface StatisticsState {
   setAppliedFilterOS: React.Dispatch<React.SetStateAction<Set<string>>>;
   showConversions: boolean;
   setShowConversions: React.Dispatch<React.SetStateAction<boolean>>;
+  showImpressions: boolean;
+  setShowImpressions: React.Dispatch<React.SetStateAction<boolean>>;
+  showClicks: boolean;
+  setShowClicks: React.Dispatch<React.SetStateAction<boolean>>;
+  showCtr: boolean;
+  setShowCtr: React.Dispatch<React.SetStateAction<boolean>>;
+  showSpent: boolean;
+  setShowSpent: React.Dispatch<React.SetStateAction<boolean>>;
   showCpm: boolean;
   setShowCpm: React.Dispatch<React.SetStateAction<boolean>>;
   showCpc: boolean;
   setShowCpc: React.Dispatch<React.SetStateAction<boolean>>;
+  showConversionsCol: boolean;
+  setShowConversionsCol: React.Dispatch<React.SetStateAction<boolean>>;
   showConfirmedConversions: boolean;
   setShowConfirmedConversions: React.Dispatch<React.SetStateAction<boolean>>;
+  showCr: boolean;
+  setShowCr: React.Dispatch<React.SetStateAction<boolean>>;
+  showIncome: boolean;
+  setShowIncome: React.Dispatch<React.SetStateAction<boolean>>;
   showConfirmedIncome: boolean;
   setShowConfirmedIncome: React.Dispatch<React.SetStateAction<boolean>>;
+  showRoi: boolean;
+  setShowRoi: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const StatisticsContext = createContext<StatisticsState | null>(null);
@@ -80,10 +96,18 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
   const [appliedFilterDevice, setAppliedFilterDevice] = useState<Set<string>>(new Set());
   const [appliedFilterOS, setAppliedFilterOS] = useState<Set<string>>(new Set());
   const [showConversions, setShowConversions] = useState(false);
+  const [showImpressions, setShowImpressions] = useState(true);
+  const [showClicks, setShowClicks] = useState(true);
+  const [showCtr, setShowCtr] = useState(true);
+  const [showSpent, setShowSpent] = useState(true);
   const [showCpm, setShowCpm] = useState(true);
   const [showCpc, setShowCpc] = useState(true);
+  const [showConversionsCol, setShowConversionsCol] = useState(true);
   const [showConfirmedConversions, setShowConfirmedConversions] = useState(true);
+  const [showCr, setShowCr] = useState(true);
+  const [showIncome, setShowIncome] = useState(true);
   const [showConfirmedIncome, setShowConfirmedIncome] = useState(true);
+  const [showRoi, setShowRoi] = useState(true);
 
   return (
     <StatisticsContext.Provider value={{
@@ -107,10 +131,18 @@ export function StatisticsProvider({ children }: { children: ReactNode }) {
       appliedFilterDevice, setAppliedFilterDevice,
       appliedFilterOS, setAppliedFilterOS,
       showConversions, setShowConversions,
+      showImpressions, setShowImpressions,
+      showClicks, setShowClicks,
+      showCtr, setShowCtr,
+      showSpent, setShowSpent,
       showCpm, setShowCpm,
       showCpc, setShowCpc,
+      showConversionsCol, setShowConversionsCol,
       showConfirmedConversions, setShowConfirmedConversions,
+      showCr, setShowCr,
+      showIncome, setShowIncome,
       showConfirmedIncome, setShowConfirmedIncome,
+      showRoi, setShowRoi,
     }}>
       {children}
     </StatisticsContext.Provider>
