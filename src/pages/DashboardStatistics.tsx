@@ -904,24 +904,71 @@ export default function DashboardStatistics() {
                         <Filter className="h-3.5 w-3.5" /> {t("stats.columns")}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-56 p-2" align="end">
-                      <div className="space-y-1">
-                        <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
-                          <Checkbox checked={showCpm} onCheckedChange={(c) => setShowCpm(!!c)} />
-                          {t("stats.cpm")}
-                        </label>
-                        <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
-                          <Checkbox checked={showCpc} onCheckedChange={(c) => setShowCpc(!!c)} />
-                          {t("stats.cpc")}
-                        </label>
-                        <label className={cn("flex items-center gap-2 px-2 py-1.5 rounded text-sm", showConversions ? "hover:bg-muted/50 cursor-pointer" : "opacity-50")}>
-                          <Checkbox checked={showConfirmedConversions} disabled={!showConversions} onCheckedChange={(c) => setShowConfirmedConversions(!!c)} />
-                          {t("stats.confirmedConversions")}
-                        </label>
-                        <label className={cn("flex items-center gap-2 px-2 py-1.5 rounded text-sm", showConversions ? "hover:bg-muted/50 cursor-pointer" : "opacity-50")}>
-                          <Checkbox checked={showConfirmedIncome} disabled={!showConversions} onCheckedChange={(c) => setShowConfirmedIncome(!!c)} />
-                          {t("stats.confirmedIncome")}
-                        </label>
+                    <PopoverContent className="w-64 p-3 max-h-[70vh] overflow-y-auto" align="end">
+                      <div className="space-y-3">
+                        <div>
+                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground/80 px-1 mb-1">{t("stats.groupTraffic")}</div>
+                          <div className="space-y-0.5">
+                            <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                              <Checkbox checked={showImpressions} onCheckedChange={(c) => setShowImpressions(!!c)} />
+                              {t("stats.impressions")}
+                            </label>
+                            <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                              <Checkbox checked={showClicks} onCheckedChange={(c) => setShowClicks(!!c)} />
+                              {t("stats.clicks")}
+                            </label>
+                            <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                              <Checkbox checked={showCtr} onCheckedChange={(c) => setShowCtr(!!c)} />
+                              {t("stats.ctr")}
+                            </label>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground/80 px-1 mb-1">{t("stats.groupCost")}</div>
+                          <div className="space-y-0.5">
+                            <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                              <Checkbox checked={showSpent} onCheckedChange={(c) => setShowSpent(!!c)} />
+                              {t("stats.spent")}
+                            </label>
+                            <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                              <Checkbox checked={showCpm} onCheckedChange={(c) => setShowCpm(!!c)} />
+                              {t("stats.cpm")}
+                            </label>
+                            <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                              <Checkbox checked={showCpc} onCheckedChange={(c) => setShowCpc(!!c)} />
+                              {t("stats.cpc")}
+                            </label>
+                          </div>
+                        </div>
+                        <div>
+                          <div className={cn("text-[11px] uppercase tracking-wide px-1 mb-1", showConversions ? "text-muted-foreground/80" : "text-muted-foreground/40")}>{t("stats.groupConversions")}</div>
+                          <div className={cn("space-y-0.5", !showConversions && "opacity-50")}>
+                            <label className={cn("flex items-center gap-2 px-2 py-1.5 rounded text-sm", showConversions ? "hover:bg-muted/50 cursor-pointer" : "")}>
+                              <Checkbox checked={showConversionsCol} disabled={!showConversions} onCheckedChange={(c) => setShowConversionsCol(!!c)} />
+                              {t("stats.conversions")}
+                            </label>
+                            <label className={cn("flex items-center gap-2 px-2 py-1.5 rounded text-sm", showConversions ? "hover:bg-muted/50 cursor-pointer" : "")}>
+                              <Checkbox checked={showConfirmedConversions} disabled={!showConversions} onCheckedChange={(c) => setShowConfirmedConversions(!!c)} />
+                              {t("stats.confirmedConversions")}
+                            </label>
+                            <label className={cn("flex items-center gap-2 px-2 py-1.5 rounded text-sm", showConversions ? "hover:bg-muted/50 cursor-pointer" : "")}>
+                              <Checkbox checked={showCr} disabled={!showConversions} onCheckedChange={(c) => setShowCr(!!c)} />
+                              {t("stats.cr")}
+                            </label>
+                            <label className={cn("flex items-center gap-2 px-2 py-1.5 rounded text-sm", showConversions ? "hover:bg-muted/50 cursor-pointer" : "")}>
+                              <Checkbox checked={showIncome} disabled={!showConversions} onCheckedChange={(c) => setShowIncome(!!c)} />
+                              {t("stats.income")}
+                            </label>
+                            <label className={cn("flex items-center gap-2 px-2 py-1.5 rounded text-sm", showConversions ? "hover:bg-muted/50 cursor-pointer" : "")}>
+                              <Checkbox checked={showConfirmedIncome} disabled={!showConversions} onCheckedChange={(c) => setShowConfirmedIncome(!!c)} />
+                              {t("stats.confirmedIncome")}
+                            </label>
+                            <label className={cn("flex items-center gap-2 px-2 py-1.5 rounded text-sm", showConversions ? "hover:bg-muted/50 cursor-pointer" : "")}>
+                              <Checkbox checked={showRoi} disabled={!showConversions} onCheckedChange={(c) => setShowRoi(!!c)} />
+                              {t("stats.roi")}
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </PopoverContent>
                   </Popover>
