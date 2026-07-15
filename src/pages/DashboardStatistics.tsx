@@ -996,14 +996,29 @@ export default function DashboardStatistics() {
               ) : (
                 <div className="overflow-x-auto overflow-y-hidden">
                   {(() => {
-                    const costCols = 1 + (showCpm ? 1 : 0) + (showCpc ? 1 : 0);
-                    const convCols = showConversions ? (2 + (showConfirmedConversions ? 1 : 0) + (showConfirmedIncome ? 1 : 0) + 1) : 0;
+                    const trafficCols = (showImpressions ? 1 : 0) + (showClicks ? 1 : 0) + (showCtr ? 1 : 0);
+                    const costCols = (showSpent ? 1 : 0) + (showCpm ? 1 : 0) + (showCpc ? 1 : 0);
+                    const convCols = showConversions
+                      ? (showConversionsCol ? 1 : 0) + (showConfirmedConversions ? 1 : 0) + (showCr ? 1 : 0) + (showIncome ? 1 : 0) + (showConfirmedIncome ? 1 : 0) + (showRoi ? 1 : 0)
+                      : 0;
                     const stickyCell = "sticky left-0 z-10";
                     const stickyHead = `${stickyCell} bg-card`;
                     const stickyBody = `${stickyCell} bg-card`;
                     const stickyAlt  = `${stickyCell} bg-[hsl(var(--muted)/0.3)]`;
                     // subtle vertical separator between column groups
                     const sep = "border-l border-border/60";
+                    // First-visible-in-group helpers so the vertical separator lands on the right cell.
+                    const firstCost: "spent" | "cpm" | "cpc" | null = showSpent ? "spent" : showCpm ? "cpm" : showCpc ? "cpc" : null;
+                    const firstConv: "conversions" | "confirmedConv" | "cr" | "income" | "confirmedIncome" | "roi" | null =
+                      showConversions
+                        ? (showConversionsCol ? "conversions"
+                          : showConfirmedConversions ? "confirmedConv"
+                          : showCr ? "cr"
+                          : showIncome ? "income"
+                          : showConfirmedIncome ? "confirmedIncome"
+                          : showRoi ? "roi"
+                          : null)
+                        : null;
                     const fmtMoney = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     const fmtMoney2 = (n: number) => `$${(Math.floor(n * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     const fmtMoney5 = (n: number) => `$${(Math.floor(n * 100000) / 100000).toLocaleString(undefined, { minimumFractionDigits: 5, maximumFractionDigits: 5 })}`;
@@ -1015,10 +1030,14 @@ export default function DashboardStatistics() {
                       {/* Group header row */}
                       <tr className="border-b border-border/60 text-[11px] uppercase tracking-wide text-muted-foreground/70">
                         <th className={cn("py-1.5 px-2 text-left", stickyHead)}></th>
-                        <th colSpan={3} className="py-1.5 px-2 text-left">{t("stats.groupTraffic")}</th>
-                        <th colSpan={costCols} className={cn("py-1.5 px-2 text-left", sep)}>{t("stats.groupCost")}</th>
-                        {showConversions && (
-                          <th colSpan={convCols} className={cn("py-1.5 px-2 text-left", sep)}>{t("stats.groupConversions")}</th>
+                        {trafficCols > 0 && (
+                          <th colSpan={trafficCols} className="py-1.5 px-2 text-left">{t("stats.groupTraffic")}</th>
+                        )}
+                        {costCols > 0 && (
+                          <th colSpan={costCols} className={cn("py-1.5 px-2 text-left", trafficCols > 0 && sep)}>{t("stats.groupCost")}</th>
+                        )}
+                        {showConversions && convCols > 0 && (
+                          <th colSpan={convCols} className={cn("py-1.5 px-2 text-left", (trafficCols + costCols) > 0 && sep)}>{t("stats.groupConversions")}</th>
                         )}
                       </tr>
                       <tr className="border-b border-border">
@@ -1026,42 +1045,58 @@ export default function DashboardStatistics() {
                           onClick={() => canSortByLabel && toggleSort("label")}>
                           {labelHeader} {canSortByLabel && <SortIcon col="label" />}
                         </th>
-                        <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("impressions")}>
-                          {t("stats.impressions")} <SortIcon col="impressions" />
-                        </th>
-                        <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("clicks")}>
-                          {t("stats.clicks")} <SortIcon col="clicks" />
-                        </th>
-                        <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap">{t("stats.ctr")}</th>
-                        <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", sep)} onClick={() => toggleSort("spent")}>
-                          {t("stats.spent")} <SortIcon col="spent" />
-                        </th>
+                        {showImpressions && (
+                          <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("impressions")}>
+                            {t("stats.impressions")} <SortIcon col="impressions" />
+                          </th>
+                        )}
+                        {showClicks && (
+                          <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("clicks")}>
+                            {t("stats.clicks")} <SortIcon col="clicks" />
+                          </th>
+                        )}
+                        {showCtr && (
+                          <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap">{t("stats.ctr")}</th>
+                        )}
+                        {showSpent && (
+                          <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", firstCost === "spent" && trafficCols > 0 && sep)} onClick={() => toggleSort("spent")}>
+                            {t("stats.spent")} <SortIcon col="spent" />
+                          </th>
+                        )}
                         {showCpm && (
-                          <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("cpm")}>
+                          <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", firstCost === "cpm" && trafficCols > 0 && sep)} onClick={() => toggleSort("cpm")}>
                             {t("stats.cpm")} <SortIcon col="cpm" />
                           </th>
                         )}
                         {showCpc && (
-                          <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("cpc")}>
+                          <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", firstCost === "cpc" && trafficCols > 0 && sep)} onClick={() => toggleSort("cpc")}>
                             {t("stats.cpc")} <SortIcon col="cpc" />
                           </th>
                         )}
                         {showConversions && (
                           <>
-                            <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", sep)} onClick={() => toggleSort("conversions")}>
-                              {t("stats.conversions")} <SortIcon col="conversions" />
-                            </th>
+                            {showConversionsCol && (
+                              <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", firstConv === "conversions" && (trafficCols + costCols) > 0 && sep)} onClick={() => toggleSort("conversions")}>
+                                {t("stats.conversions")} <SortIcon col="conversions" />
+                              </th>
+                            )}
                             {showConfirmedConversions && (
-                              <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap">{t("stats.confirmed")}</th>
+                              <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap", firstConv === "confirmedConv" && (trafficCols + costCols) > 0 && sep)}>{t("stats.confirmed")}</th>
                             )}
-                            <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap">{t("stats.cr")}</th>
-                            <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("income")}>
-                              {t("stats.income")} <SortIcon col="income" />
-                            </th>
+                            {showCr && (
+                              <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap", firstConv === "cr" && (trafficCols + costCols) > 0 && sep)}>{t("stats.cr")}</th>
+                            )}
+                            {showIncome && (
+                              <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap", firstConv === "income" && (trafficCols + costCols) > 0 && sep)} onClick={() => toggleSort("income")}>
+                                {t("stats.income")} <SortIcon col="income" />
+                              </th>
+                            )}
                             {showConfirmedIncome && (
-                              <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap">{t("stats.confirmed")}</th>
+                              <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap", firstConv === "confirmedIncome" && (trafficCols + costCols) > 0 && sep)}>{t("stats.confirmed")}</th>
                             )}
-                            <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap">{t("stats.roi")}</th>
+                            {showRoi && (
+                              <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap", firstConv === "roi" && (trafficCols + costCols) > 0 && sep)}>{t("stats.roi")}</th>
+                            )}
                           </>
                         )}
                       </tr>
@@ -1076,20 +1111,20 @@ export default function DashboardStatistics() {
                           <td className={cn("py-2 px-2 font-medium whitespace-nowrap", stickyBody, "group-hover:bg-muted/50")}>
                             {appliedGroupBy === "country" ? formatCountryLabel(row.label, lang) : row.label}
                           </td>
-                          <td className="py-2 px-2 whitespace-nowrap">{row.impressions.toLocaleString()}</td>
-                          <td className="py-2 px-2 whitespace-nowrap">{row.clicks.toLocaleString()}</td>
-                          <td className="py-2 px-2 whitespace-nowrap">{row.impressions > 0 ? ((row.clicks / row.impressions) * 100).toFixed(2) : "0.00"}%</td>
-                          <td className={cn("py-2 px-2 whitespace-nowrap", sep)}>{fmtMoney(row.spent)}</td>
-                          {showCpm && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney2(cpmOf(row))}</td>}
-                          {showCpc && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney5(cpcOf(row))}</td>}
+                          {showImpressions && <td className="py-2 px-2 whitespace-nowrap">{row.impressions.toLocaleString()}</td>}
+                          {showClicks && <td className="py-2 px-2 whitespace-nowrap">{row.clicks.toLocaleString()}</td>}
+                          {showCtr && <td className="py-2 px-2 whitespace-nowrap">{row.impressions > 0 ? ((row.clicks / row.impressions) * 100).toFixed(2) : "0.00"}%</td>}
+                          {showSpent && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "spent" && trafficCols > 0 && sep)}>{fmtMoney(row.spent)}</td>}
+                          {showCpm && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "cpm" && trafficCols > 0 && sep)}>{fmtMoney2(cpmOf(row))}</td>}
+                          {showCpc && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "cpc" && trafficCols > 0 && sep)}>{fmtMoney5(cpcOf(row))}</td>}
                           {showConversions && (
                             <>
-                              <td className={cn("py-2 px-2 whitespace-nowrap", sep)}>{row.conversions.toLocaleString()}</td>
-                              {showConfirmedConversions && <td className="py-2 px-2 whitespace-nowrap">{row.confirmedConversions.toLocaleString()}</td>}
-                              <td className="py-2 px-2 whitespace-nowrap">{cr}%</td>
-                              <td className="py-2 px-2 whitespace-nowrap">{fmtMoney(row.income)}</td>
-                              {showConfirmedIncome && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney(row.confirmedIncome)}</td>}
-                              <td className={cn("py-2 px-2 whitespace-nowrap font-medium", roiNum > 0 ? "text-emerald-500" : roiNum < 0 ? "text-red-500" : "")}>{roi}%</td>
+                              {showConversionsCol && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "conversions" && (trafficCols + costCols) > 0 && sep)}>{row.conversions.toLocaleString()}</td>}
+                              {showConfirmedConversions && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "confirmedConv" && (trafficCols + costCols) > 0 && sep)}>{row.confirmedConversions.toLocaleString()}</td>}
+                              {showCr && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "cr" && (trafficCols + costCols) > 0 && sep)}>{cr}%</td>}
+                              {showIncome && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "income" && (trafficCols + costCols) > 0 && sep)}>{fmtMoney(row.income)}</td>}
+                              {showConfirmedIncome && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "confirmedIncome" && (trafficCols + costCols) > 0 && sep)}>{fmtMoney(row.confirmedIncome)}</td>}
+                              {showRoi && <td className={cn("py-2 px-2 whitespace-nowrap font-medium", firstConv === "roi" && (trafficCols + costCols) > 0 && sep, roiNum > 0 ? "text-emerald-500" : roiNum < 0 ? "text-red-500" : "")}>{roi}%</td>}
                             </>
                           )}
                         </tr>
@@ -1097,24 +1132,24 @@ export default function DashboardStatistics() {
                       })}
                       <tr className="bg-muted/30 font-semibold">
                         <td className={cn("py-2 px-2 whitespace-nowrap", stickyAlt)}>{t("stats.total")}</td>
-                        <td className="py-2 px-2 whitespace-nowrap">{totals.impressions.toLocaleString()}</td>
-                        <td className="py-2 px-2 whitespace-nowrap">{totals.clicks.toLocaleString()}</td>
-                        <td className="py-2 px-2 whitespace-nowrap">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>
-                        <td className={cn("py-2 px-2 whitespace-nowrap", sep)}>{fmtMoney(totals.spent)}</td>
-                        {showCpm && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney2(cpmOf(totals))}</td>}
-                        {showCpc && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney5(cpcOf(totals))}</td>}
+                        {showImpressions && <td className="py-2 px-2 whitespace-nowrap">{totals.impressions.toLocaleString()}</td>}
+                        {showClicks && <td className="py-2 px-2 whitespace-nowrap">{totals.clicks.toLocaleString()}</td>}
+                        {showCtr && <td className="py-2 px-2 whitespace-nowrap">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>}
+                        {showSpent && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "spent" && trafficCols > 0 && sep)}>{fmtMoney(totals.spent)}</td>}
+                        {showCpm && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "cpm" && trafficCols > 0 && sep)}>{fmtMoney2(cpmOf(totals))}</td>}
+                        {showCpc && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "cpc" && trafficCols > 0 && sep)}>{fmtMoney5(cpcOf(totals))}</td>}
                         {showConversions && (() => {
                           const cr = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) : "0.00";
                           const roiNum = totals.spent > 0 ? ((totals.income - totals.spent) / totals.spent) * 100 : 0;
                           const roi = totals.spent > 0 ? roiNum.toFixed(2) : "0.00";
                           return (
                             <>
-                              <td className={cn("py-2 px-2 whitespace-nowrap", sep)}>{totals.conversions.toLocaleString()}</td>
-                              {showConfirmedConversions && <td className="py-2 px-2 whitespace-nowrap">{totals.confirmedConversions.toLocaleString()}</td>}
-                              <td className="py-2 px-2 whitespace-nowrap">{cr}%</td>
-                              <td className="py-2 px-2 whitespace-nowrap">{fmtMoney(totals.income)}</td>
-                              {showConfirmedIncome && <td className="py-2 px-2 whitespace-nowrap">{fmtMoney(totals.confirmedIncome)}</td>}
-                              <td className={cn("py-2 px-2 whitespace-nowrap", roiNum > 0 ? "text-emerald-500" : roiNum < 0 ? "text-red-500" : "")}>{roi}%</td>
+                              {showConversionsCol && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "conversions" && (trafficCols + costCols) > 0 && sep)}>{totals.conversions.toLocaleString()}</td>}
+                              {showConfirmedConversions && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "confirmedConv" && (trafficCols + costCols) > 0 && sep)}>{totals.confirmedConversions.toLocaleString()}</td>}
+                              {showCr && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "cr" && (trafficCols + costCols) > 0 && sep)}>{cr}%</td>}
+                              {showIncome && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "income" && (trafficCols + costCols) > 0 && sep)}>{fmtMoney(totals.income)}</td>}
+                              {showConfirmedIncome && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "confirmedIncome" && (trafficCols + costCols) > 0 && sep)}>{fmtMoney(totals.confirmedIncome)}</td>}
+                              {showRoi && <td className={cn("py-2 px-2 whitespace-nowrap", firstConv === "roi" && (trafficCols + costCols) > 0 && sep, roiNum > 0 ? "text-emerald-500" : roiNum < 0 ? "text-red-500" : "")}>{roi}%</td>}
                             </>
                           );
                         })()}
