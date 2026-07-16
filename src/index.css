@@ -391,13 +391,35 @@
 }
 
 .landing-hero-title {
-  line-height: 0.95;
-  letter-spacing: -0.04em;
+  font-family:
+    "Space Grotesk",
+    "Manrope",
+    "Inter",
+    system-ui,
+    sans-serif;
+
+  font-size: clamp(52px, 7.1vw, 112px);
+  font-weight: 300;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+  text-wrap: balance;
 }
 
 .landing-hero-title-ru {
-  line-height: 1.08;
-  letter-spacing: -0.015em;
+  font-family:
+    "Manrope",
+    "Inter",
+    system-ui,
+    sans-serif;
+
+  font-size: clamp(42px, 5.7vw, 90px);
+  line-height: 1.18;
+  letter-spacing: 0;
+  word-spacing: 0.02em;
 }
 
 .landing-outline-text {
