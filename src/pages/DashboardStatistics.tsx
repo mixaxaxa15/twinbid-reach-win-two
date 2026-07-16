@@ -559,7 +559,7 @@ export default function DashboardStatistics() {
       if (showCpc) base.push(cpcOf(r));
       if (!showConversions) return base.map(escape).join(",");
       const cr = r.clicks > 0 ? ((r.conversions / r.clicks) * 100).toFixed(2) + "%" : "0.00%";
-      const roi = r.spent > 0 ? (((r.income - r.spent) / r.spent) * 100).toFixed(2) + "%" : "0.00%";
+      const roi = r.spent > 0 ? (((r.confirmedIncome - r.spent) / r.spent) * 100).toFixed(2) + "%" : "0.00%";
       const conv: (string | number)[] = [r.conversions];
       if (showConfirmedConversions) conv.push(r.confirmedConversions);
       conv.push(cr, r.income.toFixed(2));
