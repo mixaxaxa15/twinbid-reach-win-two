@@ -410,7 +410,8 @@ export default function DashboardStatistics() {
     const totalIncome = data.reduce((s, r) => s + r.income, 0);
     const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
     const cr = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(2) : "0.00";
-    const roi = totalSpent > 0 ? (((totalIncome - totalSpent) / totalSpent) * 100).toFixed(2) : "0.00";
+    const totalConfirmedIncome = data.reduce((s, r) => s + r.confirmedIncome, 0);
+    const roi = totalSpent > 0 ? (((totalConfirmedIncome - totalSpent) / totalSpent) * 100).toFixed(2) : "0.00";
     const base = [
       { label: t("stats.impressions"), value: totalImpressions.toLocaleString(), icon: Eye },
       { label: t("stats.clicks"), value: totalClicks.toLocaleString(), icon: MousePointer },
