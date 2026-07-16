@@ -394,8 +394,8 @@
   font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
   font-size: clamp(52px, 7.1vw, 112px);
   font-weight: 300;
-  line-height: 0.9;
-  letter-spacing: -0.065em;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
   text-wrap: balance;
 }
 
