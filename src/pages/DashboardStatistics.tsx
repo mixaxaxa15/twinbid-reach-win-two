@@ -1141,7 +1141,7 @@ export default function DashboardStatistics() {
                         {showCpc && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "cpc" && trafficCols > 0 && sep)}>{fmtMoney5(cpcOf(totals))}</td>}
                         {showConversions && (() => {
                           const cr = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) : "0.00";
-                          const roiNum = totals.spent > 0 ? ((totals.income - totals.spent) / totals.spent) * 100 : 0;
+                          const roiNum = totals.spent > 0 ? ((totals.confirmedIncome - totals.spent) / totals.spent) * 100 : 0;
                           const roi = totals.spent > 0 ? roiNum.toFixed(2) : "0.00";
                           return (
                             <>
