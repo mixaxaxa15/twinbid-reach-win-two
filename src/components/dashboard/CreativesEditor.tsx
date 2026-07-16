@@ -203,23 +203,29 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
   const showImage = formatKey !== "popunder";
 
   const updateCreative = (id: string, updates: Partial<Creative>) => {
-    onChange(creatives.map(c => c.id === id ? { ...c, ...updates } : c));
+    // Read from ref so async handlers (image uploads etc.) can't overwrite
+    // recent sibling edits with a stale creatives snapshot.
+    const list = creativesRef.current;
+    onChange(list.map(c => c.id === id ? { ...c, ...updates } : c));
   };
 
   const addCreative = () => {
-    if (creatives.length >= MAX_CREATIVES) {
+    const list = creativesRef.current;
+    if (list.length >= MAX_CREATIVES) {
       toast.error(t("create.creativeLimit").replace("{max}", String(MAX_CREATIVES)));
       return;
     }
-    onChange([...creatives, { id: generateId(), url: "", creativeType: isBanner ? "image" : undefined }]);
+    onChange([...list, { id: generateId(), url: "", creativeType: isBanner ? "image" : undefined, sizeMismatch: false }]);
   };
 
   const removeCreative = (id: string) => {
-    if (creatives.length <= 1) return;
-    onChange(creatives.filter(c => c.id !== id));
+    const list = creativesRef.current;
+    if (list.length <= 1) return;
+    onChange(list.filter(c => c.id !== id));
     setOrigSources(prev => { const n = { ...prev }; delete n[id]; return n; });
     setMeasured(prev => { const n = { ...prev }; delete n[id]; return n; });
   };
+
 
   const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
   const ALLOWED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif"];
