@@ -99,26 +99,6 @@ export function HeroSection() {
   const title1 = t("hero.title1").trim();
   const title2 = t("hero.title2").trim();
 
-  const isRussian = lang === "ru";
-  const russianTitleParts = isRussian ? title2.split("-") : [];
-
-  /*
-   * У Space Grotesk нет полноценного кириллического начертания.
-   * Поэтому для русского заголовка явно используется Manrope.
-   *
-   * Стили указаны inline, чтобы их не могли перебить значения
-   * line-height и letter-spacing из index.css.
-   */
-  const russianTitleStyle: CSSProperties | undefined = isRussian
-    ? {
-        fontFamily: '"Manrope", "Inter", system-ui, sans-serif',
-        fontSize: "clamp(42px, 5.2vw, 84px)",
-        lineHeight: 1.18,
-        letterSpacing: "0.01em",
-        wordSpacing: "0.04em",
-      }
-    : undefined;
-
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden pb-16 pt-32 md:pb-20 md:pt-36">
       <div className="landing-hero-glow pointer-events-none absolute left-[12%] top-[18%] h-72 w-72 rounded-full bg-primary/10 blur-[100px]" />
@@ -144,33 +124,15 @@ export function HeroSection() {
               delay: 0.08,
               ease: [0.22, 1, 0.36, 1],
             }}
-            className="landing-hero-title text-foreground"
-            style={russianTitleStyle}
+            className={`landing-hero-title text-foreground ${
+              lang === "ru" ? "landing-hero-title-ru" : ""
+            }`}
           >
             <span className="block">{title1}</span>
 
-            {isRussian && russianTitleParts.length >= 2 ? (
-              <span
-                className="landing-outline-text block"
-                style={{
-                  lineHeight: 1.2,
-                  letterSpacing: "0.015em",
-                  paddingBottom: "0.12em",
-                }}
-              >
-                <span className="block">
-                  {russianTitleParts[0]}-
-                </span>
-
-                <span className="block">
-                  {russianTitleParts.slice(1).join("-")}
-                </span>
-              </span>
-            ) : (
-              <span className="landing-outline-text block">
-                {title2}
-              </span>
-            )}
+            <span className="landing-outline-text block">
+              {title2}
+            </span>
           </motion.h1>
 
           <motion.p
@@ -183,9 +145,11 @@ export function HeroSection() {
             className="mt-7 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg"
           >
             {t("hero.subtitle")}{" "}
+
             <span className="text-foreground">
               {t("hero.subtitleSites")}
             </span>{" "}
+
             {t("hero.subtitleEnd")}
           </motion.p>
 
