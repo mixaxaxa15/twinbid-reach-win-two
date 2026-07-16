@@ -313,15 +313,15 @@ export default function DashboardStatistics() {
       if (cancelled || !res) return;
       const byKey = new Map<string, { impressions: number; clicks: number; spent: number; conversions: number; income: number; confirmedConversions: number; confirmedIncome: number }>();
       for (const [key, m] of Object.entries(res.rows)) {
-        const extra = m as unknown as { conversions?: number; income?: number; revenue?: number; confirmed_conversions?: number; confirmed_income?: number; confirmed_revenue?: number };
+        const extra = m as unknown as { conversions?: number; income?: number; conversions_approved?: number; income_approved?: number };
         byKey.set(key, {
           impressions: Number(m.impressions) || 0,
           clicks: Number(m.clicks) || 0,
           spent: Number(m.spent) || 0,
           conversions: Number(extra.conversions) || 0,
-          income: Number(extra.income ?? extra.revenue) || 0,
-          confirmedConversions: Number(extra.confirmed_conversions) || 0,
-          confirmedIncome: Number(extra.confirmed_income ?? extra.confirmed_revenue) || 0,
+          income: Number(extra.income) || 0,
+          confirmedConversions: Number(extra.conversions_approved) || 0,
+          confirmedIncome: Number(extra.income_approved) || 0,
         });
       }
       const empty = { impressions: 0, clicks: 0, spent: 0, conversions: 0, income: 0, confirmedConversions: 0, confirmedIncome: 0 };
