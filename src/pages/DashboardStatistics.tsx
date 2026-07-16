@@ -313,15 +313,15 @@ export default function DashboardStatistics() {
       if (cancelled || !res) return;
       const byKey = new Map<string, { impressions: number; clicks: number; spent: number; conversions: number; income: number; confirmedConversions: number; confirmedIncome: number }>();
       for (const [key, m] of Object.entries(res.rows)) {
-        const extra = m as unknown as { conversions?: number; income?: number; revenue?: number; confirmed_conversions?: number; confirmed_income?: number; confirmed_revenue?: number };
+        const extra = m as unknown as { conversions?: number; income?: number; conversions_approved?: number; income_approved?: number };
         byKey.set(key, {
           impressions: Number(m.impressions) || 0,
           clicks: Number(m.clicks) || 0,
           spent: Number(m.spent) || 0,
           conversions: Number(extra.conversions) || 0,
-          income: Number(extra.income ?? extra.revenue) || 0,
-          confirmedConversions: Number(extra.confirmed_conversions) || 0,
-          confirmedIncome: Number(extra.confirmed_income ?? extra.confirmed_revenue) || 0,
+          income: Number(extra.income) || 0,
+          confirmedConversions: Number(extra.conversions_approved) || 0,
+          confirmedIncome: Number(extra.income_approved) || 0,
         });
       }
       const empty = { impressions: 0, clicks: 0, spent: 0, conversions: 0, income: 0, confirmedConversions: 0, confirmedIncome: 0 };
@@ -410,7 +410,8 @@ export default function DashboardStatistics() {
     const totalIncome = data.reduce((s, r) => s + r.income, 0);
     const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
     const cr = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(2) : "0.00";
-    const roi = totalSpent > 0 ? (((totalIncome - totalSpent) / totalSpent) * 100).toFixed(2) : "0.00";
+    const totalConfirmedIncome = data.reduce((s, r) => s + r.confirmedIncome, 0);
+    const roi = totalSpent > 0 ? (((totalConfirmedIncome - totalSpent) / totalSpent) * 100).toFixed(2) : "0.00";
     const base = [
       { label: t("stats.impressions"), value: totalImpressions.toLocaleString(), icon: Eye },
       { label: t("stats.clicks"), value: totalClicks.toLocaleString(), icon: MousePointer },
@@ -558,7 +559,7 @@ export default function DashboardStatistics() {
       if (showCpc) base.push(cpcOf(r));
       if (!showConversions) return base.map(escape).join(",");
       const cr = r.clicks > 0 ? ((r.conversions / r.clicks) * 100).toFixed(2) + "%" : "0.00%";
-      const roi = r.spent > 0 ? (((r.income - r.spent) / r.spent) * 100).toFixed(2) + "%" : "0.00%";
+      const roi = r.spent > 0 ? (((r.confirmedIncome - r.spent) / r.spent) * 100).toFixed(2) + "%" : "0.00%";
       const conv: (string | number)[] = [r.conversions];
       if (showConfirmedConversions) conv.push(r.confirmedConversions);
       conv.push(cr, r.income.toFixed(2));
@@ -571,7 +572,7 @@ export default function DashboardStatistics() {
     if (showCpm) baseTotal.push(cpmOf(totals));
     if (showCpc) baseTotal.push(cpcOf(totals));
     const crTotal = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) + "%" : "0.00%";
-    const roiTotal = totals.spent > 0 ? (((totals.income - totals.spent) / totals.spent) * 100).toFixed(2) + "%" : "0.00%";
+    const roiTotal = totals.spent > 0 ? (((totals.confirmedIncome - totals.spent) / totals.spent) * 100).toFixed(2) + "%" : "0.00%";
     const convTotal: (string | number)[] = [totals.conversions];
     if (showConfirmedConversions) convTotal.push(totals.confirmedConversions);
     convTotal.push(crTotal, totals.income.toFixed(2));
@@ -1104,7 +1105,7 @@ export default function DashboardStatistics() {
                     <tbody>
                       {visibleRows.map((row) => {
                         const cr = row.clicks > 0 ? ((row.conversions / row.clicks) * 100).toFixed(2) : "0.00";
-                        const roiNum = row.spent > 0 ? ((row.income - row.spent) / row.spent) * 100 : 0;
+                        const roiNum = row.spent > 0 ? ((row.confirmedIncome - row.spent) / row.spent) * 100 : 0;
                         const roi = row.spent > 0 ? roiNum.toFixed(2) : "0.00";
                         return (
                         <tr key={row.label} className="group border-b border-border/50 hover:bg-muted/50 transition-colors">
@@ -1140,7 +1141,7 @@ export default function DashboardStatistics() {
                         {showCpc && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "cpc" && trafficCols > 0 && sep)}>{fmtMoney5(cpcOf(totals))}</td>}
                         {showConversions && (() => {
                           const cr = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) : "0.00";
-                          const roiNum = totals.spent > 0 ? ((totals.income - totals.spent) / totals.spent) * 100 : 0;
+                          const roiNum = totals.spent > 0 ? ((totals.confirmedIncome - totals.spent) / totals.spent) * 100 : 0;
                           const roi = totals.spent > 0 ? roiNum.toFixed(2) : "0.00";
                           return (
                             <>
