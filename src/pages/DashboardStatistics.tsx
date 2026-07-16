@@ -572,7 +572,7 @@ export default function DashboardStatistics() {
     if (showCpm) baseTotal.push(cpmOf(totals));
     if (showCpc) baseTotal.push(cpcOf(totals));
     const crTotal = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) + "%" : "0.00%";
-    const roiTotal = totals.spent > 0 ? (((totals.income - totals.spent) / totals.spent) * 100).toFixed(2) + "%" : "0.00%";
+    const roiTotal = totals.spent > 0 ? (((totals.confirmedIncome - totals.spent) / totals.spent) * 100).toFixed(2) + "%" : "0.00%";
     const convTotal: (string | number)[] = [totals.conversions];
     if (showConfirmedConversions) convTotal.push(totals.confirmedConversions);
     convTotal.push(crTotal, totals.income.toFixed(2));
