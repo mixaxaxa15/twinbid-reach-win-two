@@ -336,7 +336,7 @@
   }
 
   .scroll-indicator { display: none; }
-  .marquee-track { animation: marquee-loop 90s linear infinite; }
+  .marquee-track { animation: marquee-loop 30s linear infinite; animation-play-state: running !important; }
 }
 
 @keyframes marquee-loop {
