@@ -546,16 +546,13 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
 
   const updateCampaign = useCallback(async (id: string, updates: Partial<Campaign>) => {
     if (!user) throw new Error("Not authenticated");
-    // If the user selected CPC for popunder, convert to CPM before sending.
+    // For popunder CPC, keep pricing_model = "cpc" but store the value as CPM-equivalent (×1000).
     const current = campaigns.find(c => c.id === id);
     const effectiveUpdates: Partial<Campaign> = { ...updates };
     const fmt = effectiveUpdates.formatKey ?? current?.formatKey;
     const pm = effectiveUpdates.pricingModel ?? current?.pricingModel;
-    if (fmt === "popunder" && pm === "cpc") {
-      effectiveUpdates.pricingModel = "cpm";
-      if (effectiveUpdates.priceValue !== undefined) {
-        effectiveUpdates.priceValue = (effectiveUpdates.priceValue as number) * 1000;
-      }
+    if (fmt === "popunder" && pm === "cpc" && effectiveUpdates.priceValue !== undefined) {
+      effectiveUpdates.priceValue = (effectiveUpdates.priceValue as number) * 1000;
     }
     // Sync creatives BEFORE patching the campaign. Some status transitions
     // (draft → moderation) are rejected by the backend when the campaign has
