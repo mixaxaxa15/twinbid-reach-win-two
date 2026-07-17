@@ -336,7 +336,7 @@
   }
 
   .scroll-indicator { display: none; }
-  .marquee-track { animation: marquee-loop 90s linear infinite; }
+  .marquee-track { animation: marquee-loop 30s linear infinite; animation-play-state: running !important; }
 }
 
 @keyframes marquee-loop {
@@ -578,8 +578,7 @@
 @media (prefers-reduced-motion: reduce) {
   .landing-orbit,
   .landing-format-orbit,
-  .landing-format-counter,
-  .marquee-track { animation-play-state: paused; }
+  .landing-format-counter { animation-play-state: paused; }
 }
 
 /* Hide number input spinners */
