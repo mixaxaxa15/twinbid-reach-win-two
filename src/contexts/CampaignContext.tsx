@@ -409,9 +409,9 @@ function buildApiCampaignBody(c: Omit<Campaign, "id">): Omit<ApiCampaign, "campa
   // so the backend can apply its own default / nullability handling.
   if (c.brandName) body.brand_name = c.brandName;
   // For popunder, the backend only stores CPM. If the user selected CPC,
-  // convert the value to an equivalent CPM and send CPM as the model.
+  // send the value as its CPM-equivalent (×1000), but keep pricing_model = "cpc"
+  // so the user's choice is preserved and displayed back correctly.
   if (c.formatKey === "popunder" && c.pricingModel === "cpc") {
-    body.pricing_model = "cpm";
     body.base_price = c.priceValue * 1000;
   }
   return body;
