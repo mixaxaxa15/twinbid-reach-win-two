@@ -417,7 +417,7 @@ function ListItem({ config, list: rawList, onUpdate }: {
 export function TargetingSection({ lists, onUpdate }: TargetingSectionProps) {
   const { t } = useLanguage();
 
-  // Migrate old dayOfWeek/hour data to schedule format
+  // Migrate old dayOfWeek/hour data to schedule format and force schedule always on.
   const effectiveLists = { ...lists };
   if ((lists.dayOfWeek?.mode !== "none" && lists.dayOfWeek?.items?.length) || (lists.hour?.mode !== "none" && lists.hour?.items?.length)) {
     if (!lists.schedule || lists.schedule.mode === "none") {
@@ -431,6 +431,12 @@ export function TargetingSection({ lists, onUpdate }: TargetingSectionProps) {
       }
       effectiveLists.schedule = { mode: "white", items: scheduleItems };
     }
+  }
+  // Schedule cannot be turned off; default to all days/hours if missing or disabled.
+  if (!effectiveLists.schedule || effectiveLists.schedule.mode === "none" || !effectiveLists.schedule.items?.length) {
+    const allItems: string[] = [];
+    for (const d of DAYS) for (let h = 0; h < 24; h++) allItems.push(`${d}:${h}`);
+    effectiveLists.schedule = { mode: "white", items: allItems };
   }
 
   return (
