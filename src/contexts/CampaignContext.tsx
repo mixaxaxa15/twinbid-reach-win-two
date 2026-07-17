@@ -294,7 +294,11 @@ function readApiTargeting(c: ApiCampaign): Record<string, TargetingState> {
 
 // ---- Mapping --------------------------------------------------------------
 function mapApiCampaignToUi(c: ApiCampaign, creatives: Creative[]): Campaign {
-  const priceValue = Number(c.base_price) || 0;
+  let priceValue = Number(c.base_price) || 0;
+  // Popunder CPC is stored as CPM-equivalent (value * 1000). Convert back for display.
+  if (c.format_type === "popunder" && c.pricing_model === "cpc") {
+    priceValue = priceValue / 1000;
+  }
   return {
     id: c.campaign_id,
     name: c.campaign_name,
