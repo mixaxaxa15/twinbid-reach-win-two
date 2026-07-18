@@ -14,7 +14,6 @@ const copy = {
     bid: "Текущая ставка",
     insight: "Видите не только купленный трафик",
     description: "Выберите кампанию или задайте таргетинги вручную. Калькулятор покажет, сколько потенциальных кликов соответствовало этим параметрам, какую долю получила кампания и позволит сразу изменить ставку.",
-    source: "Исторические данные за последние полные сутки — без прогнозной модели",
     cta: "Открыть калькулятор",
   },
   en: {
@@ -26,7 +25,6 @@ const copy = {
     bid: "Current bid",
     insight: "See more than the traffic you bought",
     description: "Select a campaign or set targeting manually. The calculator shows how many potential clicks matched the parameters, what share the campaign received and lets you update the bid immediately.",
-    source: "Historical data from the latest complete day — no prediction model",
     cta: "Open calculator",
   },
   es: {
@@ -38,7 +36,6 @@ const copy = {
     bid: "Puja actual",
     insight: "Ve más que el tráfico comprado",
     description: "Selecciona una campaña o configura la segmentación. La calculadora muestra cuántos clics potenciales coincidían, qué cuota recibió la campaña y permite actualizar la puja al instante.",
-    source: "Datos históricos del último día completo, sin modelos predictivos",
     cta: "Abrir calculadora",
   },
 };
@@ -116,7 +113,6 @@ export function TrafficCalculatorSection() {
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-primary/[0.08]"><Target className="h-5 w-5 text-primary" strokeWidth={1.5} /></span>
                 <h3 className="mt-7 font-display text-4xl font-light leading-[1.05] tracking-tight text-foreground md:text-5xl">{text.insight}</h3>
                 <p className="mt-6 text-[15px] leading-relaxed text-muted-foreground md:text-base">{text.description}</p>
-                <div className="mt-6 flex items-start gap-3 border-l border-primary/35 pl-4 text-xs leading-relaxed text-muted-foreground"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />{text.source}</div>
                 <AuthDialog
                   trigger={<button className="landing-button landing-button-primary mt-8 px-6 py-3.5 text-[13px]">{text.cta}<ArrowRight className="h-4 w-4" /></button>}
                   defaultTab="register"
