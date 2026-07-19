@@ -290,8 +290,6 @@ export default function TrafficCalculator() {
       const calculation = await api.calculator({
         format_type: filters.format as "banner" | "native" | "push" | "popunder",
         traffic_type: filters.trafficType,
-        verticals: filters.verticals,
-        verticals_mode: filters.verticalsMode,
         country: filters.country,
         country_mode: filters.countryMode,
         language: filters.language,
