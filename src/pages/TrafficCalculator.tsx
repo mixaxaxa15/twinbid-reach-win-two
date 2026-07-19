@@ -28,7 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCampaigns, type Campaign, type PricingModel, VERTICALS } from "@/contexts/CampaignContext";
+import { useCampaigns, type Campaign, type PricingModel } from "@/contexts/CampaignContext";
 import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import { COUNTRIES, LANGUAGES } from "@/lib/dimensions";
 import { BROWSER_FILTER_KEYS, DEVICE_FILTER_KEYS, OS_FILTER_KEYS, OTHER_KEY } from "@/lib/statFilters";
