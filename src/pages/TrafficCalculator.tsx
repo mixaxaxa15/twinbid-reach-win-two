@@ -222,8 +222,6 @@ function fromCampaign(campaign: Campaign): FilterState {
   return {
     format: campaign.formatKey || "banner",
     trafficType: campaign.trafficType,
-    verticals: campaign.verticals,
-    verticalsMode: "include",
     country: items("country"),
     countryMode: mode("country"),
     language: items("language"),
