@@ -189,8 +189,6 @@ const formats = [
 type FilterState = {
   format: string;
   trafficType: "mainstream" | "adult" | "mixed";
-  verticals: string[];
-  verticalsMode: "include" | "exclude";
   country: string[];
   countryMode: "include" | "exclude";
   language: string[];
@@ -206,8 +204,6 @@ type FilterState = {
 const defaults: FilterState = {
   format: "banner",
   trafficType: "mainstream",
-  verticals: [],
-  verticalsMode: "include",
   country: [],
   countryMode: "include",
   language: [],
