@@ -28,7 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCampaigns, type Campaign, type PricingModel, VERTICALS } from "@/contexts/CampaignContext";
+import { useCampaigns, type Campaign, type PricingModel } from "@/contexts/CampaignContext";
 import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import { COUNTRIES, LANGUAGES } from "@/lib/dimensions";
 import { BROWSER_FILTER_KEYS, DEVICE_FILTER_KEYS, OS_FILTER_KEYS, OTHER_KEY } from "@/lib/statFilters";
@@ -189,8 +189,6 @@ const formats = [
 type FilterState = {
   format: string;
   trafficType: "mainstream" | "adult" | "mixed";
-  verticals: string[];
-  verticalsMode: "include" | "exclude";
   country: string[];
   countryMode: "include" | "exclude";
   language: string[];
@@ -206,8 +204,6 @@ type FilterState = {
 const defaults: FilterState = {
   format: "banner",
   trafficType: "mainstream",
-  verticals: [],
-  verticalsMode: "include",
   country: [],
   countryMode: "include",
   language: [],
@@ -226,8 +222,6 @@ function fromCampaign(campaign: Campaign): FilterState {
   return {
     format: campaign.formatKey || "banner",
     trafficType: campaign.trafficType,
-    verticals: campaign.verticals,
-    verticalsMode: "include",
     country: items("country"),
     countryMode: mode("country"),
     language: items("language"),
@@ -296,8 +290,6 @@ export default function TrafficCalculator() {
       const calculation = await api.calculator({
         format_type: filters.format as "banner" | "native" | "push" | "popunder",
         traffic_type: filters.trafficType,
-        verticals: filters.verticals,
-        verticals_mode: filters.verticalsMode,
         country: filters.country,
         country_mode: filters.countryMode,
         language: filters.language,
@@ -406,7 +398,7 @@ export default function TrafficCalculator() {
             <MultiChoice label={text.devices} text={text} mode={filters.deviceTypeMode} values={filters.deviceType} options={DEVICE_FILTER_KEYS.filter((item) => item !== OTHER_KEY).map(simpleOption)} onModeChange={(deviceTypeMode) => updateFilters({ deviceTypeMode })} onChange={(deviceType) => updateFilters({ deviceType })} />
             <MultiChoice label="OS" text={text} mode={filters.osMode} values={filters.os} options={OS_FILTER_KEYS.filter((item) => item !== OTHER_KEY).map(simpleOption)} onModeChange={(osMode) => updateFilters({ osMode })} onChange={(os) => updateFilters({ os })} />
             <MultiChoice label={text.browsers} text={text} mode={filters.browserMode} values={filters.browser} options={BROWSER_FILTER_KEYS.filter((item) => item !== OTHER_KEY).map(simpleOption)} onModeChange={(browserMode) => updateFilters({ browserMode })} onChange={(browser) => updateFilters({ browser })} />
-            <MultiChoice label={text.verticals} text={text} mode={filters.verticalsMode} values={filters.verticals} options={VERTICALS.map(simpleOption)} onModeChange={(verticalsMode) => updateFilters({ verticalsMode })} onChange={(verticals) => updateFilters({ verticals })} />
+            
           </div>
           <Button className="mt-5 w-full" onClick={calculate} disabled={loading}>{loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}{text.getData}</Button>
         </Card>
