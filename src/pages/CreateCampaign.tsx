@@ -206,6 +206,11 @@ export default function CreateCampaign() {
   const handleNext = async () => {
     if (step === 1 && !validateStep1()) return;
     if (step === 2) {
+      const sched = lists.schedule;
+      if (!sched || !sched.items || sched.items.length === 0) {
+        toast.error(t("targeting.scheduleRequired"));
+        return;
+      }
       setStep(3);
       setErrors({});
       void loadBidRecommendation();
