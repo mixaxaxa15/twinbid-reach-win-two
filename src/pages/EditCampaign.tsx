@@ -177,6 +177,12 @@ export default function EditCampaign() {
     }
     if (!name.trim()) e.name = t("create.required");
 
+    const sched = lists.schedule;
+    if (!sched || !sched.items || sched.items.length === 0) {
+      toast.error(t("targeting.scheduleRequired"));
+      return;
+    }
+
     crvs.forEach(c => {
       if (!c.name?.trim()) e[`creative_${c.id}_name`] = t("create.required");
       const type = campaign.formatKey === "banner" ? (c.creativeType || "image") : "image";
