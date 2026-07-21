@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveDisplayedBidRecommendation } from "@/lib/bidRecommendation";
+import { buildRecommendBidRequest, resolveDisplayedBidRecommendation } from "@/lib/bidRecommendation";
 
 describe("resolveDisplayedBidRecommendation", () => {
   it("uses the API recommendations when the returned bid reaches the active minimum", () => {
@@ -36,5 +36,16 @@ describe("resolveDisplayedBidRecommendation", () => {
       minimumRecommended: 0.001785,
       optimalRecommended: 0.00306,
     });
+  });
+});
+
+describe("buildRecommendBidRequest", () => {
+  it("passes site IDs and their include/exclude mode to recommend_bid", () => {
+    const request = buildRecommendBidRequest("popunder", "adult", {
+      sites: { mode: "black", items: ["12345", "abdjhx"] },
+    });
+
+    expect(request.site_id).toEqual(["12345", "abdjhx"]);
+    expect(request.site_id_mode).toBe("exclude");
   });
 });

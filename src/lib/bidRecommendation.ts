@@ -38,6 +38,7 @@ export function buildRecommendBidRequest(
   const deviceType = readList(lists, "deviceType");
   const os = readList(lists, "os");
   const browser = readList(lists, "browser");
+  const sites = readList(lists, "sites");
 
   return {
     format_type: formatType as RecommendBidRequest["format_type"],
@@ -52,6 +53,8 @@ export function buildRecommendBidRequest(
     os_mode: os.mode,
     browser: browser.items,
     browser_mode: browser.mode,
+    site_id: sites.items,
+    site_id_mode: sites.mode,
   };
 }
 
