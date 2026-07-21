@@ -443,11 +443,9 @@ export function TargetingSection({ lists, onUpdate }: TargetingSectionProps) {
       effectiveLists.schedule = { mode: "white", items: scheduleItems };
     }
   }
-  // Schedule cannot be turned off; default to all days/hours if missing or disabled.
-  if (!effectiveLists.schedule || effectiveLists.schedule.mode === "none" || !effectiveLists.schedule.items?.length) {
-    const allItems: string[] = [];
-    for (const d of DAYS) for (let h = 0; h < 24; h++) allItems.push(`${d}:${h}`);
-    effectiveLists.schedule = { mode: "white", items: allItems };
+  // Ensure schedule entry exists (mode always "white"); don't refill when user cleared it.
+  if (!effectiveLists.schedule || effectiveLists.schedule.mode === "none") {
+    effectiveLists.schedule = { mode: "white", items: effectiveLists.schedule?.items ?? [] };
   }
 
   return (
