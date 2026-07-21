@@ -8,6 +8,18 @@ export interface BidRecommendation {
   optimalRecommended: number;
 }
 
+interface DisplayedBidRecommendationParams {
+  apiMinimumRecommended: number;
+  apiOptimalRecommended: number;
+  hardcodedMinimum: number;
+  hardcodedRecommended: number;
+}
+
+export interface DisplayedBidRecommendation {
+  minimumRecommended: number;
+  optimalRecommended: number;
+}
+
 const readList = (lists: Record<string, TargetingState>, key: string) => {
   const list = lists[key];
   return {
@@ -49,5 +61,24 @@ export function makeBidRecommendation(averageBid: number): BidRecommendation | n
   return {
     minimumRecommended: averageBid,
     optimalRecommended: averageBid * optimalMultiplier,
+  };
+}
+
+export function resolveDisplayedBidRecommendation({
+  apiMinimumRecommended,
+  apiOptimalRecommended,
+  hardcodedMinimum,
+  hardcodedRecommended,
+}: DisplayedBidRecommendationParams): DisplayedBidRecommendation {
+  if (apiMinimumRecommended < hardcodedMinimum) {
+    return {
+      minimumRecommended: (hardcodedMinimum + hardcodedRecommended) / 2,
+      optimalRecommended: hardcodedRecommended,
+    };
+  }
+
+  return {
+    minimumRecommended: apiMinimumRecommended,
+    optimalRecommended: Math.max(apiMinimumRecommended, apiOptimalRecommended),
   };
 }

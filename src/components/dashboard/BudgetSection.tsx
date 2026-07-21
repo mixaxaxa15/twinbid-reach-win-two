@@ -10,7 +10,10 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { PricingModel, TrafficQuality } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { BidRecommendation } from "@/lib/bidRecommendation";
+import {
+  resolveDisplayedBidRecommendation,
+  type BidRecommendation,
+} from "@/lib/bidRecommendation";
 
 const formatCpmLimits: Record<string, Record<TrafficQuality, { min: number; rec: number }>> = {
   banner: {
@@ -66,6 +69,8 @@ function formatBid(value: number, model: PricingModel): string {
 
 function recommendationForModel(value: number, formatKey: string, model: PricingModel): number {
   if (model === "cpm" || formatKey === "push") return value;
+  // The backend always returns Popunder recommendations in CPM. When the
+  // campaign uses CPC, preserve the same CPM -> CPC coefficient as before.
   return value * CPC_MULTIPLIER;
 }
 
@@ -104,12 +109,24 @@ export function BudgetSection({
   const maxPrice = pricingModel === "cpm"
     ? (formatKey === "popunder" ? MAX_POPUNDER_CPM : MAX_CPM)
     : MAX_CPC;
-  const minimumRecommended = bidRecommendation
-    ? Math.max(limits.min, recommendationForModel(bidRecommendation.minimumRecommended, formatKey, pricingModel))
+  const displayedRecommendation = bidRecommendation
+    ? resolveDisplayedBidRecommendation({
+        apiMinimumRecommended: recommendationForModel(
+          bidRecommendation.minimumRecommended,
+          formatKey,
+          pricingModel,
+        ),
+        apiOptimalRecommended: recommendationForModel(
+          bidRecommendation.optimalRecommended,
+          formatKey,
+          pricingModel,
+        ),
+        hardcodedMinimum: limits.min,
+        hardcodedRecommended: limits.rec,
+      })
     : null;
-  const optimalRecommended = bidRecommendation && minimumRecommended !== null
-    ? Math.max(minimumRecommended, recommendationForModel(bidRecommendation.optimalRecommended, formatKey, pricingModel))
-    : null;
+  const minimumRecommended = displayedRecommendation?.minimumRecommended ?? null;
+  const optimalRecommended = displayedRecommendation?.optimalRecommended ?? null;
   const isBelowMin = priceValue !== "" && priceNum < limits.min;
   const activeRecommended = minimumRecommended ?? limits.rec;
   const isBelowRec = priceValue !== "" && priceNum >= limits.min && priceNum < activeRecommended;
