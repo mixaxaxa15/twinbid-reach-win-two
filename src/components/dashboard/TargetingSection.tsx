@@ -185,8 +185,7 @@ function SchedulePicker({ items, onUpdate, t }: { items: string[]; onUpdate: (it
   };
 
   const toggleAll = () => {
-    const total = DAYS.length * 24;
-    if (itemSet.size >= total) {
+    if (itemSet.size > 0) {
       onUpdate([]);
     } else {
       const all: string[] = [];
