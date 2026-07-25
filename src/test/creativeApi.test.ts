@@ -1,0 +1,349 @@
+import { describe, expect, it } from "vitest";
+import type { ApiCreative, ApiCreativeImage, ApiCreativeWrite } from "@/api/types";
+import {
+  CreativeImageUploadError,
+  buildCreativeWriteBody,
+  buildIframeAdm,
+  createCampaignCreatives,
+  MAX_CREATIVE_VIDEO_BYTES,
+  normalizeCreativeUploadFile,
+  syncCampaignCreatives,
+  validateCreativeFile,
+  type CreativeApiClient,
+  type CreativeDraft,
+} from "@/lib/creativeApi";
+import { mapApiCreativeToUi } from "@/contexts/CampaignContext";
+
+function imageFile(name = "banner.jpg", type = "image/jpeg") {
+  return new File(["bytes"], name, { type });
+}
+
+function baseCreative(overrides: Partial<CreativeDraft> = {}): CreativeDraft {
+  return {
+    id: "local-1",
+    name: "Creative",
+    url: "https://target.example?site_id={site_id}",
+    creativeType: "image",
+    pendingFile: imageFile(),
+    imageFileName: "banner.jpg",
+    imageMimeType: "image/jpeg",
+    mediaType: "image",
+    ...overrides,
+  };
+}
+
+function existingCreative(overrides: Partial<ApiCreative> = {}): ApiCreative {
+  return {
+    id: "creative-1",
+    campaign_id: "campaign-1",
+    creative_name: "Creative",
+    adm: '<a href="https://target.example" target="_blank" rel="noopener noreferrer"><img src="https://cdn.example/image.jpg" width="300" height="250" alt="" style="display:block;border:0"></a>',
+    banner_type: "img",
+    image_id: "image-1",
+    image_url: "https://cdn.example/image.jpg",
+    image_name: "banner.jpg",
+    mime_type: "image/jpg",
+    trackers_macros: {},
+    w: 300,
+    h: 250,
+    title: null,
+    description: null,
+    ...overrides,
+  };
+}
+
+class FakeCreativeApi implements CreativeApiClient {
+  uploads: Array<{ campaignId: string; file: File; filename?: string }> = [];
+  creates: Array<{ campaignId: string; body: ApiCreativeWrite }> = [];
+  patches: Array<{ id: string; body: Partial<ApiCreativeWrite> }> = [];
+  deletes: string[] = [];
+  failUpload = false;
+
+  async uploadCreativeImage(campaignId: string, file: File, filename?: string): Promise<ApiCreativeImage> {
+    this.uploads.push({ campaignId, file, filename });
+    if (this.failUpload) throw new Error("Backend rejected file");
+    return {
+      image_id: `uploaded-image-${this.uploads.length}`,
+      campaign_id: campaignId,
+      creative_id: null,
+      image_url: `https://cdn.example/${filename || file.name}`,
+      filename: filename || file.name,
+      mime_type: file.type,
+      file_format: file.type,
+      size_bytes: file.size,
+      created_at: "2026-07-25T00:00:00Z",
+      updated_at: "2026-07-25T00:00:00Z",
+    };
+  }
+
+  async createCreative(campaignId: string, body: ApiCreativeWrite): Promise<ApiCreative> {
+    this.creates.push({ campaignId, body });
+    return { ...body, id: `creative-${this.creates.length}`, campaign_id: campaignId };
+  }
+
+  async patchCreative(id: string, body: Partial<ApiCreativeWrite>): Promise<ApiCreative> {
+    this.patches.push({ id, body });
+    return { ...existingCreative({ id }), ...body };
+  }
+
+  async deleteCreative(id: string): Promise<void> {
+    this.deletes.push(id);
+  }
+}
+
+const dimensions = { w: 300, h: 250 };
+
+describe("creative API migration", () => {
+  it("creates banner image only after upload and uses permanent image_url in ADM", async () => {
+    const client = new FakeCreativeApi();
+    await createCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "banner",
+      dimensions,
+      creatives: [baseCreative()],
+    });
+
+    expect(client.uploads).toHaveLength(1);
+    expect(client.uploads[0].file.type).toBe("image/jpg");
+    expect(client.creates).toHaveLength(1);
+    expect(client.creates[0].body).toMatchObject({
+      banner_type: "img",
+      image_id: "uploaded-image-1",
+      w: 300,
+      h: 250,
+    });
+    expect(client.creates[0].body.adm).toContain('src="https://cdn.example/banner.jpg"');
+  });
+
+  it("builds iframe code from a URL with campaign banner dimensions and does not upload", async () => {
+    const client = new FakeCreativeApi();
+    await createCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "banner",
+      dimensions,
+      creatives: [baseCreative({
+        creativeType: "iframe",
+        iframeMode: "url",
+        iframeUrl: "https://creative.example/frame",
+        pendingFile: undefined,
+      })],
+    });
+
+    expect(client.uploads).toHaveLength(0);
+    expect(client.creates[0].body.banner_type).toBe("iframe");
+    expect(client.creates[0].body.adm).toBe(
+      buildIframeAdm("https://creative.example/frame", 300, 250, "Creative"),
+    );
+  });
+
+  it("sends banner HTML as ADM with backend iframe type", async () => {
+    const body = buildCreativeWriteBody({
+      format: "banner",
+      dimensions,
+      creative: baseCreative({
+        creativeType: "html",
+        htmlCode: "<div>HTML banner</div>",
+        pendingFile: undefined,
+      }),
+    });
+    expect(body).toMatchObject({ banner_type: "iframe", adm: "<div>HTML banner</div>" });
+    expect(body.image_id).toBeUndefined();
+  });
+
+  it.each(["native", "push"] as const)("uploads image before %s creative create", async (format) => {
+    const client = new FakeCreativeApi();
+    await createCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format,
+      dimensions: { w: null, h: null },
+      creatives: [baseCreative({ title: "Title", description: "Description" })],
+    });
+    expect(client.uploads).toHaveLength(1);
+    expect(client.creates[0].body.image_id).toBe("uploaded-image-1");
+    expect(client.creates[0].body.banner_type).toBeUndefined();
+  });
+
+  it("creates popunder without image upload or image fields", async () => {
+    const client = new FakeCreativeApi();
+    await createCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "popunder",
+      dimensions: { w: null, h: null },
+      creatives: [baseCreative({ pendingFile: undefined })],
+    });
+    expect(client.uploads).toHaveLength(0);
+    expect(client.creates[0].body.adm).toBe("https://target.example");
+    expect(client.creates[0].body.image_id).toBeUndefined();
+    expect(client.creates[0].body.banner_type).toBeUndefined();
+  });
+
+  it("uploads a replacement image and PATCHes the same creative ID", async () => {
+    const client = new FakeCreativeApi();
+    await syncCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "banner",
+      dimensions,
+      creatives: [baseCreative({ id: "creative-1" })],
+      existing: [existingCreative()],
+    });
+    expect(client.uploads).toHaveLength(1);
+    expect(client.patches).toHaveLength(1);
+    expect(client.patches[0]).toMatchObject({ id: "creative-1", body: { image_id: "uploaded-image-1" } });
+    expect(client.deletes).toHaveLength(0);
+  });
+
+  it("does not upload or PATCH an unchanged existing image creative", async () => {
+    const client = new FakeCreativeApi();
+    const existing = existingCreative();
+    await syncCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "banner",
+      dimensions,
+      creatives: [baseCreative({
+        id: "creative-1",
+        url: "https://target.example",
+        pendingFile: undefined,
+        imageId: "image-1",
+        imageUrl: "https://cdn.example/image.jpg",
+        imageFileName: "banner.jpg",
+        imageMimeType: "image/jpg",
+      })],
+      existing: [existing],
+    });
+    expect(client.uploads).toHaveLength(0);
+    expect(client.patches).toHaveLength(0);
+    expect(client.deletes).toHaveLength(0);
+  });
+
+  it("clears image_id when banner switches from img to iframe", async () => {
+    const client = new FakeCreativeApi();
+    await syncCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "banner",
+      dimensions,
+      creatives: [baseCreative({
+        id: "creative-1",
+        creativeType: "iframe",
+        iframeMode: "code",
+        iframeCode: '<iframe src="https://creative.example"></iframe>',
+        pendingFile: undefined,
+      })],
+      existing: [existingCreative()],
+    });
+    expect(client.uploads).toHaveLength(0);
+    expect(client.patches[0].body).toMatchObject({
+      banner_type: "iframe",
+      image_id: null,
+    });
+  });
+
+  it("deletes only creatives removed by the user", async () => {
+    const client = new FakeCreativeApi();
+    await syncCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "banner",
+      dimensions,
+      creatives: [],
+      existing: [existingCreative()],
+    });
+    expect(client.deletes).toEqual(["creative-1"]);
+  });
+
+  it("can add, update and delete different creatives without full recreation", async () => {
+    const client = new FakeCreativeApi();
+    const changed = existingCreative({ id: "creative-change", creative_name: "Old" });
+    const removed = existingCreative({ id: "creative-remove" });
+    await syncCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "popunder",
+      dimensions: { w: null, h: null },
+      creatives: [
+        baseCreative({ id: "creative-change", name: "New", pendingFile: undefined }),
+        baseCreative({ id: "local-new", name: "Added", pendingFile: undefined }),
+      ],
+      existing: [changed, removed],
+    });
+    expect(client.creates).toHaveLength(1);
+    expect(client.patches.map(item => item.id)).toEqual(["creative-change"]);
+    expect(client.deletes).toEqual(["creative-remove"]);
+  });
+
+  it("maps permanent image_url back into the editor independently of campaign status", () => {
+    const mapped = mapApiCreativeToUi(existingCreative({
+      image_url: "https://cdn.example/permanent.jpg",
+      image_name: "permanent.jpg",
+    }));
+    expect(mapped.imageUrl).toBe("https://cdn.example/permanent.jpg");
+    expect(mapped.imageFileName).toBe("permanent.jpg");
+    expect(mapped.pendingFile).toBeUndefined();
+    expect(mapped.creativeType).toBe("image");
+  });
+
+  it("sends MP4 with video/mp4 MIME and builds video ADM", async () => {
+    const original = imageFile("banner.mp4", "application/octet-stream");
+    expect(normalizeCreativeUploadFile(original).type).toBe("video/mp4");
+    const client = new FakeCreativeApi();
+    await createCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "banner",
+      dimensions,
+      creatives: [baseCreative({
+        pendingFile: original,
+        imageFileName: "banner.mp4",
+        imageMimeType: "video/mp4",
+        mediaType: "video",
+      })],
+    });
+    expect(client.uploads[0].file.type).toBe("video/mp4");
+    expect(client.creates[0].body.adm).toContain("<video ");
+  });
+
+  it("allows MP4 only for banners and enforces the 10 MB limit", () => {
+    const exactLimit = new File(
+      [new Uint8Array(MAX_CREATIVE_VIDEO_BYTES)],
+      "banner.mp4",
+      { type: "video/mp4" },
+    );
+    const aboveLimit = new File(
+      [new Uint8Array(MAX_CREATIVE_VIDEO_BYTES + 1)],
+      "banner.mp4",
+      { type: "video/mp4" },
+    );
+
+    expect(validateCreativeFile(exactLimit, true)).toEqual({
+      valid: true,
+      mediaType: "video",
+    });
+    expect(validateCreativeFile(aboveLimit, true)).toEqual({
+      valid: false,
+      reason: "video-size",
+    });
+    expect(validateCreativeFile(exactLimit, false)).toEqual({
+      valid: false,
+      reason: "format",
+    });
+  });
+
+  it("stops before creative POST when image upload fails", async () => {
+    const client = new FakeCreativeApi();
+    client.failUpload = true;
+    await expect(createCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "banner",
+      dimensions,
+      creatives: [baseCreative()],
+    })).rejects.toBeInstanceOf(CreativeImageUploadError);
+    expect(client.creates).toHaveLength(0);
+  });
+});

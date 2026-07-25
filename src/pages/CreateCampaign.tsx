@@ -20,6 +20,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { api } from "@/api";
 import { buildRecommendBidRequest, makeBidRecommendation, type BidRecommendation } from "@/lib/bidRecommendation";
 import { getBidLimits, getMaximumBid } from "@/lib/bidLimits";
+import { isCreativeImageUploadError } from "@/lib/creativeApi";
 
 const formatLabels: Record<string, string> = {
   banner: "Banner", popunder: "Popunder", native: "Native", push: "In-page Push",
@@ -218,7 +219,7 @@ export default function CreateCampaign() {
     }
     if (step === 3) { if (!validateStep3()) return; setStep(4); setErrors({}); return; }
     if (step === 4) {
-      if (creatives.some(c => (c.creativeType || "image") === "image" && c.sizeMismatch)) { setConfirmMismatchOpen(true); return; }
+      if (creatives.some(c => (c.creativeType || "image") === "image" && c.mediaType !== "video" && c.sizeMismatch)) { setConfirmMismatchOpen(true); return; }
       await handleCreate();
       return;
     }
@@ -258,7 +259,11 @@ export default function CreateCampaign() {
       toast.success(t("create.created"));
       navigate("/dashboard/campaigns");
     } catch (e: any) {
-      toast.error(`${t("create.failed") || "Failed to create campaign"}: ${e?.message || e}`);
+      toast.error(
+        isCreativeImageUploadError(e)
+          ? e.message
+          : `${t("create.failed") || "Failed to create campaign"}: ${e?.message || e}`,
+      );
       setIsCreating(false);
     }
   };
@@ -280,7 +285,11 @@ export default function CreateCampaign() {
         brandName: showBrandName ? brandName : undefined,
       });
     } catch (e: any) {
-      toast.error(`${t("create.failed") || "Failed to save draft"}: ${e?.message || e}`);
+      toast.error(
+        isCreativeImageUploadError(e)
+          ? e.message
+          : `${t("create.failed") || "Failed to save draft"}: ${e?.message || e}`,
+      );
     }
   };
 

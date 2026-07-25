@@ -19,6 +19,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { api } from "@/api";
 import { buildRecommendBidRequest, makeBidRecommendation, type BidRecommendation } from "@/lib/bidRecommendation";
 import { getBidLimits, getMaximumBid } from "@/lib/bidLimits";
+import { isCreativeImageUploadError } from "@/lib/creativeApi";
 
 const bannerSizes = ["300x100", "300x250", "300x600", "728x90"];
 
@@ -244,7 +245,7 @@ export default function EditCampaign() {
     }
 
     // Only image creatives fall into the auto-crop confirm path.
-    if (!skipMismatchCheck && crvs.some(c => (c.creativeType || "image") === "image" && c.sizeMismatch)) {
+    if (!skipMismatchCheck && crvs.some(c => (c.creativeType || "image") === "image" && c.mediaType !== "video" && c.sizeMismatch)) {
       setConfirmMismatchOpen(true);
       return;
     }
@@ -274,7 +275,11 @@ export default function EditCampaign() {
         
       });
     } catch (err: any) {
-      toast.error(`${t("edit.saveFailed") || "Failed to save campaign"}: ${err?.message || err}`);
+      toast.error(
+        isCreativeImageUploadError(err)
+          ? err.message
+          : `${t("edit.saveFailed") || "Failed to save campaign"}: ${err?.message || err}`,
+      );
       return;
     }
 
