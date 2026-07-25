@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 import type { ApiCreative, ApiCreativeImage, ApiCreativeWrite } from "@/api/types";
 import {
   CreativeImageUploadError,
+  buildUrlWithMacros,
   buildCreativeWriteBody,
   buildIframeAdm,
   createCampaignCreatives,
+  creativeRequiresImage,
+  extractMacrosFromUrl,
+  isCreativeReadyForCreate,
   MAX_CREATIVE_IMAGE_BYTES,
   MAX_CREATIVE_VIDEO_BYTES,
   normalizeCreativeUploadFile,
@@ -111,10 +115,65 @@ describe("creative API migration", () => {
     expect(client.creates[0].body).toMatchObject({
       banner_type: "img",
       image_id: "uploaded-image-1",
+      trackers_macros: { site_id: true },
       w: 300,
       h: 250,
     });
+    expect(client.creates[0].body.adm).toContain('href="https://target.example"');
+    expect(client.creates[0].body.adm).not.toContain("{site_id}");
     expect(client.creates[0].body.adm).toContain('src="https://cdn.example/banner.jpg"');
+  });
+
+  it("uses a boolean macro map and restores only explicitly enabled macros", () => {
+    expect(extractMacrosFromUrl(
+      "https://target.example?site_id={site_id}&country_code={country_code}",
+    )).toEqual({
+      site_id: true,
+      country_code: true,
+    });
+    expect(buildUrlWithMacros("https://target.example", {
+      site_id: true,
+      country_code: false,
+    })).toBe("https://target.example?site_id={site_id}");
+  });
+
+  it("requires an image for a banner image creative", () => {
+    const creative = baseCreative({ pendingFile: undefined });
+    expect(creativeRequiresImage("banner", creative)).toBe(true);
+    expect(isCreativeReadyForCreate("banner", creative)).toBe(false);
+  });
+
+  it("does not require an image for a complete banner HTML creative", () => {
+    const creative = baseCreative({
+      creativeType: "html",
+      htmlCode: "<div>HTML banner</div>",
+      pendingFile: undefined,
+    });
+    expect(creativeRequiresImage("banner", creative)).toBe(false);
+    expect(isCreativeReadyForCreate("banner", creative)).toBe(true);
+  });
+
+  it("does not require an image for a complete banner iframe creative", () => {
+    const creative = baseCreative({
+      creativeType: "iframe",
+      iframeMode: "url",
+      iframeUrl: "https://creative.example/frame",
+      pendingFile: undefined,
+    });
+    expect(creativeRequiresImage("banner", creative)).toBe(false);
+    expect(isCreativeReadyForCreate("banner", creative)).toBe(true);
+  });
+
+  it.each(["native", "push"] as const)("requires an image for %s", (format) => {
+    const creative = baseCreative({ pendingFile: undefined });
+    expect(creativeRequiresImage(format, creative)).toBe(true);
+    expect(isCreativeReadyForCreate(format, creative)).toBe(false);
+  });
+
+  it("does not require an image for popunder", () => {
+    const creative = baseCreative({ pendingFile: undefined });
+    expect(creativeRequiresImage("popunder", creative)).toBe(false);
+    expect(isCreativeReadyForCreate("popunder", creative)).toBe(true);
   });
 
   it("builds iframe code from a URL with campaign banner dimensions and does not upload", async () => {

@@ -110,23 +110,21 @@ export function stripMacrosFromUrl(url: string | undefined): string {
   return result.replace(/[?&]+$/, "");
 }
 
-export function extractMacrosFromUrl(url: string | undefined): Record<string, string> {
+export function extractMacrosFromUrl(url: string | undefined): Record<string, boolean> {
   return Object.fromEntries(
     TRACKER_MACRO_KEYS
       .filter((macro) => !!url?.includes(`{${macro}}`))
-      .map((macro) => [macro, `{${macro}}`]),
+      .map((macro) => [macro, true]),
   );
 }
 
 export function buildUrlWithMacros(
   cleanUrl: string | undefined,
-  macros: Record<string, unknown> | undefined,
+  macros: Record<string, boolean> | undefined,
 ): string {
   let url = cleanUrl || "";
   for (const macro of TRACKER_MACRO_KEYS) {
-    const value = macros?.[macro];
-    const enabled = value !== undefined && value !== null && value !== false && value !== 0 && value !== "0" && value !== "";
-    if (!enabled || url.includes(`{${macro}}`) || !url.trim()) continue;
+    if (macros?.[macro] !== true || url.includes(`{${macro}}`) || !url.trim()) continue;
     url += `${url.includes("?") ? "&" : "?"}${macro}={${macro}}`;
   }
   return url;
