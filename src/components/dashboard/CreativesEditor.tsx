@@ -13,7 +13,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import type { Creative, CreativeType } from "@/contexts/CampaignContext";
 import { ImageCropperDialog } from "@/components/dashboard/ImageCropperDialog";
 import { CreativePreviewDialog } from "@/components/dashboard/CreativePreviewDialog";
-import { validateCreativeFile } from "@/lib/creativeApi";
+import {
+  extractIframeSrc,
+  hasValidHtmlImageUrl,
+  isValidCreativeUrl,
+  validateCreativeFile,
+} from "@/lib/creativeApi";
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -154,7 +159,9 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
     try {
       const text = await file.text();
       updateCreative(creativeId, { htmlCode: text });
-      onClearError?.(`creative_${creativeId}_html`);
+      if (hasValidHtmlImageUrl(text)) {
+        onClearError?.(`creative_${creativeId}_html`);
+      }
       toast.success(t("create.htmlFileUploaded"));
     } catch (err) {
       console.error("HTML upload error:", err);
@@ -410,20 +417,6 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
 
   const activeSource = cropperCreativeId ? origSources[cropperCreativeId] : null;
 
-  const isValidHttpsUrl = (u: string) => {
-    try {
-      const parsed = new URL(u);
-      return parsed.protocol === "https:";
-    } catch { return false; }
-  };
-
-  /** Extract the `src` attribute from a raw <iframe ...> snippet. Returns "" if not found. */
-  const extractIframeSrc = (snippet: string): string => {
-    if (!snippet) return "";
-    const m = snippet.match(/<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i);
-    return m ? m[1] : "";
-  };
-
   /** Effective iframe URL used for probe/preview, from either mode. */
   const getEffectiveIframeUrl = (c: Creative): string => {
     const mode = c.iframeMode || "url";
@@ -467,7 +460,7 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
       }
       if (type === "iframe") {
         const eff = getEffectiveIframeUrl(c);
-        if (!eff || !isValidHttpsUrl(eff)) {
+        if (!eff || !isValidCreativeUrl(eff)) {
           if (c.sizeMismatch) { changed = true; return { ...c, sizeMismatch: false }; }
           return c;
         }
@@ -658,7 +651,13 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                 <Label>{t("create.htmlCode")}</Label>
                 <Textarea
                   value={creative.htmlCode || ""}
-                  onChange={e => { updateCreative(creative.id, { htmlCode: e.target.value }); if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_html`); }}
+                  onChange={e => {
+                    const htmlCode = e.target.value;
+                    updateCreative(creative.id, { htmlCode });
+                    if (hasValidHtmlImageUrl(htmlCode)) {
+                      onClearError?.(`creative_${creative.id}_html`);
+                    }
+                  }}
                   placeholder={t("create.htmlCodePlaceholder")}
                   rows={10}
                   className={`bg-background border-border font-mono text-xs ${errors[`creative_${creative.id}_html`] ? "border-destructive" : ""}`}
@@ -680,13 +679,16 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                     <Upload className="h-4 w-4" />
                     {t("create.uploadHtmlFile")}
                   </Button>
-                  {creative.htmlCode?.trim() && (
+                  {hasValidHtmlImageUrl(creative.htmlCode) && (
                     <Button type="button" variant="outline" onClick={() => setPreviewCreativeId(creative.id)} className="border-border gap-2">
                       <Eye className="h-4 w-4" />
                       {t("create.previewCreative")}
                     </Button>
                   )}
                 </div>
+                {creative.htmlCode?.trim() && !hasValidHtmlImageUrl(creative.htmlCode) && (
+                  <p className="text-xs text-destructive">{t("create.htmlImageUrlRequired")}</p>
+                )}
                 {creative.sizeMismatch && target && target.mode === "fixed" && meas && (
                   <div className="flex items-start gap-2 p-2 rounded border border-yellow-500/30 bg-yellow-500/10">
                     <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
@@ -700,7 +702,7 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                   </div>
                 )}
                 {errors[`creative_${creative.id}_html`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_html`]}</p>}
-                {target && target.mode === "fixed" && creative.htmlCode?.trim() && (
+                {target && target.mode === "fixed" && hasValidHtmlImageUrl(creative.htmlCode) && (
                   <HiddenSizeProbe
                     html={creative.htmlCode}
                     targetW={target.w}
@@ -715,7 +717,7 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
             {isBanner && type === "iframe" && (() => {
               const iframeMode = creative.iframeMode || "url";
               const effUrl = getEffectiveIframeUrl(creative);
-              const hasValidEff = effUrl && isValidHttpsUrl(effUrl);
+              const hasValidEff = effUrl && isValidCreativeUrl(effUrl);
               return (
               <div className="space-y-2">
                 <div className="flex items-start gap-2 rounded border border-border bg-muted/40 p-2">
@@ -743,7 +745,9 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                       value={creative.iframeUrl || ""}
                       onChange={e => {
                         updateCreative(creative.id, { iframeUrl: e.target.value, iframeSizeConfirmed: false });
-                        if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_iframe`);
+                        if (isValidCreativeUrl(e.target.value)) {
+                          onClearError?.(`creative_${creative.id}_iframe`);
+                        }
                         setMeasured(prev => { const n = { ...prev }; delete n[creative.id]; return n; });
                       }}
                       placeholder={t("create.iframeUrlPlaceholder")}
@@ -757,7 +761,9 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                       value={creative.iframeCode || ""}
                       onChange={e => {
                         updateCreative(creative.id, { iframeCode: e.target.value, iframeSizeConfirmed: false });
-                        if (e.target.value.trim()) onClearError?.(`creative_${creative.id}_iframe`);
+                        if (isValidCreativeUrl(extractIframeSrc(e.target.value))) {
+                          onClearError?.(`creative_${creative.id}_iframe`);
+                        }
                         setMeasured(prev => { const n = { ...prev }; delete n[creative.id]; return n; });
                       }}
                       placeholder={t("create.iframeCodePlaceholder")}
@@ -819,10 +825,10 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                     )}
                   </>
                 )}
-                {iframeMode === "url" && creative.iframeUrl && !isValidHttpsUrl(creative.iframeUrl) && (
+                {iframeMode === "url" && creative.iframeUrl && !isValidCreativeUrl(creative.iframeUrl) && (
                   <p className="text-xs text-destructive">{t("create.iframeUrlInvalid")}</p>
                 )}
-                {iframeMode === "code" && effUrl && !isValidHttpsUrl(effUrl) && (
+                {iframeMode === "code" && effUrl && !isValidCreativeUrl(effUrl) && (
                   <p className="text-xs text-destructive">{t("create.iframeUrlInvalid")}</p>
                 )}
                 {errors[`creative_${creative.id}_iframe`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_iframe`]}</p>}

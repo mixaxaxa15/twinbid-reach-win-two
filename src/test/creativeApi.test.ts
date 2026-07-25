@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import type { ApiCreative, ApiCreativeImage, ApiCreativeWrite } from "@/api/types";
 import {
@@ -7,8 +8,11 @@ import {
   buildIframeAdm,
   createCampaignCreatives,
   creativeRequiresImage,
+  extractValidHtmlImageUrl,
   extractMacrosFromUrl,
+  hasValidHtmlImageUrl,
   isCreativeReadyForCreate,
+  isValidCreativeUrl,
   MAX_CREATIVE_IMAGE_BYTES,
   MAX_CREATIVE_VIDEO_BYTES,
   normalizeCreativeUploadFile,
@@ -146,7 +150,7 @@ describe("creative API migration", () => {
   it("does not require an image for a complete banner HTML creative", () => {
     const creative = baseCreative({
       creativeType: "html",
-      htmlCode: "<div>HTML banner</div>",
+      htmlCode: '<div><img src="http://cdn.example/banner.jpg"></div>',
       pendingFile: undefined,
     });
     expect(creativeRequiresImage("banner", creative)).toBe(false);
@@ -157,7 +161,7 @@ describe("creative API migration", () => {
     const creative = baseCreative({
       creativeType: "iframe",
       iframeMode: "url",
-      iframeUrl: "https://creative.example/frame",
+      iframeUrl: "http://creative.example/frame",
       pendingFile: undefined,
     });
     expect(creativeRequiresImage("banner", creative)).toBe(false);
@@ -199,17 +203,70 @@ describe("creative API migration", () => {
   });
 
   it("sends banner HTML as ADM with backend iframe type", async () => {
+    const html = '\n  <div>\n    <img src="http://cdn.example/banner.jpg">\n  </div>\n';
     const body = buildCreativeWriteBody({
       format: "banner",
       dimensions,
       creative: baseCreative({
         creativeType: "html",
-        htmlCode: "<div>HTML banner</div>",
+        htmlCode: html,
         pendingFile: undefined,
       }),
     });
-    expect(body).toMatchObject({ banner_type: "iframe", adm: "<div>HTML banner</div>" });
+    expect(body).toMatchObject({ banner_type: "iframe", adm: html, trackers_macros: {} });
     expect(body.image_id).toBeUndefined();
+  });
+
+  it.each([
+    ["empty HTML", "", false],
+    ["markup without image", "<div>Banner</div>", false],
+    ["image without src", "<img alt='banner'>", false],
+    ["image with empty src", "<img src=''>", false],
+    ["relative image URL", "<img src='/banner.jpg'>", false],
+    ["data image URL", "<img src='data:image/png;base64,abc'>", false],
+    ["blob image URL", "<img src='blob:https://example.com/id'>", false],
+    ["javascript image URL", "<img src='javascript:alert(1)'>", false],
+    ["absolute HTTP image URL", "<img src='http://cdn.example/banner.jpg'>", true],
+    ["absolute HTTPS image URL", "<img src='https://cdn.example/banner.jpg'>", true],
+    ["nested image", "<main><section><img src='https://cdn.example/nested.png'></section></main>", true],
+    ["later valid image", "<img src='/bad.png'><img src='http://cdn.example/good.png'>", true],
+    ["case-insensitive element", "<IMG SRC='HTTP://cdn.example/banner.jpg'>", true],
+  ] as const)("validates %s", (_name, html, expected) => {
+    expect(hasValidHtmlImageUrl(html)).toBe(expected);
+  });
+
+  it("returns the first valid absolute HTTP(S) image URL", () => {
+    expect(extractValidHtmlImageUrl(
+      "<img src='/bad.png'><img src='http://cdn.example/good.png'><img src='https://cdn.example/next.png'>",
+    )).toBe("http://cdn.example/good.png");
+  });
+
+  it.each([
+    ["http://creative.example/frame", true],
+    ["https://creative.example/frame", true],
+    ["/relative/frame", false],
+    ["data:text/html,test", false],
+    ["javascript:alert(1)", false],
+  ] as const)("validates creative URL %s", (url, expected) => {
+    expect(isValidCreativeUrl(url)).toBe(expected);
+  });
+
+  it("skips an incomplete HTML creative during draft autosave", async () => {
+    const client = new FakeCreativeApi();
+    await createCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "banner",
+      dimensions,
+      creatives: [baseCreative({
+        creativeType: "html",
+        htmlCode: "<div>Missing image</div>",
+        pendingFile: undefined,
+      })],
+      skipIncomplete: true,
+    });
+    expect(client.uploads).toHaveLength(0);
+    expect(client.creates).toHaveLength(0);
   });
 
   it.each(["native", "push"] as const)("uploads image before %s creative create", async (format) => {
@@ -304,6 +361,31 @@ describe("creative API migration", () => {
     });
   });
 
+  it("clears image_id when banner switches from img to HTML", async () => {
+    const client = new FakeCreativeApi();
+    const html = '<img src="http://cdn.example/banner.jpg">';
+    await syncCampaignCreatives({
+      client,
+      campaignId: "campaign-1",
+      format: "banner",
+      dimensions,
+      creatives: [baseCreative({
+        id: "creative-1",
+        creativeType: "html",
+        htmlCode: html,
+        pendingFile: undefined,
+      })],
+      existing: [existingCreative()],
+    });
+    expect(client.uploads).toHaveLength(0);
+    expect(client.patches[0].body).toMatchObject({
+      banner_type: "iframe",
+      adm: html,
+      image_id: null,
+      trackers_macros: {},
+    });
+  });
+
   it("deletes only creatives removed by the user", async () => {
     const client = new FakeCreativeApi();
     await syncCampaignCreatives({
@@ -394,22 +476,27 @@ describe("creative API migration", () => {
     });
   });
 
-  it("enforces the 1 MB limit for PNG, JPG and GIF images", () => {
+  it.each([
+    ["banner.png", "image/png", "image/png"],
+    ["banner.jpg", "image/jpeg", "image/jpg"],
+    ["banner.gif", "image/gif", "image/gif"],
+  ] as const)("enforces the 1 MB limit and upload MIME for %s", (name, browserMime, uploadMime) => {
     const exactLimit = new File(
       [new Uint8Array(MAX_CREATIVE_IMAGE_BYTES)],
-      "banner.png",
-      { type: "image/png" },
+      name,
+      { type: browserMime },
     );
     const aboveLimit = new File(
       [new Uint8Array(MAX_CREATIVE_IMAGE_BYTES + 1)],
-      "banner.png",
-      { type: "image/png" },
+      name,
+      { type: browserMime },
     );
 
     expect(validateCreativeFile(exactLimit, true)).toEqual({
       valid: true,
       mediaType: "image",
     });
+    expect(normalizeCreativeUploadFile(exactLimit).type).toBe(uploadMime);
     expect(validateCreativeFile(aboveLimit, true)).toEqual({
       valid: false,
       reason: "image-size",

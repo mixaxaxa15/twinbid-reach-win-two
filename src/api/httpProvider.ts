@@ -1,4 +1,4 @@
-import { http } from "./http";
+import { ApiError, authenticatedFetch, http } from "./http";
 import type {
   ApiUser, ApiCampaign, ApiCreative, ApiCreativeImage, ApiUserTransaction, ApiPromocode,
   ApiNotification, StatsQueryRequest, StatsQueryResponse,
@@ -6,7 +6,7 @@ import type {
   AuthResponse, AuthTokens, ApiEnvelope,
 } from "./types";
 import type { RawApiProvider } from "./mockProvider";
-import { ACCESS_TOKEN_KEY, API_BASE_URL } from "./config";
+import { API_BASE_URL } from "./config";
 import { normalizeCreativeUploadFile } from "@/lib/creativeApi";
 
 /** Only creative image upload uses multipart/form-data. */
@@ -18,18 +18,33 @@ function buildCreativeImageForm(file: File, filename?: string): FormData {
   return fd;
 }
 
-function authHeaders(): Record<string, string> {
-  const tok = localStorage.getItem(ACCESS_TOKEN_KEY);
-  return tok ? { Authorization: `Bearer ${tok}` } : {};
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object"
+    ? value as Record<string, unknown>
+    : null;
 }
 
 async function multipart<T>(url: string, fd: FormData): Promise<ApiEnvelope<T>> {
-  const r = await fetch(`${API_BASE_URL}${url}`, { method: "POST", headers: authHeaders(), body: fd });
-  let data: any = null;
+  const r = await authenticatedFetch(`${API_BASE_URL}${url}`, { method: "POST", body: fd });
+  let data: unknown = null;
   const text = await r.text();
   if (text) { try { data = JSON.parse(text); } catch { data = text; } }
   if (!r.ok) {
-    return { success: false, errorMsg: data?.errorMsg || data?.error?.message || `HTTP ${r.status}` };
+    const payload = asRecord(data);
+    const error = asRecord(payload?.error);
+    const message =
+      (typeof payload?.errorMsg === "string" && payload.errorMsg)
+      || (typeof error?.message === "string" && error.message)
+      || (typeof data === "string" && data)
+      || `HTTP ${r.status}`;
+    const code = typeof error?.code === "string" ? error.code : undefined;
+    const fields = asRecord(error?.fields);
+    const normalizedFields = fields
+      ? Object.fromEntries(
+          Object.entries(fields).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+        )
+      : undefined;
+    throw new ApiError(r.status, message, code, normalizedFields);
   }
   // Backend may return an envelope already, or a bare payload.
   if (data && typeof data === "object" && "success" in data) {

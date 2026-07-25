@@ -139,6 +139,35 @@ export function extractIframeSrc(adm: string | undefined): string {
   return match ? decodeHtmlAttribute(match[1]) : "";
 }
 
+export function isValidCreativeUrl(value: string | undefined): boolean {
+  if (!value?.trim()) return false;
+  try {
+    const parsed = new URL(value.trim());
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Returns the first safe, absolute HTTP(S) image URL from banner HTML.
+ * Parsing is intentionally inert: the markup is inspected with DOMParser
+ * and is never attached to the live document or executed.
+ */
+export function extractValidHtmlImageUrl(html: string | undefined): string {
+  if (!html?.trim() || typeof DOMParser === "undefined") return "";
+  const document = new DOMParser().parseFromString(html, "text/html");
+  for (const image of Array.from(document.querySelectorAll("img"))) {
+    const source = image.getAttribute("src")?.trim();
+    if (isValidCreativeUrl(source)) return source!;
+  }
+  return "";
+}
+
+export function hasValidHtmlImageUrl(html: string | undefined): boolean {
+  return extractValidHtmlImageUrl(html) !== "";
+}
+
 export function extractBannerTargetUrl(adm: string | undefined): string {
   const match = adm?.match(/<a[^>]*\shref\s*=\s*["']([^"']+)["']/i);
   return match ? decodeHtmlAttribute(match[1]) : "";
@@ -195,11 +224,12 @@ export function isCreativeReadyForCreate(format: string, creative: CreativeDraft
   if (!creative.name?.trim()) return false;
   if (format === "banner") {
     const type = creative.creativeType || "image";
-    if (type === "html") return !!creative.htmlCode?.trim();
+    if (type === "html") return hasValidHtmlImageUrl(creative.htmlCode);
     if (type === "iframe") {
-      return creative.iframeMode === "code"
-        ? !!creative.iframeCode?.trim()
-        : !!creative.iframeUrl?.trim();
+      const iframeUrl = creative.iframeMode === "code"
+        ? extractIframeSrc(creative.iframeCode)
+        : creative.iframeUrl;
+      return isValidCreativeUrl(iframeUrl);
     }
     return !!creative.pendingFile && !!creative.url.trim();
   }
@@ -242,7 +272,7 @@ export function buildCreativeWriteBody({
 
     const type = creative.creativeType || "image";
     if (type === "html") {
-      base.adm = creative.htmlCode?.trim() || "";
+      base.adm = creative.htmlCode || "";
       base.banner_type = "iframe";
       return withImageId(base, imageId);
     }
