@@ -15,7 +15,8 @@ import { ImageCropperDialog } from "@/components/dashboard/ImageCropperDialog";
 import { CreativePreviewDialog } from "@/components/dashboard/CreativePreviewDialog";
 import {
   extractIframeSrc,
-  hasValidHtmlImageUrl,
+  hasInsecureHttpReference,
+  isInsecureHttpUrl,
   isValidCreativeUrl,
   validateCreativeFile,
 } from "@/lib/creativeApi";
@@ -159,7 +160,7 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
     try {
       const text = await file.text();
       updateCreative(creativeId, { htmlCode: text });
-      if (hasValidHtmlImageUrl(text)) {
+      if (text.trim()) {
         onClearError?.(`creative_${creativeId}_html`);
       }
       toast.success(t("create.htmlFileUploaded"));
@@ -556,6 +557,12 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                   placeholder="https://example.com/landing"
                   className={`bg-background border-border ${errors[`creative_${creative.id}_url`] ? "border-destructive" : ""}`} />
                 {errors[`creative_${creative.id}_url`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_url`]}</p>}
+                {isInsecureHttpUrl(creative.url) && (
+                  <div className="flex items-start gap-2 rounded border border-yellow-500/30 bg-yellow-500/10 p-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+                    <p className="text-xs text-yellow-500">{t("create.httpUrlWarning")}</p>
+                  </div>
+                )}
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">{t("create.urlMacrosHint")}</p>
                   <div className="flex flex-wrap gap-1.5">
@@ -654,7 +661,7 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                   onChange={e => {
                     const htmlCode = e.target.value;
                     updateCreative(creative.id, { htmlCode });
-                    if (hasValidHtmlImageUrl(htmlCode)) {
+                    if (htmlCode.trim()) {
                       onClearError?.(`creative_${creative.id}_html`);
                     }
                   }}
@@ -679,15 +686,18 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                     <Upload className="h-4 w-4" />
                     {t("create.uploadHtmlFile")}
                   </Button>
-                  {hasValidHtmlImageUrl(creative.htmlCode) && (
+                  {creative.htmlCode?.trim() && (
                     <Button type="button" variant="outline" onClick={() => setPreviewCreativeId(creative.id)} className="border-border gap-2">
                       <Eye className="h-4 w-4" />
                       {t("create.previewCreative")}
                     </Button>
                   )}
                 </div>
-                {creative.htmlCode?.trim() && !hasValidHtmlImageUrl(creative.htmlCode) && (
-                  <p className="text-xs text-destructive">{t("create.htmlImageUrlRequired")}</p>
+                {hasInsecureHttpReference(creative.htmlCode) && (
+                  <div className="flex items-start gap-2 rounded border border-yellow-500/30 bg-yellow-500/10 p-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+                    <p className="text-xs text-yellow-500">{t("create.httpUrlWarning")}</p>
+                  </div>
                 )}
                 {creative.sizeMismatch && target && target.mode === "fixed" && meas && (
                   <div className="flex items-start gap-2 p-2 rounded border border-yellow-500/30 bg-yellow-500/10">
@@ -702,7 +712,7 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                   </div>
                 )}
                 {errors[`creative_${creative.id}_html`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_html`]}</p>}
-                {target && target.mode === "fixed" && hasValidHtmlImageUrl(creative.htmlCode) && (
+                {target && target.mode === "fixed" && creative.htmlCode?.trim() && (
                   <HiddenSizeProbe
                     html={creative.htmlCode}
                     targetW={target.w}
@@ -831,6 +841,12 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                 {iframeMode === "code" && effUrl && !isValidCreativeUrl(effUrl) && (
                   <p className="text-xs text-destructive">{t("create.iframeUrlInvalid")}</p>
                 )}
+                {isInsecureHttpUrl(effUrl) && (
+                  <div className="flex items-start gap-2 rounded border border-yellow-500/30 bg-yellow-500/10 p-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+                    <p className="text-xs text-yellow-500">{t("create.httpUrlWarning")}</p>
+                  </div>
+                )}
                 {errors[`creative_${creative.id}_iframe`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_iframe`]}</p>}
               </div>
               );
@@ -846,6 +862,12 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
                   placeholder="https://example.com/landing"
                   className={`bg-background border-border ${errors[`creative_${creative.id}_url`] ? "border-destructive" : ""}`} />
                 {errors[`creative_${creative.id}_url`] && <p className="text-xs text-destructive">{errors[`creative_${creative.id}_url`]}</p>}
+                {isInsecureHttpUrl(creative.url) && (
+                  <div className="flex items-start gap-2 rounded border border-yellow-500/30 bg-yellow-500/10 p-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+                    <p className="text-xs text-yellow-500">{t("create.httpUrlWarning")}</p>
+                  </div>
+                )}
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">{t("create.urlMacrosHint")}</p>
                   <div className="flex flex-wrap gap-1.5">

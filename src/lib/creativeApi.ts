@@ -149,23 +149,17 @@ export function isValidCreativeUrl(value: string | undefined): boolean {
   }
 }
 
-/**
- * Returns the first safe, absolute HTTP(S) image URL from banner HTML.
- * Parsing is intentionally inert: the markup is inspected with DOMParser
- * and is never attached to the live document or executed.
- */
-export function extractValidHtmlImageUrl(html: string | undefined): string {
-  if (!html?.trim() || typeof DOMParser === "undefined") return "";
-  const document = new DOMParser().parseFromString(html, "text/html");
-  for (const image of Array.from(document.querySelectorAll("img"))) {
-    const source = image.getAttribute("src")?.trim();
-    if (isValidCreativeUrl(source)) return source!;
+export function isInsecureHttpUrl(value: string | undefined): boolean {
+  if (!value?.trim()) return false;
+  try {
+    return new URL(value.trim()).protocol === "http:";
+  } catch {
+    return false;
   }
-  return "";
 }
 
-export function hasValidHtmlImageUrl(html: string | undefined): boolean {
-  return extractValidHtmlImageUrl(html) !== "";
+export function hasInsecureHttpReference(html: string | undefined): boolean {
+  return /\bhttp:\/\//i.test(html || "");
 }
 
 export function extractBannerTargetUrl(adm: string | undefined): string {
@@ -224,7 +218,7 @@ export function isCreativeReadyForCreate(format: string, creative: CreativeDraft
   if (!creative.name?.trim()) return false;
   if (format === "banner") {
     const type = creative.creativeType || "image";
-    if (type === "html") return hasValidHtmlImageUrl(creative.htmlCode);
+    if (type === "html") return !!creative.htmlCode?.trim();
     if (type === "iframe") {
       const iframeUrl = creative.iframeMode === "code"
         ? extractIframeSrc(creative.iframeCode)

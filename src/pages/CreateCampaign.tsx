@@ -23,7 +23,6 @@ import { getBidLimits, getMaximumBid } from "@/lib/bidLimits";
 import {
   creativeRequiresImage,
   extractIframeSrc,
-  hasValidHtmlImageUrl,
   isCreativeImageUploadError,
   isValidCreativeUrl,
 } from "@/lib/creativeApi";
@@ -116,9 +115,7 @@ export default function CreateCampaign() {
       if (!c.name?.trim()) e[`creative_${c.id}_name`] = t("create.required");
       const type = adFormat === "banner" ? (c.creativeType || "image") : "image";
       if (adFormat === "banner" && type === "html") {
-        if (!hasValidHtmlImageUrl(c.htmlCode)) {
-          e[`creative_${c.id}_html`] = t("create.htmlImageUrlRequired");
-        }
+        if (!c.htmlCode?.trim()) e[`creative_${c.id}_html`] = t("create.required");
       } else if (adFormat === "banner" && type === "iframe") {
         const mode = c.iframeMode || "url";
         let u = "";

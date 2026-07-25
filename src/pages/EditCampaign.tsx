@@ -22,7 +22,6 @@ import { getBidLimits, getMaximumBid } from "@/lib/bidLimits";
 import {
   creativeRequiresImage,
   extractIframeSrc,
-  hasValidHtmlImageUrl,
   isCreativeImageUploadError,
   isValidCreativeUrl,
 } from "@/lib/creativeApi";
@@ -194,9 +193,7 @@ export default function EditCampaign() {
       if (!c.name?.trim()) e[`creative_${c.id}_name`] = t("create.required");
       const type = campaign.formatKey === "banner" ? (c.creativeType || "image") : "image";
       if (campaign.formatKey === "banner" && type === "html") {
-        if (!hasValidHtmlImageUrl(c.htmlCode)) {
-          e[`creative_${c.id}_html`] = t("create.htmlImageUrlRequired");
-        }
+        if (!c.htmlCode?.trim()) e[`creative_${c.id}_html`] = t("create.required");
       } else if (campaign.formatKey === "banner" && type === "iframe") {
         const mode = c.iframeMode || "url";
         let u = "";
@@ -462,9 +459,7 @@ export default function EditCampaign() {
             if (!c.name?.trim()) e[`creative_${c.id}_name`] = t("create.required");
             const type = campaign.formatKey === "banner" ? (c.creativeType || "image") : "image";
             if (campaign.formatKey === "banner" && type === "html") {
-              if (!hasValidHtmlImageUrl(c.htmlCode)) {
-                e[`creative_${c.id}_html`] = t("create.htmlImageUrlRequired");
-              }
+              if (!c.htmlCode?.trim()) e[`creative_${c.id}_html`] = t("create.required");
             } else if (campaign.formatKey === "banner" && type === "iframe") {
               const mode = c.iframeMode || "url";
               let iframeUrl = "";

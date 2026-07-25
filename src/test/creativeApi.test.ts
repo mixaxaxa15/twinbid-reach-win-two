@@ -8,9 +8,9 @@ import {
   buildIframeAdm,
   createCampaignCreatives,
   creativeRequiresImage,
-  extractValidHtmlImageUrl,
   extractMacrosFromUrl,
-  hasValidHtmlImageUrl,
+  hasInsecureHttpReference,
+  isInsecureHttpUrl,
   isCreativeReadyForCreate,
   isValidCreativeUrl,
   MAX_CREATIVE_IMAGE_BYTES,
@@ -150,7 +150,7 @@ describe("creative API migration", () => {
   it("does not require an image for a complete banner HTML creative", () => {
     const creative = baseCreative({
       creativeType: "html",
-      htmlCode: '<div><img src="http://cdn.example/banner.jpg"></div>',
+      htmlCode: "<canvas id='ad'></canvas>",
       pendingFile: undefined,
     });
     expect(creativeRequiresImage("banner", creative)).toBe(false);
@@ -203,7 +203,7 @@ describe("creative API migration", () => {
   });
 
   it("sends banner HTML as ADM with backend iframe type", async () => {
-    const html = '\n  <div>\n    <img src="http://cdn.example/banner.jpg">\n  </div>\n';
+    const html = "\n  <canvas id='ad'></canvas>\n";
     const body = buildCreativeWriteBody({
       format: "banner",
       dimensions,
@@ -218,27 +218,42 @@ describe("creative API migration", () => {
   });
 
   it.each([
-    ["empty HTML", "", false],
-    ["markup without image", "<div>Banner</div>", false],
-    ["image without src", "<img alt='banner'>", false],
-    ["image with empty src", "<img src=''>", false],
-    ["relative image URL", "<img src='/banner.jpg'>", false],
-    ["data image URL", "<img src='data:image/png;base64,abc'>", false],
-    ["blob image URL", "<img src='blob:https://example.com/id'>", false],
-    ["javascript image URL", "<img src='javascript:alert(1)'>", false],
-    ["absolute HTTP image URL", "<img src='http://cdn.example/banner.jpg'>", true],
-    ["absolute HTTPS image URL", "<img src='https://cdn.example/banner.jpg'>", true],
-    ["nested image", "<main><section><img src='https://cdn.example/nested.png'></section></main>", true],
-    ["later valid image", "<img src='/bad.png'><img src='http://cdn.example/good.png'>", true],
-    ["case-insensitive element", "<IMG SRC='HTTP://cdn.example/banner.jpg'>", true],
-  ] as const)("validates %s", (_name, html, expected) => {
-    expect(hasValidHtmlImageUrl(html)).toBe(expected);
+    "<div>HTML banner</div>",
+    "<canvas id='ad'></canvas>",
+    "<svg><rect width='10' height='10'/></svg>",
+    "<video src='/banner.mp4'></video>",
+  ])("accepts non-empty HTML without requiring an img tag: %s", (html) => {
+    expect(isCreativeReadyForCreate("banner", baseCreative({
+      creativeType: "html",
+      htmlCode: html,
+      pendingFile: undefined,
+    }))).toBe(true);
   });
 
-  it("returns the first valid absolute HTTP(S) image URL", () => {
-    expect(extractValidHtmlImageUrl(
-      "<img src='/bad.png'><img src='http://cdn.example/good.png'><img src='https://cdn.example/next.png'>",
-    )).toBe("http://cdn.example/good.png");
+  it("rejects only empty HTML", () => {
+    expect(isCreativeReadyForCreate("banner", baseCreative({
+      creativeType: "html",
+      htmlCode: "   ",
+      pendingFile: undefined,
+    }))).toBe(false);
+  });
+
+  it.each([
+    ["http://creative.example/frame", true],
+    ["HTTP://creative.example/frame", true],
+    ["https://creative.example/frame", false],
+    ["/relative/frame", false],
+  ] as const)("detects whether URL %s needs an HTTP warning", (url, expected) => {
+    expect(isInsecureHttpUrl(url)).toBe(expected);
+  });
+
+  it.each([
+    ["<canvas></canvas>", false],
+    ["<img src='https://cdn.example/banner.png'>", false],
+    ["<img src='http://cdn.example/banner.png'>", true],
+    ["<a href='HTTP://target.example'>Open</a>", true],
+  ] as const)("detects HTTP references in HTML", (html, expected) => {
+    expect(hasInsecureHttpReference(html)).toBe(expected);
   });
 
   it.each([
@@ -260,7 +275,7 @@ describe("creative API migration", () => {
       dimensions,
       creatives: [baseCreative({
         creativeType: "html",
-        htmlCode: "<div>Missing image</div>",
+        htmlCode: "   ",
         pendingFile: undefined,
       })],
       skipIncomplete: true,
@@ -363,7 +378,7 @@ describe("creative API migration", () => {
 
   it("clears image_id when banner switches from img to HTML", async () => {
     const client = new FakeCreativeApi();
-    const html = '<img src="http://cdn.example/banner.jpg">';
+    const html = "<canvas id='ad'></canvas>";
     await syncCampaignCreatives({
       client,
       campaignId: "campaign-1",
