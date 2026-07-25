@@ -40,7 +40,7 @@ export class CreativeImageUploadError extends Error {
   }
 }
 
-export const MAX_CREATIVE_IMAGE_BYTES = 64 * 1024 * 1024;
+export const MAX_CREATIVE_IMAGE_BYTES = 1 * 1024 * 1024;
 export const MAX_CREATIVE_VIDEO_BYTES = 10 * 1024 * 1024;
 
 export type CreativeFileValidation =

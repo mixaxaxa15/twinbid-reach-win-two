@@ -5,6 +5,7 @@ import {
   buildCreativeWriteBody,
   buildIframeAdm,
   createCampaignCreatives,
+  MAX_CREATIVE_IMAGE_BYTES,
   MAX_CREATIVE_VIDEO_BYTES,
   normalizeCreativeUploadFile,
   syncCampaignCreatives,
@@ -331,6 +332,28 @@ describe("creative API migration", () => {
     expect(validateCreativeFile(exactLimit, false)).toEqual({
       valid: false,
       reason: "format",
+    });
+  });
+
+  it("enforces the 1 MB limit for PNG, JPG and GIF images", () => {
+    const exactLimit = new File(
+      [new Uint8Array(MAX_CREATIVE_IMAGE_BYTES)],
+      "banner.png",
+      { type: "image/png" },
+    );
+    const aboveLimit = new File(
+      [new Uint8Array(MAX_CREATIVE_IMAGE_BYTES + 1)],
+      "banner.png",
+      { type: "image/png" },
+    );
+
+    expect(validateCreativeFile(exactLimit, true)).toEqual({
+      valid: true,
+      mediaType: "image",
+    });
+    expect(validateCreativeFile(aboveLimit, true)).toEqual({
+      valid: false,
+      reason: "image-size",
     });
   });
 
