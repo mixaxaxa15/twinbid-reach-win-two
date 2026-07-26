@@ -9,6 +9,7 @@ interface CreativePreviewDialogProps {
   onClose: () => void;
   formatKey: string;
   bannerSize?: string;
+  brandName?: string;
   creative: Creative | null;
 }
 
@@ -136,8 +137,9 @@ function BannerPreview({ size, creative }: { size: string; creative: Creative })
   );
 }
 
-function PushPreview({ title, description, imageUrl, variant }: { title?: string; description?: string; imageUrl?: string; variant: "desktop" | "android" }) {
+function PushPreview({ title, description, imageUrl, brandName, variant }: { title?: string; description?: string; imageUrl?: string; brandName?: string; variant: "desktop" | "android" }) {
   const site = "example-news.com";
+  const brand = brandName?.trim() || "Brand name";
   if (variant === "desktop") {
     return (
       <div className="relative rounded-md border border-slate-300 bg-gradient-to-br from-slate-200 to-slate-300 p-6 min-h-[320px]">
@@ -146,6 +148,7 @@ function PushPreview({ title, description, imageUrl, variant }: { title?: string
             ? <img src={imageUrl} alt="" className="h-12 w-12 rounded object-cover shrink-0" />
             : <div className="h-12 w-12 rounded bg-slate-200 shrink-0" />}
           <div className="min-w-0 flex-1">
+            <div className="text-[10px] font-medium text-slate-500 truncate">{brand}</div>
             <div className="text-[12px] font-semibold text-slate-900 truncate">{title || "Notification title"}</div>
             <div className="text-[11px] text-slate-600 line-clamp-2">{description || "Notification description shown to the user"}</div>
             <div className="text-[10px] text-slate-400 mt-1">{site}</div>
@@ -170,7 +173,7 @@ function PushPreview({ title, description, imageUrl, variant }: { title?: string
             : <div className="h-10 w-10 rounded bg-slate-200 shrink-0" />}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1 text-[9px] text-slate-500">
-              <Bell className="h-2.5 w-2.5" /> Chrome · {site}
+              <Bell className="h-2.5 w-2.5" /> {brand} · {site}
             </div>
             <div className="text-[11px] font-semibold text-slate-900 truncate">{title || "Notification title"}</div>
             <div className="text-[10px] text-slate-600 line-clamp-2">{description || "Notification description"}</div>
@@ -181,7 +184,7 @@ function PushPreview({ title, description, imageUrl, variant }: { title?: string
   );
 }
 
-function NativeCard({ title, description, imageUrl, sponsored = false }: { title: string; description: string; imageUrl?: string; sponsored?: boolean }) {
+function NativeCard({ title, description, imageUrl, sponsored = false, brandName }: { title: string; description: string; imageUrl?: string; sponsored?: boolean; brandName?: string }) {
   return (
     <div className="rounded-lg overflow-hidden border border-slate-200 bg-white">
       {imageUrl
@@ -191,14 +194,14 @@ function NativeCard({ title, description, imageUrl, sponsored = false }: { title
         <div className="text-[11px] font-semibold text-slate-900 line-clamp-2 leading-snug">{title}</div>
         <div className="text-[10px] text-slate-600 line-clamp-2 mt-1">{description}</div>
         <div className="text-[9px] mt-1.5 uppercase tracking-wide text-slate-400">
-          {sponsored ? "Sponsored" : "example-news.com"}
+          {sponsored ? `Sponsored · ${brandName?.trim() || "Brand name"}` : "example-news.com"}
         </div>
       </div>
     </div>
   );
 }
 
-function NativePreview({ title, description, imageUrl }: { title?: string; description?: string; imageUrl?: string }) {
+function NativePreview({ title, description, imageUrl, brandName }: { title?: string; description?: string; imageUrl?: string; brandName?: string }) {
   return (
     <FakeSite withSidebar={false}>
       <ArticleBody short />
@@ -211,6 +214,7 @@ function NativePreview({ title, description, imageUrl }: { title?: string; descr
           title={title || "Your ad title here"}
           description={description || "Your ad description shown as a native card"}
           imageUrl={imageUrl}
+          brandName={brandName}
           sponsored
         />
         <NativeCard title="Home workouts that actually work in 20 minutes" description="Backed by trainers and easy to follow" />
@@ -220,7 +224,7 @@ function NativePreview({ title, description, imageUrl }: { title?: string; descr
   );
 }
 
-export function CreativePreviewDialog({ open, onClose, formatKey, bannerSize, creative }: CreativePreviewDialogProps) {
+export function CreativePreviewDialog({ open, onClose, formatKey, bannerSize, brandName, creative }: CreativePreviewDialogProps) {
   const { t } = useLanguage();
   if (!creative) return null;
 
@@ -244,16 +248,16 @@ export function CreativePreviewDialog({ open, onClose, formatKey, bannerSize, cr
               <TabsTrigger value="android">{t("create.previewAndroid")}</TabsTrigger>
             </TabsList>
             <TabsContent value="desktop" className="mt-3">
-              <PushPreview variant="desktop" title={creative.title} description={creative.description} imageUrl={creative.imageUrl} />
+              <PushPreview variant="desktop" title={creative.title} description={creative.description} imageUrl={creative.imageUrl} brandName={brandName} />
             </TabsContent>
             <TabsContent value="android" className="mt-3">
-              <PushPreview variant="android" title={creative.title} description={creative.description} imageUrl={creative.imageUrl} />
+              <PushPreview variant="android" title={creative.title} description={creative.description} imageUrl={creative.imageUrl} brandName={brandName} />
             </TabsContent>
           </Tabs>
         )}
 
         {formatKey === "native" && (
-          <NativePreview title={creative.title} description={creative.description} imageUrl={creative.imageUrl} />
+          <NativePreview title={creative.title} description={creative.description} imageUrl={creative.imageUrl} brandName={brandName} />
         )}
 
         {formatKey === "popunder" && (

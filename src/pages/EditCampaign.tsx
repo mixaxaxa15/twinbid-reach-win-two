@@ -427,7 +427,7 @@ export default function EditCampaign() {
 
               <div className="pt-2">
                 <p className="text-sm font-medium text-muted-foreground mb-3">{t("create.creatives")}</p>
-                <CreativesEditor ref={creativesEditorRef} formatKey={campaign.formatKey} bannerSize={bannerSize} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
+                <CreativesEditor ref={creativesEditorRef} formatKey={campaign.formatKey} bannerSize={bannerSize} brandName={brandName} creatives={creatives} onChange={setCreatives} errors={errors} onClearError={clearError} />
               </div>
             </CardContent>
           </Card>

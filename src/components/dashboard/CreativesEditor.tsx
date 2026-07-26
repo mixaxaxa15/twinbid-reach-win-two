@@ -61,6 +61,7 @@ const URL_MACROS = [
 interface CreativesEditorProps {
   formatKey: string;
   bannerSize?: string;
+  brandName?: string;
   creatives: Creative[];
   onChange: (creatives: Creative[]) => void;
   errors?: Record<string, string>;
@@ -136,7 +137,7 @@ function HiddenSizeProbe({
 }
 
 export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditorProps>(function CreativesEditor(
-  { formatKey, bannerSize, creatives, onChange, errors = {}, onClearError },
+  { formatKey, bannerSize, brandName, creatives, onChange, errors = {}, onClearError },
   ref,
 ) {
   const { t } = useLanguage();
@@ -1007,6 +1008,7 @@ export const CreativesEditor = forwardRef<CreativesEditorHandle, CreativesEditor
       onClose={() => setPreviewCreativeId(null)}
       formatKey={formatKey}
       bannerSize={bannerSize}
+      brandName={brandName}
       creative={creatives.find(c => c.id === previewCreativeId) || null}
     />
     </>
