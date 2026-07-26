@@ -85,6 +85,9 @@ export interface Creative {
   imageFileName?: string;
   imageMimeType?: string;
   mediaType?: "image" | "video";
+  /** Final media dimensions after crop/resize. Sent as creative w/h for native and in-page push. */
+  imageWidth?: number;
+  imageHeight?: number;
   /** New file picked by the user. Uploaded before the creative JSON POST/PATCH. */
   pendingFile?: File;
   title?: string;
@@ -310,6 +313,8 @@ export function mapApiCreativeToUi(cr: ApiCreative): Creative {
     imageFileName: imageName,
     imageMimeType: mimeType,
     mediaType: isVideoAsset(mimeType, imageName) ? "video" : "image",
+    imageWidth: cr.w || undefined,
+    imageHeight: cr.h || undefined,
     title: cr.title || undefined,
     description: cr.description || undefined,
     creativeType,
