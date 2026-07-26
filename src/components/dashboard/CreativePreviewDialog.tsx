@@ -137,8 +137,7 @@ function BannerPreview({ size, creative }: { size: string; creative: Creative })
   );
 }
 
-function PushPreview({ title, description, imageUrl, brandName, variant }: { title?: string; description?: string; imageUrl?: string; brandName?: string; variant: "desktop" | "android" }) {
-  const site = "example-news.com";
+function PushPreview({ title, description, imageUrl, brandName, variant }: { title?: string; description?: string; imageUrl?: string; brandName?: string; variant: "desktop" | "mobile" }) {
   const brand = brandName?.trim() || "Brand name";
   if (variant === "desktop") {
     return (
@@ -151,7 +150,6 @@ function PushPreview({ title, description, imageUrl, brandName, variant }: { tit
             <div className="text-[10px] font-medium text-slate-500 truncate">{brand}</div>
             <div className="text-[12px] font-semibold text-slate-900 truncate">{title || "Notification title"}</div>
             <div className="text-[11px] text-slate-600 line-clamp-2">{description || "Notification description shown to the user"}</div>
-            <div className="text-[10px] text-slate-400 mt-1">{site}</div>
           </div>
           <button className="text-slate-400 hover:text-slate-600 shrink-0"><X className="h-3.5 w-3.5" /></button>
         </div>
@@ -159,7 +157,7 @@ function PushPreview({ title, description, imageUrl, brandName, variant }: { tit
       </div>
     );
   }
-  // Android
+  // Mobile
   return (
     <div className="mx-auto w-full max-w-[300px] rounded-[28px] bg-slate-900 p-2 shadow-xl">
       <div className="rounded-[22px] bg-gradient-to-b from-indigo-500 to-purple-600 h-[420px] p-3 relative overflow-hidden">
@@ -173,7 +171,7 @@ function PushPreview({ title, description, imageUrl, brandName, variant }: { tit
             : <div className="h-10 w-10 rounded bg-slate-200 shrink-0" />}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1 text-[9px] text-slate-500">
-              <Bell className="h-2.5 w-2.5" /> {brand} · {site}
+              <Bell className="h-2.5 w-2.5" /> {brand}
             </div>
             <div className="text-[11px] font-semibold text-slate-900 truncate">{title || "Notification title"}</div>
             <div className="text-[10px] text-slate-600 line-clamp-2">{description || "Notification description"}</div>
@@ -245,13 +243,13 @@ export function CreativePreviewDialog({ open, onClose, formatKey, bannerSize, br
           <Tabs defaultValue="desktop">
             <TabsList className="w-full justify-start overflow-x-auto bg-background border border-border sm:w-auto">
               <TabsTrigger value="desktop">{t("create.previewDesktop")}</TabsTrigger>
-              <TabsTrigger value="android">{t("create.previewAndroid")}</TabsTrigger>
+              <TabsTrigger value="mobile">{t("create.previewMobile")}</TabsTrigger>
             </TabsList>
             <TabsContent value="desktop" className="mt-3">
               <PushPreview variant="desktop" title={creative.title} description={creative.description} imageUrl={creative.imageUrl} brandName={brandName} />
             </TabsContent>
-            <TabsContent value="android" className="mt-3">
-              <PushPreview variant="android" title={creative.title} description={creative.description} imageUrl={creative.imageUrl} brandName={brandName} />
+            <TabsContent value="mobile" className="mt-3">
+              <PushPreview variant="mobile" title={creative.title} description={creative.description} imageUrl={creative.imageUrl} brandName={brandName} />
             </TabsContent>
           </Tabs>
         )}
