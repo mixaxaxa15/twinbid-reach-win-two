@@ -356,11 +356,12 @@ function endTimestamp(date: string): string | null {
 }
 
 function buildApiCampaignBody(c: Omit<Campaign, "id">): Omit<ApiCampaign, "campaign_id" | "user_id" | "cum_done_dollars"> {
+  const isBanner = (c.formatKey || c.format) === "banner";
   const body: any = {
     campaign_name: c.name,
     format_type: (c.formatKey || c.format) as FormatType,
-    h: null,
-    w: null,
+    h: isBanner ? 999 : null,
+    w: isBanner ? 999 : null,
     status: c.status,
     traffic_type: c.trafficType,
     vertical: verticalsToApiArray(c.verticals),
@@ -579,11 +580,11 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     // Build a *partial* patch so toggling a single field (status, budget,
     // ...) does not rewrite unrelated fields.
     const patch = buildApiCampaignPatch(effectiveUpdates);
-    if (fmt === "banner" && updates.creatives !== undefined) {
-      // Banner dimensions now belong to each creative. Clear legacy
-      // campaign-level dimensions whenever banner creatives are saved.
-      patch.w = null;
-      patch.h = null;
+    if (fmt === "banner") {
+      // Real banner dimensions belong to each creative. The campaign keeps
+      // a neutral technical size required by the moderation bot.
+      patch.w = 999;
+      patch.h = 999;
     }
     let patchedCampaign: ApiCampaign | undefined;
     if (Object.keys(patch).length > 0) {

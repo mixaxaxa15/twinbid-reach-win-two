@@ -80,7 +80,7 @@ Resp: `User`.
   "campaign_name": "string",
   "format_type": "banner | popunder | native | push",
   "brand_name": "string?",
-  "h": null, "w": null,
+  "h": 999, "w": 999,
   "status": "active | paused | draft | completed | moderation",
   "traffic_type": "mainstream | adult | mixed",
   "vertical": ["Dating", "Nutra"],
@@ -105,10 +105,10 @@ Resp: `User`.
 
 > Если расписание выключено — `active_intervals = [["mon,0","sun,23"]]`.
 > `cum_done_dollars` приходит ТОЛЬКО с бэка (не пишется фронтом).
-> Для banner размер больше не задаётся на кампании: фронт отправляет
-> `h: null, w: null`, а фактические `h/w` передаются отдельно в каждом
-> креативе. Поэтому в одной banner-кампании могут одновременно работать
-> креативы разных размеров.
+> Для banner фронт отправляет на кампании технический размер
+> `h: 999, w: 999`, необходимый для Telegram-модерации. Фактические `h/w`
+> передаются отдельно в каждом креативе, поэтому в одной banner-кампании
+> могут одновременно работать креативы разных размеров.
 
 ### GET `/api/campaigns?status=&limit=&offset=` → `{ items: Campaign[], total }`
 ### GET `/api/campaigns/:id` → `Campaign`
