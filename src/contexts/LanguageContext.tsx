@@ -214,7 +214,7 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
 
   // Balance page
   "balance.title": { ru: "Баланс и платежи", en: "Balance & Payments" },
-  "balance.subtitle": { ru: "Пополнение USDT", en: "USDT top-up" },
+  "balance.subtitle": { ru: "Пополнение USDT и USDC", en: "USDT and USDC top-up" },
   "balance.current": { ru: "Текущий баланс", en: "Current balance" },
   "balance.spentToday": { ru: "Потрачено сегодня", en: "Spent today" },
   "balance.spentWeek": { ru: "Потрачено за неделю", en: "Spent this week" },

@@ -185,7 +185,7 @@ export const ES_TRANSLATIONS: Record<string, string> = {
 
   // Balance page
   "balance.title": "Saldo y pagos",
-  "balance.subtitle": "Recarga USDT",
+  "balance.subtitle": "Recarga de USDT y USDC",
   "balance.current": "Saldo actual",
   "balance.spentToday": "Gastado hoy",
   "balance.spentWeek": "Gastado esta semana",
