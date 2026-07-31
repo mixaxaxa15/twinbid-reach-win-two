@@ -2,13 +2,25 @@ import { useMemo, useCallback, useEffect, useLayoutEffect, useRef, useState } fr
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, MousePointer, Target, TrendingUp, ArrowUpDown, CalendarIcon, RefreshCw, Filter, Download, Zap, Percent, DollarSign } from "lucide-react";
+import { Eye, MousePointer, Target, TrendingUp, ArrowUpDown, CalendarIcon, RefreshCw, Filter, Download, Zap, Percent, DollarSign, ShieldCheck, ShieldX, Eraser } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, subDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
@@ -28,6 +40,11 @@ import { api } from "@/api";
 import type { StatsGroupBy, StatsFilterBy } from "@/api/types";
 import { formatNumberWithDot, formatStatisticInteger, formatStatisticRate } from "@/lib/numberFormat";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  buildTrafficCleanerTargeting,
+  selectUnconvertedSiteIds,
+  type TrafficCleanerMode,
+} from "@/lib/trafficCleaner";
 
 type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "country";
 type SortKey = "label" | "impressions" | "clicks" | "spent" | "cpm" | "cpc" | "conversions" | "income";
@@ -126,7 +143,7 @@ function MultiSelectFilter({ label, options, selected, onChange }: {
 
 export default function DashboardStatistics() {
   const isMobile = useIsMobile();
-  const { campaigns, loadCampaignCreatives } = useCampaigns();
+  const { campaigns, loadCampaignCreatives, updateCampaign } = useCampaigns();
   const { t, lang } = useLanguage();
   
   const {
@@ -219,6 +236,11 @@ export default function DashboardStatistics() {
   const [slowLoading, setSlowLoading] = useState(false);
   type PageSize = 50 | 100 | "all";
   const [pageSize, setPageSize] = useState<PageSize>(50);
+  const [selectedSiteIds, setSelectedSiteIds] = useState<Set<string>>(new Set());
+  const [cleanerCampaignId, setCleanerCampaignId] = useState("");
+  const [cleanerSpendThreshold, setCleanerSpendThreshold] = useState("0");
+  const [cleanerSaving, setCleanerSaving] = useState(false);
+  const [pendingCleanerMode, setPendingCleanerMode] = useState<TrafficCleanerMode | null>(null);
   useEffect(() => { setPageSize(50); }, [appliedGroupBy]);
 
   // Preserve scroll position when the user switches grouping or page size.
@@ -513,6 +535,93 @@ export default function DashboardStatistics() {
     () => pageSize === "all" ? sortedData : sortedData.slice(0, pageSize),
     [sortedData, pageSize],
   );
+
+  const cleanerCampaigns = useMemo(
+    () => campaigns.filter((campaign) => appliedCampaignIds.has(campaign.id)),
+    [campaigns, appliedCampaignIds],
+  );
+
+  useEffect(() => {
+    setCleanerCampaignId((current) => {
+      if (cleanerCampaigns.some((campaign) => campaign.id === current)) return current;
+      return cleanerCampaigns.length === 1 ? cleanerCampaigns[0].id : "";
+    });
+  }, [cleanerCampaigns]);
+
+  useEffect(() => {
+    if (appliedGroupBy !== "siteid") {
+      setSelectedSiteIds(new Set());
+      return;
+    }
+    const available = new Set(data.map((row) => row.label));
+    setSelectedSiteIds((current) => {
+      const next = new Set(Array.from(current).filter((siteId) => available.has(siteId)));
+      if (next.size === current.size && Array.from(next).every((siteId) => current.has(siteId))) return current;
+      return next;
+    });
+  }, [appliedGroupBy, data]);
+
+  const visibleSiteIds = useMemo(
+    () => appliedGroupBy === "siteid" ? visibleRows.map((row) => row.label).filter(Boolean) : [],
+    [appliedGroupBy, visibleRows],
+  );
+  const allVisibleSitesSelected = visibleSiteIds.length > 0 && visibleSiteIds.every((siteId) => selectedSiteIds.has(siteId));
+  const someVisibleSitesSelected = visibleSiteIds.some((siteId) => selectedSiteIds.has(siteId));
+
+  const toggleVisibleSiteIds = (checked: boolean) => {
+    setSelectedSiteIds((current) => {
+      const next = new Set(current);
+      visibleSiteIds.forEach((siteId) => checked ? next.add(siteId) : next.delete(siteId));
+      return next;
+    });
+  };
+
+  const handleSelectUnconvertedSites = () => {
+    const parsedThreshold = Number(cleanerSpendThreshold.replace(",", "."));
+    const selected = selectUnconvertedSiteIds(sortedData, parsedThreshold);
+    setSelectedSiteIds(new Set(selected));
+    if (selected.length === 0) toast.info(t("stats.cleaner.noMatches"));
+  };
+
+  const applyTrafficCleaner = async (mode: TrafficCleanerMode, replaceConfirmed = false) => {
+    const targetCampaign = cleanerCampaigns.find((campaign) => campaign.id === cleanerCampaignId);
+    if (!targetCampaign) {
+      toast.error(t("stats.cleaner.selectCampaignError"));
+      return;
+    }
+    if (selectedSiteIds.size === 0) {
+      toast.error(t("stats.cleaner.selectSitesError"));
+      return;
+    }
+
+    const result = buildTrafficCleanerTargeting(targetCampaign.targeting.sites, selectedSiteIds, mode);
+    if (result.replacesExisting && !replaceConfirmed) {
+      setPendingCleanerMode(mode);
+      return;
+    }
+
+    setCleanerSaving(true);
+    try {
+      await updateCampaign(targetCampaign.id, {
+        targeting: {
+          ...targetCampaign.targeting,
+          sites: result.next,
+        },
+      });
+      toast.success(
+        t(mode === "black" ? "stats.cleaner.blacklistSaved" : "stats.cleaner.whitelistSaved")
+          .replace("{count}", String(selectedSiteIds.size))
+          .replace("{campaign}", targetCampaign.name),
+      );
+      setSelectedSiteIds(new Set());
+      setPendingCleanerMode(null);
+    } catch (error) {
+      console.error("Traffic Cleaner update failed:", error);
+      toast.error(t("stats.cleaner.saveFailed"));
+    } finally {
+      setCleanerSaving(false);
+    }
+  };
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === "desc" ? "asc" : "desc");
@@ -1027,6 +1136,90 @@ export default function DashboardStatistics() {
                   </div>
                 </div>
               </div>
+              {appliedGroupBy === "siteid" && data.length > 0 && (
+                <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-4">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+                        <p className="font-semibold">Traffic Cleaner</p>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{t("stats.cleaner.description")}</p>
+                    </div>
+                    <p className="shrink-0 text-sm font-medium text-primary">
+                      {t("stats.cleaner.selectedCount").replace("{count}", String(selectedSiteIds.size))}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 grid min-w-0 gap-3 lg:grid-cols-[minmax(220px,1fr)_minmax(180px,0.65fr)_auto] lg:items-end">
+                    <div className="min-w-0 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">{t("stats.cleaner.campaign")}</Label>
+                      <Select value={cleanerCampaignId} onValueChange={setCleanerCampaignId}>
+                        <SelectTrigger className="w-full bg-background">
+                          <SelectValue placeholder={t("stats.cleaner.selectCampaign")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cleanerCampaigns.map((campaign) => (
+                            <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="min-w-0 space-y-1.5">
+                      <Label htmlFor="traffic-cleaner-spend" className="text-xs text-muted-foreground">
+                        {t("stats.cleaner.minimumSpend")}
+                      </Label>
+                      <Input
+                        id="traffic-cleaner-spend"
+                        inputMode="decimal"
+                        value={cleanerSpendThreshold}
+                        onChange={(event) => setCleanerSpendThreshold(event.target.value)}
+                        className="bg-background"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-wrap gap-2">
+                      <Button type="button" variant="outline" onClick={handleSelectUnconvertedSites} className="min-w-0 flex-1 gap-2 lg:flex-none">
+                        <Filter className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{t("stats.cleaner.selectNoConversions")}</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setSelectedSiteIds(new Set())}
+                        disabled={selectedSiteIds.size === 0}
+                        className="gap-2"
+                      >
+                        <Eraser className="h-4 w-4" />
+                        {t("stats.cleaner.clearSelection")}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={cleanerSaving || selectedSiteIds.size === 0 || !cleanerCampaignId}
+                      onClick={() => void applyTrafficCleaner("white")}
+                      className="gap-2 border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-400"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      {t("stats.cleaner.addWhitelist")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={cleanerSaving || selectedSiteIds.size === 0 || !cleanerCampaignId}
+                      onClick={() => void applyTrafficCleaner("black")}
+                      className="gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <ShieldX className="h-4 w-4" />
+                      {t("stats.cleaner.addBlacklist")}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               {data.length === 0 ? (
@@ -1080,7 +1273,18 @@ export default function DashboardStatistics() {
                       <tr className="border-b border-border">
                         <th className={cn("text-left py-2 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap", stickyHead, canSortByLabel && "cursor-pointer select-none")}
                           onClick={() => canSortByLabel && toggleSort("label")}>
-                          {labelHeader} {canSortByLabel && <SortIcon col="label" />}
+                          <span className="inline-flex items-center gap-2">
+                            {appliedGroupBy === "siteid" && (
+                              <Checkbox
+                                aria-label={t("stats.cleaner.selectVisible")}
+                                checked={allVisibleSitesSelected ? true : someVisibleSitesSelected ? "indeterminate" : false}
+                                onCheckedChange={(checked) => toggleVisibleSiteIds(checked === true)}
+                                onClick={(event) => event.stopPropagation()}
+                              />
+                            )}
+                            <span>{labelHeader}</span>
+                            {canSortByLabel && <SortIcon col="label" />}
+                          </span>
                         </th>
                         {showImpressions && (
                           <th className="text-left py-2 px-2 text-sm font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort("impressions")}>
@@ -1146,7 +1350,22 @@ export default function DashboardStatistics() {
                         return (
                         <tr key={row.label} className="group border-b border-border/50 hover:bg-muted/50 transition-colors">
                           <td className={cn("py-2 px-2 font-medium whitespace-nowrap", stickyBody, "group-hover:bg-muted/50")}>
-                            {appliedGroupBy === "country" ? formatCountryLabel(row.label, lang) : row.label}
+                            <span className="inline-flex items-center gap-2">
+                              {appliedGroupBy === "siteid" && (
+                                <Checkbox
+                                  aria-label={t("stats.cleaner.selectSite").replace("{site}", row.label)}
+                                  checked={selectedSiteIds.has(row.label)}
+                                  onCheckedChange={(checked) => {
+                                    setSelectedSiteIds((current) => {
+                                      const next = new Set(current);
+                                      if (checked === true) next.add(row.label); else next.delete(row.label);
+                                      return next;
+                                    });
+                                  }}
+                                />
+                              )}
+                              <span>{appliedGroupBy === "country" ? formatCountryLabel(row.label, lang) : row.label}</span>
+                            </span>
                           </td>
                           {showImpressions && <td className="py-2 px-2 whitespace-nowrap">{formatStatisticInteger(row.impressions)}</td>}
                           {showClicks && <td className="py-2 px-2 whitespace-nowrap">{formatStatisticInteger(row.clicks)}</td>}
@@ -1201,6 +1420,25 @@ export default function DashboardStatistics() {
           </Card>
         </>
       )}
+      <AlertDialog open={pendingCleanerMode !== null} onOpenChange={(open) => { if (!open) setPendingCleanerMode(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("stats.cleaner.replaceTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("stats.cleaner.replaceDescription")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("stats.cleaner.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={cleanerSaving || pendingCleanerMode === null}
+              onClick={() => {
+                if (pendingCleanerMode) void applyTrafficCleaner(pendingCleanerMode, true);
+              }}
+            >
+              {t("stats.cleaner.replace")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
