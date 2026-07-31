@@ -9,7 +9,9 @@ describe("Traffic Cleaner", () => {
       { label: "site-c", spent: 10, conversions: 0 },
       { label: "site-c", spent: 11, conversions: 0 },
       { label: "site-d", spent: 9.99, conversions: 0 },
-    ], 10)).toEqual(["site-c"]);
+      { label: "site-e", spent: 15, conversions: 0 },
+      { label: "site-f", spent: 10, conversions: 0 },
+    ], 10, ["site-e"])).toEqual(["site-c"]);
   });
 
   it("merges selected sites into a list with the same mode", () => {
@@ -22,6 +24,21 @@ describe("Traffic Cleaner", () => {
     expect(result).toEqual({
       next: { mode: "black", items: ["site-a", "site-b", "site-c"] },
       replacesExisting: false,
+      addedCount: 1,
+    });
+  });
+
+  it("does not add a SiteID that is already in the selected list", () => {
+    const result = buildTrafficCleanerTargeting(
+      { mode: "black", items: ["site-a"] },
+      ["site-a", "site-a"],
+      "black",
+    );
+
+    expect(result).toEqual({
+      next: { mode: "black", items: ["site-a"] },
+      replacesExisting: false,
+      addedCount: 0,
     });
   });
 
@@ -35,6 +52,7 @@ describe("Traffic Cleaner", () => {
     expect(result).toEqual({
       next: { mode: "black", items: ["bad-site"] },
       replacesExisting: true,
+      addedCount: 1,
     });
   });
 });
