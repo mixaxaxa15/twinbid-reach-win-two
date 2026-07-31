@@ -261,8 +261,8 @@ export default function DashboardCampaigns() {
         <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 md:grid-cols-4">
           <Card className="min-w-0 bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t("campaigns.total")}</p><p className="mt-1 truncate text-2xl font-bold">{totalCount}</p></CardContent></Card>
           <Card className="min-w-0 bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t("campaigns.activeCount")}</p><p className="mt-1 truncate text-2xl font-bold text-green-500">{activeCount}</p></CardContent></Card>
-          <Card className="min-w-0 bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t("campaigns.budget")}</p><p className="mt-1 truncate text-2xl font-bold">${formatNumberWithDot(totalBudget)}</p></CardContent></Card>
-          <Card className="min-w-0 bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t("overview.spent")}</p><p className="mt-1 truncate text-2xl font-bold">${formatNumberWithDot(totalSpent)}</p></CardContent></Card>
+          <Card className="min-w-0 bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t("campaigns.budget")}</p><p className="mt-1 truncate text-2xl font-bold">${formatNumberWithDot(totalBudget, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></CardContent></Card>
+          <Card className="min-w-0 bg-card border-border"><CardContent className="p-4"><p className="text-sm text-muted-foreground">{t("overview.spent")}</p><p className="mt-1 truncate text-2xl font-bold">${formatNumberWithDot(totalSpent, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></CardContent></Card>
         </div>
 
         <Card className="bg-card border-border">
