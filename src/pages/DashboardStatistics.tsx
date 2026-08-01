@@ -38,7 +38,7 @@ import {
 } from "@/lib/statFilters";
 import { api } from "@/api";
 import type { StatsGroupBy, StatsFilterBy } from "@/api/types";
-import { formatNumberWithDot, formatStatisticInteger, formatStatisticRate } from "@/lib/numberFormat";
+import { formatNumberWithDot, formatStatisticInteger, formatStatisticRate, formatStatisticSpend } from "@/lib/numberFormat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   buildTrafficCleanerTargeting,
@@ -444,10 +444,7 @@ export default function DashboardStatistics() {
       { label: t("stats.ctr"), value: `${ctr}%`, icon: Target },
       {
         label: t("stats.spent"),
-        value: `$${formatNumberWithDot(totalSpent, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+        value: `$${formatStatisticSpend(totalSpent)}`,
         icon: TrendingUp,
       },
     ];
@@ -743,7 +740,7 @@ export default function DashboardStatistics() {
       if (showImpressions) base.push(r.impressions);
       if (showClicks) base.push(r.clicks);
       if (showCtr) base.push(ctr);
-      if (showSpent) base.push(r.spent.toFixed(2));
+      if (showSpent) base.push(formatStatisticSpend(r.spent));
       if (showCpm) base.push(cpmOf(r));
       if (showCpc) base.push(cpcOf(r));
       if (!showConversions) return base.map(escape).join(",");
@@ -763,7 +760,7 @@ export default function DashboardStatistics() {
     if (showImpressions) baseTotal.push(totals.impressions);
     if (showClicks) baseTotal.push(totals.clicks);
     if (showCtr) baseTotal.push(ctrTotal);
-    if (showSpent) baseTotal.push(totals.spent.toFixed(2));
+    if (showSpent) baseTotal.push(formatStatisticSpend(totals.spent));
     if (showCpm) baseTotal.push(cpmOf(totals));
     if (showCpc) baseTotal.push(cpcOf(totals));
     const crTotal = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(2) + "%" : "0.00%";
@@ -804,7 +801,7 @@ export default function DashboardStatistics() {
     return (
       <div className="rounded-lg border bg-card px-3 py-2 text-sm shadow-md" style={{ borderColor: "hsl(var(--border))" }}>
         <p className="font-medium text-foreground">{label}</p>
-        <p className="text-muted-foreground">{metricLabel}: <span className="font-semibold text-foreground">{chartMetric === "spent" ? `$${formatNumberWithDot(Number(value) || 0)}` : formatNumberWithDot(Number(value) || 0)}</span></p>
+        <p className="text-muted-foreground">{metricLabel}: <span className="font-semibold text-foreground">{chartMetric === "spent" ? `$${formatStatisticSpend(Number(value) || 0)}` : formatNumberWithDot(Number(value) || 0)}</span></p>
       </div>
     );
   };
@@ -1074,7 +1071,11 @@ export default function DashboardStatistics() {
                         tickFormatter={appliedGroupBy === "hours" ? (val: string) => val.split(" ")[1] || val : undefined}
                         interval={appliedGroupBy === "hours" ? "preserveStartEnd" : undefined}
                       />
-                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickFormatter={chartMetric === "spent" ? (value: number) => formatStatisticSpend(Number(value) || 0) : undefined}
+                      />
                       {appliedGroupBy === "hours" ? (
                         <Tooltip content={<HoursTooltip />} />
                       ) : (
@@ -1197,7 +1198,7 @@ export default function DashboardStatistics() {
                 </div>
               </div>
               {appliedGroupBy === "siteid" && data.length > 0 && (
-                <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-4">
+                <div className="mt-3 rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-4">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -1310,6 +1311,7 @@ export default function DashboardStatistics() {
                           : showRoi ? "roi"
                           : null)
                         : null;
+                    const fmtSpent = (n: number) => `$${formatStatisticSpend(n)}`;
                     const fmtMoney = (n: number) => `$${formatNumberWithDot(n, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     const fmtRate = (n: number) => `$${formatStatisticRate(n)}`;
                     const cpmOf = (r: { spent: number; impressions: number }) => r.impressions > 0 ? r.spent / r.impressions * 1000 : 0;
@@ -1458,7 +1460,7 @@ export default function DashboardStatistics() {
                           {showImpressions && <td className="py-2 px-2 whitespace-nowrap">{formatStatisticInteger(row.impressions)}</td>}
                           {showClicks && <td className="py-2 px-2 whitespace-nowrap">{formatStatisticInteger(row.clicks)}</td>}
                           {showCtr && <td className="py-2 px-2 whitespace-nowrap">{row.impressions > 0 ? ((row.clicks / row.impressions) * 100).toFixed(2) : "0.00"}%</td>}
-                          {showSpent && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "spent" && trafficCols > 0 && sep)}>{fmtMoney(row.spent)}</td>}
+                          {showSpent && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "spent" && trafficCols > 0 && sep)}>{fmtSpent(row.spent)}</td>}
                           {showCpm && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "cpm" && trafficCols > 0 && sep)}>{fmtRate(cpmOf(row))}</td>}
                           {showCpc && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "cpc" && trafficCols > 0 && sep)}>{fmtRate(cpcOf(row))}</td>}
                           {showConversions && (
@@ -1479,7 +1481,7 @@ export default function DashboardStatistics() {
                         {showImpressions && <td className="py-2 px-2 whitespace-nowrap">{formatStatisticInteger(totals.impressions)}</td>}
                         {showClicks && <td className="py-2 px-2 whitespace-nowrap">{formatStatisticInteger(totals.clicks)}</td>}
                         {showCtr && <td className="py-2 px-2 whitespace-nowrap">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00"}%</td>}
-                        {showSpent && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "spent" && trafficCols > 0 && sep)}>{fmtMoney(totals.spent)}</td>}
+                        {showSpent && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "spent" && trafficCols > 0 && sep)}>{fmtSpent(totals.spent)}</td>}
                         {showCpm && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "cpm" && trafficCols > 0 && sep)}>{fmtRate(cpmOf(totals))}</td>}
                         {showCpc && <td className={cn("py-2 px-2 whitespace-nowrap", firstCost === "cpc" && trafficCols > 0 && sep)}>{fmtRate(cpcOf(totals))}</td>}
                         {showConversions && (() => {
