@@ -39,6 +39,7 @@ import {
 import { api } from "@/api";
 import type { StatsGroupBy, StatsFilterBy } from "@/api/types";
 import { formatNumberWithDot, formatStatisticInteger, formatStatisticRate, formatStatisticSpend } from "@/lib/numberFormat";
+import { sortStatisticRowsByLabel } from "@/lib/statisticsSort";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   buildTrafficCleanerTargeting,
@@ -50,7 +51,7 @@ type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "c
 type SortKey = "label" | "impressions" | "clicks" | "spent" | "cpm" | "cpc" | "conversions" | "income";
 type SortDir = "asc" | "desc";
 
-interface UiRow { label: string; impressions: number; clicks: number; spent: number; conversions: number; income: number; confirmedConversions: number; confirmedIncome: number; }
+interface UiRow { label: string; sortValue?: number; impressions: number; clicks: number; spent: number; conversions: number; income: number; confirmedConversions: number; confirmedIncome: number; }
 
 // UI groupBy → ClickHouse group_by + bucket key in the response row.
 const GROUP_MAP: Record<GroupBy, { api: StatsGroupBy }> = {
@@ -366,7 +367,11 @@ export default function DashboardStatistics() {
         }
         rows = keys.map(k => {
           const m = byKey.get(k) ?? empty;
-          return { label: formatHourLabel(k), ...m };
+          return {
+            label: formatHourLabel(k),
+            sortValue: Date.parse(`${k.replace(" ", "T")}:00Z`),
+            ...m,
+          };
         });
       } else if (apiGroup === "date") {
         const keys: string[] = [];
@@ -380,7 +385,11 @@ export default function DashboardStatistics() {
         }
         rows = keys.map(k => {
           const m = byKey.get(k) ?? empty;
-          return { label: formatDateLabel(k), ...m };
+          return {
+            label: formatDateLabel(k),
+            sortValue: Date.parse(`${k}T00:00:00Z`),
+            ...m,
+          };
         });
       } else {
         const reverse =
@@ -515,7 +524,7 @@ export default function DashboardStatistics() {
 
   const sortedData = useMemo(() => {
     if (sortKey === "label") {
-      return [...data].sort((a, b) => sortDir === "asc" ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label));
+      return sortStatisticRowsByLabel(data, sortDir);
     }
     const valueOf = (r: UiRow): number => {
       if (sortKey === "cpm") return r.impressions > 0 ? r.spent / r.impressions * 1000 : 0;
