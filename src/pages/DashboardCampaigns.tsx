@@ -22,6 +22,7 @@ import { useCampaigns, type Campaign } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCampaignStats, statOf } from "@/hooks/use-campaign-stats";
 import { formatNumberWithDot, formatStatisticInteger } from "@/lib/numberFormat";
+import { CampaignIdPopover } from "@/components/dashboard/CampaignIdPopover";
 
 function isDraftComplete(c: Campaign): boolean {
   if (!c.name.trim()) return false;
@@ -272,7 +273,7 @@ export default function DashboardCampaigns() {
               <table className="w-full min-w-[1080px]">
                 <thead className="sticky top-0 bg-card z-10">
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.id")}</th>
+                    <th className="w-14 px-2 py-3 text-center text-sm font-medium text-muted-foreground">{t("overview.id")}</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors" onClick={() => handleSort("name")}>
                       <span className="inline-flex items-center">{t("overview.name")}<SortIcon col="name" /></span>
                     </th>
@@ -305,7 +306,7 @@ export default function DashboardCampaigns() {
                     const cs = statOf(statsById, campaign.id);
                     return (
                     <tr key={campaign.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                      <td className="py-4 px-4 text-muted-foreground font-mono text-sm">{campaign.id}</td>
+                      <td className="w-14 px-2 py-4 text-center"><CampaignIdPopover campaignId={campaign.id} /></td>
                       <td className="py-4 px-4 font-medium">{campaign.name}</td>
                       <td className="py-4 px-4"><Badge variant="outline" className={cn("font-normal", statusConfig[campaign.status]?.className)}>{statusConfig[campaign.status]?.label}</Badge></td>
                       <td className="py-4 px-4 text-muted-foreground">{campaign.format}</td>

@@ -7,6 +7,7 @@ import { useCampaigns } from "@/contexts/CampaignContext";
 import { Eye, MousePointer, Target } from "lucide-react";
 import { useCampaignStats, statOf } from "@/hooks/use-campaign-stats";
 import { formatNumberWithDot, formatStatisticInteger } from "@/lib/numberFormat";
+import { CampaignIdPopover } from "@/components/dashboard/CampaignIdPopover";
 
 export default function DashboardOverview() {
   const { t } = useLanguage();
@@ -64,7 +65,7 @@ export default function DashboardOverview() {
             <table className="w-full min-w-[720px]">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.id")}</th>
+                  <th className="w-14 px-2 py-3 text-center text-sm font-medium text-muted-foreground">{t("overview.id")}</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.name")}</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.status")}</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{t("overview.impressions")}</th>
@@ -79,7 +80,7 @@ export default function DashboardOverview() {
                   const s = statOf(byId, c.id);
                   return (
                     <tr key={c.id} className="border-b border-border/50">
-                      <td className="py-3 px-4 text-muted-foreground font-mono text-sm">{c.id}</td>
+                      <td className="w-14 px-2 py-3 text-center"><CampaignIdPopover campaignId={c.id} /></td>
                       <td className="py-3 px-4 font-medium">{c.name}</td>
                       <td className="py-3 px-4">
                         <Badge variant="outline" className={cn("font-normal", statusConfig[c.status]?.className)}>
