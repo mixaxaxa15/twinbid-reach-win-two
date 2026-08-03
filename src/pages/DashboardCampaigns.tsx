@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, MoreHorizontal, Play, Pause, Pencil, Trash2, Eye, Filter, Copy, RotateCcw, XCircle, ArrowUpDown, ArrowUp, ArrowDown, Type, BarChart3 } from "lucide-react";
+import { Plus, MoreHorizontal, Play, Pause, Pencil, Trash2, Eye, Filter, Copy, RotateCcw, XCircle, ArrowUpDown, ArrowUp, ArrowDown, Type, BarChart3, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -229,6 +229,68 @@ export default function DashboardCampaigns() {
     }
   };
 
+  const renderStatisticsButton = (campaign: Campaign) => campaign.status !== "draft" ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-8 w-8 border-primary/40 text-primary hover:border-primary hover:bg-primary/10 hover:text-primary"
+          aria-label={t("campaigns.openStatistics")}
+          onClick={() => navigate(`/dashboard/statistics?campaign=${encodeURIComponent(campaign.id)}`)}
+        >
+          <BarChart3 className="h-4 w-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{t("campaigns.openStatistics")}</TooltipContent>
+    </Tooltip>
+  ) : null;
+
+  const renderCampaignMenu = (campaign: Campaign) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t("campaigns.actions")}>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-card border-border">
+        <DropdownMenuItem className="gap-2" onClick={() => setViewCampaign(campaign)}><Eye className="h-4 w-4" /> {t("campaigns.view")}</DropdownMenuItem>
+        <DropdownMenuItem className="gap-2" onClick={() => openRenameDialog(campaign)}><Type className="h-4 w-4" /> {t("campaigns.rename")}</DropdownMenuItem>
+        {campaign.status !== "moderation" && (
+          <DropdownMenuItem className="gap-2" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}><Pencil className="h-4 w-4" /> {t("campaigns.edit")}</DropdownMenuItem>
+        )}
+        {campaign.status !== "waiting" && (
+          <DropdownMenuItem className="gap-2" onClick={() => duplicateCampaign(campaign)}><Copy className="h-4 w-4" /> {t("campaigns.copy")}</DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        {campaign.status === "active" && (
+          <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Pause className="h-4 w-4" /> {t("campaigns.pause")}</DropdownMenuItem>
+        )}
+        {campaign.status === "paused" && (
+          <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Play className="h-4 w-4" /> {t("campaigns.start")}</DropdownMenuItem>
+        )}
+        {campaign.status === "no_budget" && (
+          <DropdownMenuItem className="gap-2" onClick={() => { toast.info(t("campaigns.increaseBudgetHint")); navigate(`/dashboard/campaigns/${campaign.id}/edit?tab=budget`); }}>
+            <Plus className="h-4 w-4" /> {t("campaigns.increaseBudget")}
+          </DropdownMenuItem>
+        )}
+        {campaign.status === "draft" && (
+          <DropdownMenuItem className="gap-2" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}><Pencil className="h-4 w-4" /> {t("campaigns.finishCreation")}</DropdownMenuItem>
+        )}
+        {campaign.status === "completed" && (
+          <DropdownMenuItem className="gap-2" onClick={() => handleRestart(campaign)}><RotateCcw className="h-4 w-4" /> {t("campaigns.restart")}</DropdownMenuItem>
+        )}
+        {campaign.status === "moderation" && (
+          <DropdownMenuItem className="gap-2" onClick={() => handleCancelModeration(campaign.id)}><XCircle className="h-4 w-4" /> {t("campaigns.cancelModeration")}</DropdownMenuItem>
+        )}
+        {campaign.status !== "moderation" && (
+          <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDeleteId(campaign.id)}><Trash2 className="h-4 w-4" /> {t("campaigns.delete")}</DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <>
       <div className="space-y-6">
@@ -269,7 +331,70 @@ export default function DashboardCampaigns() {
 
         <Card className="bg-card border-border">
           <CardContent className="p-0">
-            <div className="max-w-full overflow-x-auto overscroll-x-contain">
+            <div className="space-y-3 p-3 md:hidden">
+              {sorted.map((campaign) => {
+                const cs = statOf(statsById, campaign.id);
+                return (
+                  <article key={campaign.id} className="rounded-xl border border-border bg-background/40 p-4">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0 space-y-2">
+                        <p className="break-words font-semibold leading-tight">{campaign.name}</p>
+                        <Badge variant="outline" className={cn("font-normal", statusConfig[campaign.status]?.className)}>
+                          {statusConfig[campaign.status]?.label}
+                        </Badge>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <CampaignIdPopover campaignId={campaign.id} />
+                        {renderStatisticsButton(campaign)}
+                        {renderCampaignMenu(campaign)}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("campaigns.format")}</p>
+                        <p className="mt-1 text-sm font-medium">{campaign.format}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("campaigns.budget")}</p>
+                        <p className="mt-1 text-sm font-medium">${formatNumberWithDot(campaign.budget)}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-xs text-muted-foreground">{t("overview.spent")}</p>
+                        <p className="mt-1 text-lg font-semibold">${formatNumberWithDot(cs.spent)}</p>
+                      </div>
+                    </div>
+
+                    <details className="group mt-3 border-t border-border/70 pt-3">
+                      <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-primary [&::-webkit-details-marker]:hidden">
+                        <span className="group-open:hidden">{t("campaigns.showDetails")}</span>
+                        <span className="hidden group-open:inline">{t("campaigns.hideDetails")}</span>
+                        <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="mt-3 grid grid-cols-3 gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t("overview.impressions")}</p>
+                          <p className="mt-1 text-sm font-medium">{formatStatisticInteger(cs.impressions)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t("campaigns.clicks")}</p>
+                          <p className="mt-1 text-sm font-medium">{formatStatisticInteger(cs.clicks)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">CTR</p>
+                          <p className="mt-1 text-sm font-medium">{cs.ctr}%</p>
+                        </div>
+                      </div>
+                    </details>
+                  </article>
+                );
+              })}
+              {sorted.length === 0 && (
+                <div className="py-10 text-center text-sm text-muted-foreground">{t("campaigns.notFound")}</div>
+              )}
+            </div>
+
+            <div className="hidden max-w-full overflow-x-auto overscroll-x-contain md:block">
               <table className="w-full min-w-[1080px]">
                 <thead className="sticky top-0 bg-card z-10">
                   <tr className="border-b border-border">
@@ -317,60 +442,8 @@ export default function DashboardCampaigns() {
                       <td className="py-4 px-4">{cs.ctr}%</td>
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {campaign.status !== "draft" && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-8 w-8 border-primary/40 text-primary hover:border-primary hover:bg-primary/10 hover:text-primary"
-                                  aria-label={t("campaigns.openStatistics")}
-                                  onClick={() => navigate(`/dashboard/statistics?campaign=${encodeURIComponent(campaign.id)}`)}
-                                >
-                                  <BarChart3 className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>{t("campaigns.openStatistics")}</TooltipContent>
-                            </Tooltip>
-                          )}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-card border-border">
-                            <DropdownMenuItem className="gap-2" onClick={() => setViewCampaign(campaign)}><Eye className="h-4 w-4" /> {t("campaigns.view")}</DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2" onClick={() => openRenameDialog(campaign)}><Type className="h-4 w-4" /> {t("campaigns.rename")}</DropdownMenuItem>
-                            {campaign.status !== "moderation" && (
-                              <DropdownMenuItem className="gap-2" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}><Pencil className="h-4 w-4" /> {t("campaigns.edit")}</DropdownMenuItem>
-                            )}
-                            {campaign.status !== "waiting" && (
-                              <DropdownMenuItem className="gap-2" onClick={() => duplicateCampaign(campaign)}><Copy className="h-4 w-4" /> {t("campaigns.copy")}</DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            {campaign.status === "active" && (
-                              <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Pause className="h-4 w-4" /> {t("campaigns.pause")}</DropdownMenuItem>
-                            )}
-                            {campaign.status === "paused" && (
-                              <DropdownMenuItem className="gap-2" onClick={() => toggleStatus(campaign.id)}><Play className="h-4 w-4" /> {t("campaigns.start")}</DropdownMenuItem>
-                            )}
-                            {campaign.status === "no_budget" && (
-                              <DropdownMenuItem className="gap-2" onClick={() => { toast.info(t("campaigns.increaseBudgetHint")); navigate(`/dashboard/campaigns/${campaign.id}/edit?tab=budget`); }}>
-                                <Plus className="h-4 w-4" /> {t("campaigns.increaseBudget")}
-                              </DropdownMenuItem>
-                            )}
-                            {campaign.status === "draft" && (
-                              <DropdownMenuItem className="gap-2" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}><Pencil className="h-4 w-4" /> {t("campaigns.finishCreation")}</DropdownMenuItem>
-                            )}
-                            {campaign.status === "completed" && (
-                              <DropdownMenuItem className="gap-2" onClick={() => handleRestart(campaign)}><RotateCcw className="h-4 w-4" /> {t("campaigns.restart")}</DropdownMenuItem>
-                            )}
-                            {campaign.status === "moderation" && (
-                              <DropdownMenuItem className="gap-2" onClick={() => handleCancelModeration(campaign.id)}><XCircle className="h-4 w-4" /> {t("campaigns.cancelModeration")}</DropdownMenuItem>
-                            )}
-                            {campaign.status !== "moderation" && (
-                              <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDeleteId(campaign.id)}><Trash2 className="h-4 w-4" /> {t("campaigns.delete")}</DropdownMenuItem>
-                            )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          {renderStatisticsButton(campaign)}
+                          {renderCampaignMenu(campaign)}
                         </div>
                       </td>
                     </tr>

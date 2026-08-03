@@ -61,7 +61,42 @@ export default function DashboardOverview() {
       <Card className="bg-card border-border">
         <CardHeader><CardTitle>{t("overview.activeCampaignsTitle")}</CardTitle></CardHeader>
         <CardContent className="px-0 sm:px-6">
-          <div className="max-w-full overflow-x-auto overscroll-x-contain">
+          <div className="space-y-3 px-4 pb-4 md:hidden">
+            {activeCampaigns.length === 0 ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">{t("campaigns.notFound")}</div>
+            ) : activeCampaigns.map((campaign) => {
+              const stats = statOf(byId, campaign.id);
+              return (
+                <article key={campaign.id} className="rounded-xl border border-border bg-background/40 p-4">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-2">
+                      <p className="break-words font-semibold leading-tight">{campaign.name}</p>
+                      <Badge variant="outline" className={cn("font-normal", statusConfig[campaign.status]?.className)}>
+                        {statusConfig[campaign.status]?.label}
+                      </Badge>
+                    </div>
+                    <CampaignIdPopover campaignId={campaign.id} />
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border/70 pt-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">{t("overview.impressions")}</p>
+                      <p className="mt-1 text-sm font-medium">{formatStatisticInteger(stats.impressions)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{t("overview.clicks")}</p>
+                      <p className="mt-1 text-sm font-medium">{formatStatisticInteger(stats.clicks)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{t("overview.spent")}</p>
+                      <p className="mt-1 text-sm font-medium">${formatNumberWithDot(stats.spent)}</p>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="hidden max-w-full overflow-x-auto overscroll-x-contain md:block">
             <table className="w-full min-w-[720px]">
               <thead>
                 <tr className="border-b border-border">
