@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CopyCheck } from "lucide-react";
+import { Check, ChevronsUpDown, CopyCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Campaign, TargetingState } from "@/contexts/CampaignContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { targetingConfigs } from "@/components/dashboard/TargetingSection";
+import { cn } from "@/lib/utils";
 import {
   getImportableTargetingKeys,
   importTargetingGroups,
@@ -38,6 +39,7 @@ export function TargetingImportDialog({
 }: TargetingImportDialogProps) {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
+  const [campaignSelectorOpen, setCampaignSelectorOpen] = useState(false);
   const [sourceCampaignId, setSourceCampaignId] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Set<TargetingImportKey>>(new Set());
 
@@ -50,6 +52,7 @@ export function TargetingImportDialog({
 
   const selectSource = (campaignId: string) => {
     setSourceCampaignId(campaignId);
+    setCampaignSelectorOpen(false);
     const source = sourceCampaigns.find(campaign => campaign.id === campaignId);
     setSelectedKeys(new Set(getImportableTargetingKeys(source?.targeting)));
   };
@@ -80,6 +83,7 @@ export function TargetingImportDialog({
   };
 
   const resetDialog = () => {
+    setCampaignSelectorOpen(false);
     setSourceCampaignId("");
     setSelectedKeys(new Set());
   };
@@ -104,18 +108,53 @@ export function TargetingImportDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <p className="text-sm font-medium">{t("targetingImport.source")}</p>
-            <Select value={sourceCampaignId} onValueChange={selectSource}>
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder={t("targetingImport.selectCampaign")} />
-              </SelectTrigger>
-              <SelectContent className="bg-card">
-                {sourceCampaigns.map(campaign => (
-                  <SelectItem key={campaign.id} value={campaign.id}>
-                    {campaign.name} · {campaign.format}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={campaignSelectorOpen} onOpenChange={setCampaignSelectorOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={campaignSelectorOpen}
+                  className="w-full justify-between bg-background px-3 font-normal"
+                >
+                  <span className={cn("truncate", !sourceCampaign && "text-muted-foreground")}>
+                    {sourceCampaign
+                      ? `${sourceCampaign.name} · ${sourceCampaign.format}`
+                      : t("targetingImport.selectCampaign")}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                className="w-[var(--radix-popover-trigger-width)] bg-card p-1"
+              >
+                <div
+                  className="max-h-72 overflow-y-auto overscroll-contain"
+                  onWheelCapture={event => event.stopPropagation()}
+                >
+                  {sourceCampaigns.map(campaign => (
+                    <button
+                      key={campaign.id}
+                      type="button"
+                      onClick={() => selectSource(campaign.id)}
+                      className={cn(
+                        "flex w-full items-center rounded-sm px-2 py-2 text-left text-sm outline-none hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground",
+                        campaign.id === sourceCampaignId && "bg-accent text-accent-foreground",
+                      )}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4 shrink-0",
+                          campaign.id === sourceCampaignId ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                      <span className="min-w-0 truncate">{campaign.name} · {campaign.format}</span>
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {sourceCampaign && availableKeys.length === 0 && (
