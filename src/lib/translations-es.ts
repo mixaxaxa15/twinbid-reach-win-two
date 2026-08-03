@@ -323,6 +323,7 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "campaigns.budget": "Presupuesto",
   "campaigns.format": "Formato",
   "campaigns.view": "Ver",
+  "campaigns.openStatistics": "Abrir estadísticas",
   "campaigns.rename": "Renombrar",
   "campaigns.renameTitle": "Renombrar campaña",
   "campaigns.renameDescription": "Introduce un nuevo nombre para la campaña.",

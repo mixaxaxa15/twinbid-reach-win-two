@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, MoreHorizontal, Play, Pause, Pencil, Trash2, Eye, Filter, Copy, RotateCcw, XCircle, ArrowUpDown, ArrowUp, ArrowDown, Type } from "lucide-react";
+import { Plus, MoreHorizontal, Play, Pause, Pencil, Trash2, Eye, Filter, Copy, RotateCcw, XCircle, ArrowUpDown, ArrowUp, ArrowDown, Type, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCampaigns, type Campaign } from "@/contexts/CampaignContext";
@@ -314,9 +315,27 @@ export default function DashboardCampaigns() {
                       <td className="py-4 px-4">{formatStatisticInteger(cs.clicks)}</td>
                       <td className="py-4 px-4">{cs.ctr}%</td>
                       <td className="py-4 px-4 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-card border-border">
+                        <div className="flex items-center justify-end gap-1">
+                          {campaign.status !== "draft" && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8 border-primary/40 text-primary hover:border-primary hover:bg-primary/10 hover:text-primary"
+                                  aria-label={t("campaigns.openStatistics")}
+                                  onClick={() => navigate(`/dashboard/statistics?campaign=${encodeURIComponent(campaign.id)}`)}
+                                >
+                                  <BarChart3 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{t("campaigns.openStatistics")}</TooltipContent>
+                            </Tooltip>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-card border-border">
                             <DropdownMenuItem className="gap-2" onClick={() => setViewCampaign(campaign)}><Eye className="h-4 w-4" /> {t("campaigns.view")}</DropdownMenuItem>
                             <DropdownMenuItem className="gap-2" onClick={() => openRenameDialog(campaign)}><Type className="h-4 w-4" /> {t("campaigns.rename")}</DropdownMenuItem>
                             {campaign.status !== "moderation" && (
@@ -349,8 +368,9 @@ export default function DashboardCampaigns() {
                             {campaign.status !== "moderation" && (
                               <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDeleteId(campaign.id)}><Trash2 className="h-4 w-4" /> {t("campaigns.delete")}</DropdownMenuItem>
                             )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </td>
                     </tr>
                     );

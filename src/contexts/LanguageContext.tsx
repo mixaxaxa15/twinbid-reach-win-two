@@ -352,6 +352,7 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "campaigns.budget": { ru: "Бюджет", en: "Budget" },
   "campaigns.format": { ru: "Формат", en: "Format" },
   "campaigns.view": { ru: "Просмотр", en: "View" },
+  "campaigns.openStatistics": { ru: "Открыть статистику", en: "Open statistics" },
   "campaigns.rename": { ru: "Переименовать", en: "Rename" },
   "campaigns.renameTitle": { ru: "Переименовать кампанию", en: "Rename campaign" },
   "campaigns.renameDescription": { ru: "Введите новое название кампании.", en: "Enter a new campaign name." },
