@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, Plus, Receipt, Tag } from "lucide-react";
+import { CreditCard, Wallet, Plus, Receipt, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { notifyError } from "@/lib/apiStatus";
@@ -12,11 +12,24 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePendingPayment } from "@/contexts/PendingPaymentContext";
-import { api } from "@/api";
+import { api, ApiError } from "@/api";
 import { supabase } from "@/integrations/supabase/client";
-import type { ApiUserTransaction } from "@/api/types";
-import { getPaymentCurrency, PAYMENT_METHODS } from "@/lib/paymentMethods";
+import type { ApiUserTransaction, PaymentChannel } from "@/api/types";
+import { PAYMENT_METHODS } from "@/lib/paymentMethods";
 import { formatCurrencyAmount } from "@/lib/numberFormat";
+import { PassimPayBrand } from "@/components/dashboard/PassimPayBrand";
+import {
+  buildPassimPayTopup,
+  buildStaticWalletTopup,
+  getPassimPayFee,
+  getTransactionBonusAmount,
+  isPassimPayPartial,
+  isTransactionCredited,
+  parseTopupAmount,
+  PASSIMPAY_FEE_PERCENT,
+  sanitizeTopupAmountInput,
+  validatePromocodeForTopup,
+} from "@/lib/topup";
 
 const fmtMoney = (n: number | string | null | undefined) =>
   formatCurrencyAmount(Number(n || 0));
@@ -36,11 +49,15 @@ export default function DashboardBalance() {
 
   const [selectedAmount, setSelectedAmount] = useState<number | null>(250);
   const [customAmount, setCustomAmount] = useState("");
+  const [selectedChannel, setSelectedChannel] = useState<PaymentChannel | null>(null);
   const [selectedMethod, setSelectedMethod] = useState("usdt_trc20");
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; bonus: number; id: string } | null>(null);
   const [topupRequests, setTopupRequests] = useState<TopupRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
+  const [submittingTopup, setSubmittingTopup] = useState(false);
+  const [topupError, setTopupError] = useState<string | null>(null);
+  const topupSubmitLockRef = useRef(false);
 
   const [promoNames, setPromoNames] = useState<Record<string, string>>({});
 
@@ -76,7 +93,7 @@ export default function DashboardBalance() {
         if (data) {
           setPromoNames(prev => {
             const next = { ...prev };
-            data.forEach((p: any) => { next[p.id] = p.code; });
+            data.forEach((p: { id: string; code: string }) => { next[p.id] = p.code; });
             return next;
           });
         }
@@ -99,30 +116,27 @@ export default function DashboardBalance() {
     registerRefreshHandler(fetchTopupRequests);
   }, [registerRefreshHandler, user]);
 
-  const finalAmount = customAmount ? parseInt(customAmount) : selectedAmount;
+  const finalAmount = customAmount ? parseTopupAmount(customAmount) : selectedAmount;
+  const promoPreviewBonus = finalAmount && appliedPromo
+    ? Math.round((finalAmount * appliedPromo.bonus + Number.EPSILON)) / 100
+    : 0;
+  const passimPayFee = finalAmount ? getPassimPayFee(finalAmount) : 0;
 
   const handleApplyPromo = async () => {
     const code = promoCode.trim().toUpperCase();
     if (!code) return;
     try {
       const promo = await api.getPromocode(code);
-      if (promo.valid_to && new Date(promo.valid_to) < new Date()) {
+      const validationFailure = validatePromocodeForTopup({
+        promo,
+        transactions: topupRequests,
+        userId: user?.id,
+      });
+      if (validationFailure === "expired" || validationFailure === "limit") {
         toast.error(t("balance.promo.invalid"));
         return;
       }
-      if (promo.usage_limit != null && promo.usage_count >= promo.usage_limit) {
-        toast.error(t("balance.promo.invalid"));
-        return;
-      }
-      // Reject if this user already has a *completed/pending* transaction tied to this promo.
-      // Ignore created/cancelled transactions which represent abandoned attempts.
-      const alreadyUsed = topupRequests.some(
-        (tx) => tx.promocode_id === promo.id
-          && (!user || tx.user_id === user.id)
-          && tx.status !== "draft"
-          && tx.status !== "cancelled"
-      );
-      if (alreadyUsed) {
+      if (validationFailure === "already_used") {
         toast.error(t("balance.promo.alreadyUsed"));
         return;
       }
@@ -140,74 +154,146 @@ export default function DashboardBalance() {
   };
 
   const hasDraft = topupRequests.some(tx => tx.status === "draft" && (!user || tx.user_id === user.id));
+  const pendingPassimPay = topupRequests.find(
+    tx => tx.payment_channel === "passimpay_invoice"
+      && tx.status === "pending"
+      && tx.provider_status !== "error"
+      && (!user || tx.user_id === user.id),
+  );
+  const hasPendingPassimPay = !!pendingPassimPay;
+  const hasUnfinishedPayment = hasDraft || hasPendingPassimPay;
 
   const handleTopUp = async () => {
-    if (!finalAmount || finalAmount < 100 || !user) return;
-    if (pendingPayment || hasDraft) {
+    if (!finalAmount || finalAmount < 100 || !user || !selectedChannel || submittingTopup || topupSubmitLockRef.current) return;
+    if (pendingPayment || hasUnfinishedPayment) {
       toast.error(t("balance.disabledReason"));
       return;
     }
-    // Create the transaction immediately as an internal draft so amount and
-    // bonus survive reloads before the user submits the blockchain hash.
-    const bonusPercent = appliedPromo?.bonus || 0;
-    const bonusAmount = Math.floor((finalAmount * bonusPercent) / 100);
-    const body = {
-      user_id: user.id,
-      transaction_time: new Date().toISOString(),
-      transaction_id: "",
-      payment_method: selectedMethod,
-      bonus_amount: bonusAmount,
-      // Backend resolves promo by its code text on create (it then stores the
-      // UUID internally). Sending the UUID makes the lookup fail with
-      // "promocode not found", so we send the code text here.
-      promocode_id: appliedPromo?.code ?? null,
-      transaction_hash: null,
-      deposit_amount: finalAmount,
-      total_balance_increase: finalAmount + bonusAmount,
-      status: "draft" as const,
-      currency: getPaymentCurrency(selectedMethod),
-    };
-    let txId: string | null = null;
-    try {
-      const created = await api.createTransaction(body);
-      txId = created.id;
-    } catch (e: any) {
-      notifyError(t("balance.toast.submitError"), e);
-      return;
-    }
-    // Cache promo code text by tx id for history display (backend returns UUID).
-    if (txId && appliedPromo) {
+    topupSubmitLockRef.current = true;
+    setSubmittingTopup(true);
+    setTopupError(null);
+    let paymentWindow: Window | null = null;
+    if (selectedChannel === "passimpay_invoice") {
       try {
-        const map = JSON.parse(localStorage.getItem("twinbid_promo_codes") || "{}");
-        map[txId] = appliedPromo.code;
-        // Also key by promo id so other transactions made with the same promo show the code.
-        map[appliedPromo.id] = appliedPromo.code;
-        localStorage.setItem("twinbid_promo_codes", JSON.stringify(map));
-      } catch {}
+        paymentWindow = window.open("", "_blank");
+        if (paymentWindow) paymentWindow.opener = null;
+      } catch {
+        // The dialog keeps the backend payment URL as a regular fallback link.
+      }
     }
-    setPendingPayment({
-      amount: finalAmount,
-      method: selectedMethod,
-      promo: appliedPromo?.code,
-      bonus: appliedPromo?.bonus,
-      promocode_id: appliedPromo?.id ?? null,
-      transaction_id: txId,
-    });
-    setAppliedPromo(null);
-    setPromoCode("");
-    openDialog();
-    fetchTopupRequests();
+    const promoCodeText = appliedPromo?.code ?? null;
+    try {
+      const body = selectedChannel === "passimpay_invoice"
+        ? buildPassimPayTopup({ depositAmount: finalAmount, promoCode: promoCodeText })
+        : buildStaticWalletTopup({
+            paymentMethod: selectedMethod,
+            depositAmount: finalAmount,
+            promoCode: promoCodeText,
+          });
+      const created = await api.createTransaction(body);
+      const transactionRowId = created.id;
+      const transactionChannel = created.payment_channel || selectedChannel;
+      const bonusAmount = getTransactionBonusAmount(created);
+
+      if (transactionRowId && appliedPromo) {
+        try {
+          const map = JSON.parse(localStorage.getItem("twinbid_promo_codes") || "{}");
+          map[transactionRowId] = appliedPromo.code;
+          map[appliedPromo.id] = appliedPromo.code;
+          localStorage.setItem("twinbid_promo_codes", JSON.stringify(map));
+        } catch { /* local display cache is best-effort */ }
+      }
+
+      setPendingPayment({
+        amount: Number(created.deposit_amount) || finalAmount,
+        method: created.payment_method || (transactionChannel === "passimpay_invoice" ? "passimpay" : selectedMethod),
+        channel: transactionChannel,
+        promo: appliedPromo?.code,
+        bonus: appliedPromo?.bonus,
+        bonus_amount: bonusAmount,
+        promocode_id: created.promocode_id ?? appliedPromo?.id ?? null,
+        transactionRowId,
+        total_balance_increase: Number(created.total_balance_increase) || finalAmount + bonusAmount,
+        status: created.status,
+        payment_url: created.payment_url,
+        provider_status: created.provider_status,
+        amount_paid: created.amount_paid,
+        amount_credited: created.amount_credited,
+        credited_at: created.credited_at,
+      });
+      setAppliedPromo(null);
+      setPromoCode("");
+      openDialog();
+      if (transactionChannel === "passimpay_invoice" && created.payment_url) {
+        if (paymentWindow && !paymentWindow.closed) {
+          try {
+            paymentWindow.location.href = created.payment_url;
+          } catch {
+            paymentWindow.close();
+          }
+        }
+      } else if (paymentWindow && !paymentWindow.closed) {
+        paymentWindow.close();
+      }
+      void fetchTopupRequests();
+    } catch (e: unknown) {
+      if (paymentWindow && !paymentWindow.closed) paymentWindow.close();
+      const message = selectedChannel === "passimpay_invoice" && e instanceof ApiError && e.status === 503
+        ? t("balance.passimpay.unavailable")
+        : e instanceof Error
+          ? e.message
+          : t("balance.toast.submitError");
+      setTopupError(message);
+      notifyError(t("balance.toast.submitError"), e);
+    } finally {
+      topupSubmitLockRef.current = false;
+      setSubmittingTopup(false);
+    }
+  };
+
+  const handleResumePassimPay = async () => {
+    if (!pendingPassimPay || submittingTopup) return;
+    setSubmittingTopup(true);
+    try {
+      const transaction = await api.getTransaction(pendingPassimPay.id);
+      const amount = Number(transaction.deposit_amount) || 0;
+      const bonusAmount = getTransactionBonusAmount(transaction);
+      setPendingPayment({
+        amount,
+        method: transaction.payment_method || "passimpay",
+        channel: "passimpay_invoice",
+        bonus_amount: bonusAmount,
+        promocode_id: transaction.promocode_id ?? null,
+        transactionRowId: transaction.id,
+        total_balance_increase: Number(transaction.total_balance_increase) || amount + bonusAmount,
+        status: transaction.status,
+        payment_url: transaction.payment_url,
+        provider_status: transaction.provider_status,
+        amount_paid: transaction.amount_paid,
+        amount_credited: transaction.amount_credited,
+        credited_at: transaction.credited_at,
+      });
+      openDialog();
+    } catch (e: unknown) {
+      notifyError(t("balance.toast.submitError"), e);
+      void fetchTopupRequests();
+    } finally {
+      setSubmittingTopup(false);
+    }
   };
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return "—";
     return `${String(d.getUTCDate()).padStart(2, "0")}.${String(d.getUTCMonth() + 1).padStart(2, "0")}.${d.getUTCFullYear()}`;
   };
 
   const statusMap: Record<string, { label: string; className: string }> = {
+    draft: { label: t("balance.created"), className: "text-muted-foreground border-border" },
     pending: { label: t("balance.pending"), className: "text-yellow-500 border-yellow-500/20" },
     approved: { label: t("balance.completed"), className: "text-green-500 border-green-500/20" },
     rejected: { label: t("balance.rejected") || "Rejected", className: "text-destructive border-destructive/20" },
+    cancelled: { label: t("balance.cancelled"), className: "text-muted-foreground border-border" },
   };
 
   return (
@@ -256,25 +342,88 @@ export default function DashboardBalance() {
               </div>
               <div className="relative max-w-xs">
                 <Input placeholder={t("balance.otherAmount")} value={customAmount}
-                  onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(null); }}
+                  inputMode="decimal"
+                  onChange={(e) => {
+                    const nextValue = sanitizeTopupAmountInput(e.target.value);
+                    if (nextValue === null) return;
+                    setCustomAmount(nextValue);
+                    setSelectedAmount(null);
+                  }}
                   className="bg-background border-border pr-8" />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label>{t("balance.paymentMethod")}</Label>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {PAYMENT_METHODS.map((m) => (
-                  <button key={m.id} onClick={() => setSelectedMethod(m.id)}
-                    className={cn("flex flex-col items-start gap-1 p-4 rounded-lg border transition-colors text-left",
-                      selectedMethod === m.id ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/50"
-                    )}>
-                    <span className={cn("text-sm font-medium", selectedMethod === m.id ? "text-foreground" : "text-muted-foreground")}>{m.label}</span>
-                    <span className="text-xs text-muted-foreground">{m.desc}</span>
-                  </button>
-                ))}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedChannel("static_wallet");
+                    setTopupError(null);
+                  }}
+                  className={cn(
+                    "relative flex min-h-24 items-center gap-3 rounded-xl border p-4 text-left transition-colors",
+                    selectedChannel === "static_wallet"
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-background hover:border-primary/50",
+                  )}
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                    <Wallet className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block font-semibold">TwinBid Crypto</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">{t("balance.crypto.choose")}</span>
+                  </span>
+                  <Badge className="absolute right-3 top-3 border-primary/30 bg-primary/15 px-2.5 py-1 text-sm font-bold text-primary hover:bg-primary/15">
+                    0%
+                  </Badge>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedChannel("passimpay_invoice");
+                    setTopupError(null);
+                  }}
+                  className={cn(
+                    "relative flex min-h-24 items-center rounded-xl border p-4 pr-16 text-left transition-colors",
+                    selectedChannel === "passimpay_invoice"
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-background hover:border-primary/50",
+                  )}
+                >
+                  <PassimPayBrand />
+                  <Badge className="absolute right-3 top-3 border-orange-500/30 bg-orange-500/10 px-2.5 py-1 text-sm font-bold text-orange-600 hover:bg-orange-500/10 dark:text-orange-400">
+                    {PASSIMPAY_FEE_PERCENT}%
+                  </Badge>
+                </button>
               </div>
+
+              {selectedChannel === "static_wallet" ? (
+                <div className="grid gap-3 rounded-xl border border-border bg-muted/20 p-3 sm:grid-cols-2">
+                  {PAYMENT_METHODS.map((m) => (
+                    <button key={m.id} type="button" onClick={() => setSelectedMethod(m.id)}
+                      className={cn("flex flex-col items-start gap-1 rounded-lg border p-4 text-left transition-colors",
+                        selectedMethod === m.id ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/50"
+                      )}>
+                      <span className={cn("text-sm font-medium", selectedMethod === m.id ? "text-foreground" : "text-muted-foreground")}>{m.label}</span>
+                      <span className="text-xs text-muted-foreground">{m.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : selectedChannel === "passimpay_invoice" ? (
+                <div className="flex items-start gap-3 rounded-xl border border-orange-500/20 bg-orange-500/5 p-3 text-sm">
+                  <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+                  <p className="text-muted-foreground">
+                    {t("balance.passimpay.feeHint")
+                      .replace("{amount}", finalAmount ? `$${fmtMoney(finalAmount)}` : "—")
+                      .replace("{fee}", finalAmount ? `$${fmtMoney(passimPayFee)}` : "—")}
+                  </p>
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -309,14 +458,39 @@ export default function DashboardBalance() {
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <Button onClick={handleTopUp} className="h-auto min-h-10 w-full whitespace-normal bg-accent py-2 hover:bg-accent/90 text-accent-foreground sm:w-auto"
-                disabled={!finalAmount || finalAmount < 100 || !!pendingPayment || hasDraft}>
-                {t("balance.topUpBtn")} {finalAmount ? `$${finalAmount.toLocaleString()}` : ""}
-                {appliedPromo && finalAmount ? ` (+${Math.floor(finalAmount * appliedPromo.bonus / 100)}$ ${t("balance.promo.bonusShort")})` : ""}
+                disabled={!finalAmount || finalAmount < 100 || !selectedChannel || !!pendingPayment || hasUnfinishedPayment || submittingTopup}>
+                {submittingTopup
+                  ? t("balance.payment.creating")
+                  : selectedChannel === "passimpay_invoice"
+                    ? t("balance.passimpay.create")
+                    : t("balance.topUpBtn")} {finalAmount ? `$${fmtMoney(finalAmount)}` : ""}
+                {appliedPromo && finalAmount ? ` (+${fmtMoney(promoPreviewBonus)}$ ${t("balance.promo.bonusShort")})` : ""}
               </Button>
-              {(pendingPayment || hasDraft) && (
-                <p className="text-xs text-yellow-500">{t("balance.disabledReason")}</p>
+              {(pendingPayment || hasUnfinishedPayment) && (
+                <div className="flex flex-col items-start gap-2">
+                  <p className="text-xs text-yellow-500">
+                    {pendingPayment?.channel === "passimpay_invoice" || pendingPassimPay
+                      ? t("balance.passimpay.pendingReason")
+                      : t("balance.disabledReason")}
+                  </p>
+                  {!pendingPayment && pendingPassimPay && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-border"
+                      disabled={submittingTopup}
+                      onClick={() => void handleResumePassimPay()}
+                    >
+                      {t("balance.passimpay.resume")}
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
+            {topupError && (
+              <p className="text-sm text-destructive" role="alert">{topupError}</p>
+            )}
             <p className="text-xs text-muted-foreground">{t("balance.minAmount")}</p>
           </CardContent>
         </Card>
@@ -332,11 +506,7 @@ export default function DashboardBalance() {
         <CardContent className="p-0">
           <div className="max-w-full overflow-x-auto overscroll-x-contain">
             {(() => {
-              // `draft` and `cancelled` are internal-only states (incomplete or
-              // abandoned attempts) — never shown in the user-facing history.
-              const visible = topupRequests.filter(
-                tx => tx.status !== "draft" && tx.status !== "cancelled",
-              );
+              const visible = topupRequests;
               if (loadingRequests) {
                 return <div className="py-12 text-center text-muted-foreground">Loading...</div>;
               }
@@ -355,8 +525,34 @@ export default function DashboardBalance() {
                 </thead>
                 <tbody>
                   {visible.map((req) => {
-                    const methodLabel = PAYMENT_METHODS.find(m => m.id === req.payment_method)?.label || req.payment_method;
-                    const st = statusMap[req.status] || statusMap.pending;
+                    const methodLabel = req.payment_channel === "passimpay_invoice"
+                      ? "PassimPay"
+                      : "TwinBid Crypto";
+                    const credited = isTransactionCredited(req);
+                    const partial = req.payment_channel === "passimpay_invoice"
+                      && req.status === "pending"
+                      && req.provider_status !== "error"
+                      && isPassimPayPartial(req);
+                    const historyStatus = credited
+                      ? "approved"
+                      : req.status === "approved"
+                        ? "pending"
+                        : req.status;
+                    const baseStatus = statusMap[historyStatus] || statusMap.pending;
+                    const providerStatus = req.payment_channel === "passimpay_invoice"
+                      && req.status === "pending"
+                      && !credited
+                      ? partial
+                        ? { label: t("balance.passimpay.partial"), className: "text-yellow-500 border-yellow-500/20" }
+                        : req.provider_status === "create_unknown"
+                          ? { label: t("balance.passimpay.checkingPayment"), className: "text-yellow-500 border-yellow-500/20" }
+                          : req.provider_status === "waiting" && req.status === "pending"
+                            ? { label: t("balance.passimpay.waiting"), className: "text-yellow-500 border-yellow-500/20" }
+                            : req.provider_status === "error"
+                              ? { label: t("balance.passimpay.error"), className: "text-destructive border-destructive/20" }
+                              : null
+                      : null;
+                    const st = providerStatus || baseStatus;
                     let promoLabel: string | null = null;
                     if (req.promocode_id) {
                       // Prefer the resolved DB name; fall back to the local cache used by submission flow.
@@ -365,13 +561,13 @@ export default function DashboardBalance() {
                         try {
                           const map = JSON.parse(localStorage.getItem("twinbid_promo_codes") || "{}");
                           promoLabel = map[req.id] || map[req.promocode_id] || null;
-                        } catch {}
+                        } catch { /* local display cache is best-effort */ }
                       }
                     }
                     const bonusAmt = Math.max(0, Number(req.total_balance_increase || 0) - Number(req.deposit_amount || 0));
                     return (
                       <tr key={req.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                        <td className="py-3 px-4 text-sm">{formatDate(req.created_at)}</td>
+                        <td className="py-3 px-4 text-sm">{formatDate(req.created_at || req.transaction_time || "")}</td>
                         <td className="py-3 px-4 text-sm">
                           {t("balance.topUpVia")} · {methodLabel}
                           {req.promocode_id && (
@@ -380,8 +576,11 @@ export default function DashboardBalance() {
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-sm text-left font-medium text-green-500">
-                          +${fmtMoney(req.total_balance_increase || req.deposit_amount)}
+                        <td className={cn(
+                          "py-3 px-4 text-sm text-left font-medium",
+                          credited ? "text-green-500" : "text-foreground",
+                        )}>
+                          {credited ? "+" : ""}${fmtMoney(req.total_balance_increase || req.deposit_amount)}
                         </td>
                         <td className="py-3 px-4 text-left">
                           <Badge variant="outline" className={cn("font-normal", st.className)}>

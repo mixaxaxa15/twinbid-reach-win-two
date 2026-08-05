@@ -1,21 +1,30 @@
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useRef, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import type { PaymentChannel, TopupStatus } from "@/api/types";
 
 export interface PendingPaymentData {
   amount: number;
   method: string;
+  channel?: PaymentChannel;
   promo?: string;
   bonus?: number;
   /** Resolved promocode id captured at apply-time to avoid re-lookup at submit. */
   promocode_id?: string | null;
   /** Actual bonus amount in $ (from backend tx.bonus_amount on rehydrate). Source of truth for the notification total. */
   bonus_amount?: number;
-  /** Backend transaction id (status="created") created when the dialog opens. */
-  transaction_id?: string | null;
+  /** Backend row id (`transaction.id`). Used in every TwinBid transaction URL. */
+  transactionRowId?: string | null;
+  total_balance_increase?: number;
+  status?: TopupStatus;
+  payment_url?: string | null;
+  provider_status?: string | null;
+  amount_paid?: number | null;
+  amount_credited?: number | null;
+  credited_at?: string | null;
 }
 
 interface PendingPaymentContextType {
   pendingPayment: PendingPaymentData | null;
-  setPendingPayment: (p: PendingPaymentData | null) => void;
+  setPendingPayment: Dispatch<SetStateAction<PendingPaymentData | null>>;
   isDialogOpen: boolean;
   openDialog: () => void;
   closeDialog: () => void;
