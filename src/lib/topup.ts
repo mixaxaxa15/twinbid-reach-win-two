@@ -1,6 +1,7 @@
 import type { ApiCreateTransactionRequest, ApiPromocode, ApiUserTransaction, PaymentChannel } from "@/api/types";
 
 export const PASSIMPAY_FEE_PERCENT = 1;
+export const MIN_TOPUP_AMOUNT = 1;
 export type PromocodeValidationFailure = "expired" | "limit" | "already_used";
 
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;

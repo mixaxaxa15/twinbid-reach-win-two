@@ -9,6 +9,7 @@ import {
   isPassimPayPartial,
   isTransactionCredited,
   isUnfinishedStaticWalletTransaction,
+  MIN_TOPUP_AMOUNT,
   parseTopupAmount,
   validatePromocodeForTopup,
 } from "@/lib/topup";
@@ -43,6 +44,12 @@ const transaction = (overrides: Partial<ApiUserTransaction> = {}): ApiUserTransa
 });
 
 describe("top-up request contract", () => {
+  it("allows the temporary one-dollar minimum for payment testing", () => {
+    expect(MIN_TOPUP_AMOUNT).toBe(1);
+    expect(buildPassimPayTopup({ depositAmount: 1 })).toMatchObject({ deposit_amount: 1 });
+    expect(getPassimPayChargeAmount(1)).toBe(1.01);
+  });
+
   it("keeps the entered PassimPay amount separate from the promo bonus", () => {
     expect(buildPassimPayTopup({ depositAmount: 100.25, promoCode: "BONUS25" })).toEqual({
       payment_channel: "passimpay_invoice",
