@@ -27,7 +27,6 @@ import {
   isPassimPayPartial,
   isTransactionCredited,
   isUnfinishedStaticWalletTransaction,
-  MIN_TOPUP_AMOUNT,
   parseTopupAmount,
   PASSIMPAY_FEE_PERCENT,
   sanitizeTopupAmountInput,
@@ -37,7 +36,7 @@ import {
 const fmtMoney = (n: number | string | null | undefined) =>
   formatCurrencyAmount(Number(n || 0));
 
-const amounts = [1, 100, 250, 500, 1000, 5000];
+const amounts = [100, 250, 500, 1000, 5000];
 
 type TopupRequest = ApiUserTransaction;
 
@@ -166,7 +165,7 @@ export default function DashboardBalance() {
     && (hasPendingStaticWalletDialog || hasUnfinishedStaticWallet);
 
   const handleTopUp = async () => {
-    if (!finalAmount || finalAmount < MIN_TOPUP_AMOUNT || !user || !selectedChannel || submittingTopup || topupSubmitLockRef.current) return;
+    if (!finalAmount || finalAmount < 100 || !user || !selectedChannel || submittingTopup || topupSubmitLockRef.current) return;
     if (isTopUpBlocked) {
       toast.error(t("balance.disabledReason"));
       return;
@@ -458,7 +457,7 @@ export default function DashboardBalance() {
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <Button onClick={handleTopUp} className="h-auto min-h-10 w-full whitespace-normal bg-accent py-2 hover:bg-accent/90 text-accent-foreground sm:w-auto"
-                disabled={!finalAmount || finalAmount < MIN_TOPUP_AMOUNT || !selectedChannel || isTopUpBlocked || submittingTopup}>
+                disabled={!finalAmount || finalAmount < 100 || !selectedChannel || isTopUpBlocked || submittingTopup}>
                 {submittingTopup
                   ? t("balance.payment.creating")
                   : selectedChannel === "passimpay_invoice"
