@@ -337,7 +337,7 @@ ID строки. Поле `data.transaction_id` является публичн�
 TwinBid API не подставляется. В локальном состоянии `data.id` хранится под именем
 `transactionRowId`.
 
-Успешное зачисление PassimPay определяется только сочетанием:
+Успешное зачисление invoice-платежа (PassimPay / Cryptomus) определяется только сочетанием:
 ```json
 {
   "status": "approved",

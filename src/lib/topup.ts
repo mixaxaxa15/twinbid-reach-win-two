@@ -117,7 +117,7 @@ export function isTransactionCredited(
   return transaction.status === "approved" && transaction.credited_at != null;
 }
 
-export function isPassimPayPartial(
+export function isInvoicePartial(
   transaction: Pick<ApiUserTransaction, "status" | "credited_at" | "amount_paid">,
 ): boolean {
   return Number(transaction.amount_paid) > 0 && !isTransactionCredited(transaction);

@@ -29,7 +29,7 @@ import {
   getPassimPayFee,
   getTransactionBonusAmount,
   isInvoicePaymentChannel,
-  isPassimPayPartial,
+  isInvoicePartial,
   isTransactionCredited,
   isUnfinishedStaticWalletTransaction,
   parseTopupAmount,
@@ -576,7 +576,7 @@ export default function DashboardBalance() {
                     const partial = isInvoice
                       && req.status === "pending"
                       && req.provider_status !== "error"
-                      && isPassimPayPartial(req);
+                      && isInvoicePartial(req);
                     const historyStatus = credited
                       ? "approved"
                       : req.status === "approved"

@@ -10,7 +10,7 @@ import {
   getTransactionBonusAmount,
   getTransactionChannel,
   isInvoicePaymentChannel,
-  isPassimPayPartial,
+  isInvoicePartial,
   isTransactionCredited,
   isUnfinishedStaticWalletTransaction,
   parseTopupAmount,
@@ -103,8 +103,8 @@ describe("top-up request contract", () => {
   });
 
   it("detects partial PassimPay payments without marking them credited", () => {
-    expect(isPassimPayPartial(transaction({ amount_paid: 45 }))).toBe(true);
-    expect(isPassimPayPartial(transaction({
+    expect(isInvoicePartial(transaction({ amount_paid: 45 }))).toBe(true);
+    expect(isInvoicePartial(transaction({
       status: "approved",
       amount_paid: 100,
       credited_at: "2026-08-05T00:05:00Z",
