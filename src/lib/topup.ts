@@ -71,7 +71,7 @@ export function buildPassimPayTopup(params: {
   promoCode?: string | null;
 }): ApiCreateTransactionRequest {
   return {
-    payment_channel: "passimpay_invoice",
+    provider: "passimpay",
     deposit_amount: params.depositAmount,
     currency: "USD",
     promocode_id: params.promoCode || null,
@@ -83,7 +83,7 @@ export function buildCryptomusTopup(params: {
   promoCode?: string | null;
 }): ApiCreateTransactionRequest {
   return {
-    payment_channel: "cryptomus_invoice",
+    provider: "cryptomus",
     deposit_amount: params.depositAmount,
     currency: "USD",
     promocode_id: params.promoCode || null,

@@ -263,7 +263,11 @@ export const mockProvider = {
     return transaction ? ok(transaction) : fail("Transaction not found");
   },
   async createTransaction(body: ApiCreateTransactionRequest): Promise<ApiEnvelope<ApiUserTransaction>> {
-    const channel = body.payment_channel;
+    const channel = body.provider === "passimpay"
+      ? "passimpay_invoice"
+      : body.provider === "cryptomus"
+        ? "cryptomus_invoice"
+        : "static_wallet";
     const isInvoice = channel === "passimpay_invoice" || channel === "cryptomus_invoice";
     const promoCode = String(body.promocode_id || "").trim().toUpperCase();
     const promo = promoFixtures[promoCode];

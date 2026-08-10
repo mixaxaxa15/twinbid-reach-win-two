@@ -280,7 +280,7 @@ Frontend синхронизирует креативы по ID: изменённ
    PassimPay Invoice Link:
    ```json
    {
-     "payment_channel": "passimpay_invoice",
+     "provider": "passimpay",
      "deposit_amount": 100,
      "currency": "USD",
      "promocode_id": "PROMOCODE_OR_NULL"
@@ -296,7 +296,7 @@ Frontend синхронизирует креативы по ID: изменённ
    Cryptomus Invoice Link работает по той же схеме без комиссии:
    ```json
    {
-     "payment_channel": "cryptomus_invoice",
+     "provider": "cryptomus",
      "deposit_amount": 100,
      "currency": "USD",
      "promocode_id": "PROMOCODE_OR_NULL"
@@ -313,8 +313,10 @@ Frontend синхронизирует креативы по ID: изменённ
      "promocode_id": "PROMOCODE_OR_NULL"
    }
    ```
-   Без `payment_channel` backend также считает платёж `static_wallet`, поэтому
-   старые клиенты остаются совместимыми.
+   Для invoice frontend передаёт только `provider`; `payment_channel` в ответе
+   определяет backend. Для статического кошелька frontend явно передаёт
+   `payment_channel: "static_wallet"` и не передаёт `provider`. Отсутствие и
+   `provider`, и `payment_channel` является ошибкой.
 
 2. `PATCH /api/transactions/:id` разрешён только для статического кошелька и
    принимает только blockchain hash:

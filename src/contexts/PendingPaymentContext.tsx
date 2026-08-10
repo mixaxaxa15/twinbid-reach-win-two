@@ -30,7 +30,7 @@ interface PendingPaymentContextType {
   openDialog: () => void;
   closeDialog: () => void;
   openPayment: (payment: PendingPaymentData) => void;
-  restorePaymentAfterPassimPay: () => void;
+  restorePaymentAfterInvoice: () => void;
   // Notify Balance page to refresh history after submission
   registerRefreshHandler: (fn: () => void) => void;
   triggerRefresh: () => void;
@@ -55,7 +55,7 @@ export function PendingPaymentProvider({ children }: { children: ReactNode }) {
     });
     setDialogOpen(true);
   }, []);
-  const restorePaymentAfterPassimPay = useCallback(() => {
+  const restorePaymentAfterInvoice = useCallback(() => {
     setPendingPayment(current => {
       if (!isInvoicePaymentChannel(current?.channel)) return current;
       const savedStaticPayment = savedStaticPaymentRef.current;
@@ -75,7 +75,7 @@ export function PendingPaymentProvider({ children }: { children: ReactNode }) {
     <PendingPaymentContext.Provider value={{
       pendingPayment, setPendingPayment,
       isDialogOpen, openDialog, closeDialog,
-      openPayment, restorePaymentAfterPassimPay,
+      openPayment, restorePaymentAfterInvoice,
       registerRefreshHandler, triggerRefresh,
     }}>
       {children}

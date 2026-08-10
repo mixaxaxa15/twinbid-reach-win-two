@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { PendingPaymentProvider, usePendingPayment } from "@/contexts/PendingPaymentContext";
 
 function Harness() {
-  const { pendingPayment, openPayment, restorePaymentAfterPassimPay } = usePendingPayment();
+  const { pendingPayment, openPayment, restorePaymentAfterInvoice } = usePendingPayment();
   return (
     <>
       <div data-testid="channel">{pendingPayment?.channel || "none"}</div>
@@ -16,7 +16,7 @@ function Harness() {
       <button onClick={() => openPayment({ amount: 100, method: "cryptomus", channel: "cryptomus_invoice" })}>
         cryptomus
       </button>
-      <button onClick={restorePaymentAfterPassimPay}>restore</button>
+      <button onClick={restorePaymentAfterInvoice}>restore</button>
     </>
   );
 }

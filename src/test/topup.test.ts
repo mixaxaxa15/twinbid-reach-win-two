@@ -49,7 +49,7 @@ const transaction = (overrides: Partial<ApiUserTransaction> = {}): ApiUserTransa
 describe("top-up request contract", () => {
   it("keeps the entered PassimPay amount separate from the promo bonus", () => {
     expect(buildPassimPayTopup({ depositAmount: 100.25, promoCode: "BONUS25" })).toEqual({
-      payment_channel: "passimpay_invoice",
+      provider: "passimpay",
       deposit_amount: 100.25,
       currency: "USD",
       promocode_id: "BONUS25",
@@ -58,7 +58,7 @@ describe("top-up request contract", () => {
 
   it("creates a zero-fee Cryptomus invoice with the same promo contract", () => {
     expect(buildCryptomusTopup({ depositAmount: 100.25, promoCode: "BONUS25" })).toEqual({
-      payment_channel: "cryptomus_invoice",
+      provider: "cryptomus",
       deposit_amount: 100.25,
       currency: "USD",
       promocode_id: "BONUS25",

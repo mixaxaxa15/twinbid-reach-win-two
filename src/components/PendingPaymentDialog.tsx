@@ -82,11 +82,11 @@ export function PendingPaymentDialog() {
   const {
     pendingPayment, setPendingPayment,
     isDialogOpen, openDialog, closeDialog,
-    restorePaymentAfterPassimPay, triggerRefresh,
+    restorePaymentAfterInvoice, triggerRefresh,
   } = usePendingPayment();
 
   const [txHash, setTxHash] = useState("");
-  const [checkingPassimPay, setCheckingPassimPay] = useState(false);
+  const [checkingInvoice, setCheckingInvoice] = useState(false);
   const [pollingError, setPollingError] = useState<string | null>(null);
   const hydratedTxRef = useRef<string | null>(null);
   const handlersAttachedRef = useRef<string | null>(null);
@@ -102,7 +102,7 @@ export function PendingPaymentDialog() {
 
   // If the user has an unfinished static-wallet draft but no
   // "incomplete_topup" notification, create one so the payment can be resumed.
-  // PassimPay status notifications are created exclusively by the backend.
+  // Invoice status notifications are created exclusively by the backend.
   // Runs once per user session and ONLY
   // after notifications have been hydrated from the backend (otherwise we'd
   // create a duplicate on every reload before the existing one loads).
@@ -247,8 +247,8 @@ export function PendingPaymentDialog() {
     }
   };
 
-  const refreshPassimPay = useCallback(async (transactionRowId: string, showSpinner = false) => {
-    if (showSpinner) setCheckingPassimPay(true);
+  const refreshInvoice = useCallback(async (transactionRowId: string, showSpinner = false) => {
+    if (showSpinner) setCheckingInvoice(true);
     try {
       const transaction = await api.getTransaction(transactionRowId);
       setPollingError(null);
@@ -276,10 +276,10 @@ export function PendingPaymentDialog() {
             : t("balance.toast.submitError");
       setPollingError(message);
       if (showSpinner) notifyError(t("balance.toast.submitError"), error);
-      else console.error("[topup] PassimPay polling failed", error);
+      else console.error("[topup] invoice polling failed", error);
       return { transaction: null, stopPolling };
     } finally {
-      if (showSpinner) setCheckingPassimPay(false);
+      if (showSpinner) setCheckingInvoice(false);
     }
   }, [refetchProfile, setPendingPayment, t, triggerRefresh]);
 
@@ -292,7 +292,7 @@ export function PendingPaymentDialog() {
     const startedAt = Date.now();
 
     const poll = async () => {
-      const result = await refreshPassimPay(transactionRowId);
+      const result = await refreshInvoice(transactionRowId);
       if (stopped) return;
       if (result.stopPolling) return;
       const transaction = result.transaction;
@@ -311,7 +311,7 @@ export function PendingPaymentDialog() {
       stopped = true;
       if (timer) clearTimeout(timer);
     };
-  }, [isDialogOpen, pendingPayment?.channel, pendingPayment?.transactionRowId, refreshPassimPay]);
+  }, [isDialogOpen, pendingPayment?.channel, pendingPayment?.transactionRowId, refreshInvoice]);
 
   const handleSubmitTx = async () => {
     if (!txHash.trim() || !user || !pendingPayment?.transactionRowId) return;
@@ -389,7 +389,7 @@ export function PendingPaymentDialog() {
     }
     if (isInvoicePaymentChannel(pendingPayment?.channel)) {
       closeDialog();
-      restorePaymentAfterPassimPay();
+      restorePaymentAfterInvoice();
       triggerRefresh();
       return;
     }
@@ -440,24 +440,24 @@ export function PendingPaymentDialog() {
 
   const isInvoice = isInvoicePaymentChannel(pendingPayment?.channel);
   const isCryptomus = pendingPayment?.channel === "cryptomus_invoice";
-  const passimPayApproved = isInvoice
+  const invoiceApproved = isInvoice
     && pendingPayment.status === "approved"
     && !!pendingPayment.credited_at;
-  const passimPayFailed = isInvoice
+  const invoiceFailed = isInvoice
     && (pendingPayment.status === "rejected" || pendingPayment.provider_status === "error");
-  const passimPayCancelled = isInvoice && pendingPayment.status === "cancelled";
-  const passimPayPartial = isInvoice
+  const invoiceCancelled = isInvoice && pendingPayment.status === "cancelled";
+  const invoicePartial = isInvoice
     && pendingPayment.status === "pending"
     && pendingPayment.provider_status !== "error"
     && Number(pendingPayment.amount_paid) > 0
-    && !passimPayApproved;
-  const passimPayCreating = isInvoice
+    && !invoiceApproved;
+  const invoiceCreating = isInvoice
     && !pendingPayment.payment_url
     && pendingPayment.provider_status === "create_unknown";
 
-  const finishPassimPay = () => {
+  const finishInvoice = () => {
     closeDialog();
-    restorePaymentAfterPassimPay();
+    restorePaymentAfterInvoice();
     triggerRefresh();
   };
 
@@ -517,37 +517,37 @@ export function PendingPaymentDialog() {
               </div>
 
               <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-4">
-                {passimPayApproved ? (
+                {invoiceApproved ? (
                   <CircleCheckBig className="h-6 w-6 shrink-0 text-green-500" />
-                ) : passimPayCancelled ? (
+                ) : invoiceCancelled ? (
                   <CircleX className="h-6 w-6 shrink-0 text-muted-foreground" />
-                ) : passimPayFailed && !passimPayPartial ? (
+                ) : invoiceFailed && !invoicePartial ? (
                   <CircleX className="h-6 w-6 shrink-0 text-destructive" />
                 ) : (
                   <Loader2 className="h-6 w-6 shrink-0 animate-spin text-primary" />
                 )}
                 <div>
                   <p className="font-medium">
-                    {passimPayApproved
+                    {invoiceApproved
                       ? t("balance.passimpay.paid")
-                      : passimPayCancelled
+                      : invoiceCancelled
                         ? t("balance.passimpay.cancelled")
-                        : passimPayPartial
+                        : invoicePartial
                           ? t("balance.passimpay.partial")
-                          : passimPayFailed
+                          : invoiceFailed
                             ? t("balance.passimpay.failed")
-                            : passimPayCreating || !pendingPayment?.payment_url
+                            : invoiceCreating || !pendingPayment?.payment_url
                               ? t("balance.passimpay.creatingLink")
                               : t("balance.passimpay.waiting")}
                   </p>
-                  {passimPayPartial && (
+                  {invoicePartial && (
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {t("balance.passimpay.received")
                         .replace("{paid}", `$${Number(pendingPayment?.amount_paid || 0).toLocaleString()}`)
                         .replace("{total}", `$${visibleInvoiceCharge.toLocaleString()}`)}
                     </p>
                   )}
-                  {!passimPayApproved && !passimPayFailed && !passimPayCancelled && !passimPayPartial && (
+                  {!invoiceApproved && !invoiceFailed && !invoiceCancelled && !invoicePartial && (
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {t(isCryptomus ? "balance.cryptomus.description" : "balance.passimpay.description")}
                     </p>
@@ -559,8 +559,8 @@ export function PendingPaymentDialog() {
                 <p className="text-sm text-destructive" role="alert">{pollingError}</p>
               )}
 
-              {passimPayApproved || passimPayFailed || passimPayCancelled ? (
-                <Button type="button" className="w-full" onClick={finishPassimPay}>
+              {invoiceApproved || invoiceFailed || invoiceCancelled ? (
+                <Button type="button" className="w-full" onClick={finishInvoice}>
                   {t("balance.passimpay.done")}
                 </Button>
               ) : (
@@ -584,15 +584,15 @@ export function PendingPaymentDialog() {
                     type="button"
                     variant="outline"
                     className="w-full border-border"
-                    disabled={checkingPassimPay || !pendingPayment?.transactionRowId}
+                    disabled={checkingInvoice || !pendingPayment?.transactionRowId}
                     onClick={() => {
                       if (pendingPayment?.transactionRowId) {
-                        void refreshPassimPay(pendingPayment.transactionRowId, true);
+                        void refreshInvoice(pendingPayment.transactionRowId, true);
                       }
                     }}
                   >
-                    {checkingPassimPay && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {checkingPassimPay ? t("balance.passimpay.checking") : t("balance.passimpay.check")}
+                    {checkingInvoice && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {checkingInvoice ? t("balance.passimpay.checking") : t("balance.passimpay.check")}
                   </Button>
                 </>
               )}
