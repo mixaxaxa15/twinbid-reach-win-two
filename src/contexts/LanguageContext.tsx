@@ -228,7 +228,7 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "balance.otherAmount": { ru: "Другая сумма", en: "Custom amount" },
   "balance.network": { ru: "Сеть", en: "Network" },
   "balance.topUpBtn": { ru: "Пополнить", en: "Top up" },
-  "balance.minAmount": { ru: "Минимальная сумма — $100. Бонус +25% на первый депозит.", en: "Minimum amount — $100. +25% bonus on first deposit." },
+  "balance.minAmount": { ru: "Минимальная сумма — $1. Бонус +25% на первый депозит.", en: "Minimum amount — $1. +25% bonus on first deposit." },
   "balance.promo.label": { ru: "Промокод", en: "Promo code" },
   "balance.promo.placeholder": { ru: "Введите промокод", en: "Enter promo code" },
   "balance.promo.apply": { ru: "Применить", en: "Apply" },

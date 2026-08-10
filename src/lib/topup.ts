@@ -2,6 +2,7 @@ import type { ApiCreateTransactionRequest, ApiPromocode, ApiUserTransaction, Pay
 
 export const PASSIMPAY_FEE_PERCENT = 1;
 export const CRYPTOMUS_FEE_PERCENT = 2.5;
+export const MIN_TOPUP_AMOUNT = 1;
 export const PENDING_INVOICE_HISTORY_REFRESH_MS = 5_000;
 export const DEFAULT_HISTORY_REFRESH_MS = 5 * 60 * 1_000;
 export type PromocodeValidationFailure = "expired" | "limit" | "already_used";

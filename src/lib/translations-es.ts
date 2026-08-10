@@ -199,7 +199,7 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "balance.otherAmount": "Otro importe",
   "balance.network": "Red",
   "balance.topUpBtn": "Recargar",
-  "balance.minAmount": "Importe mínimo: $100. Bono +25% en el primer depósito.",
+  "balance.minAmount": "Importe mínimo: $1. Bono +25% en el primer depósito.",
   "balance.promo.label": "Código promocional",
   "balance.promo.placeholder": "Introduce el código",
   "balance.promo.apply": "Aplicar",
