@@ -12,7 +12,13 @@ import { useNotifications, type Notification } from "@/contexts/NotificationCont
 import { useProfile } from "@/contexts/ProfileContext";
 import { usePendingPayment, type PendingPaymentData } from "@/contexts/PendingPaymentContext";
 import { PAYMENT_METHODS } from "@/lib/paymentMethods";
-import { getPassimPayChargeAmount, getPassimPayFee, getTransactionBonusAmount, getTransactionChannel } from "@/lib/topup";
+import {
+  getInvoiceChargeAmount,
+  getPassimPayFee,
+  getTransactionBonusAmount,
+  getTransactionChannel,
+  isInvoicePaymentChannel,
+} from "@/lib/topup";
 import { trackBalanceTopupSuccess } from "@/lib/yandexMetrikaTopup";
 import type { ApiUserTransaction } from "@/api/types";
 
@@ -50,7 +56,8 @@ function pendingFromTransaction(transaction: ApiUserTransaction, promo?: string)
   const channel = getTransactionChannel(transaction);
   return {
     amount,
-    method: transaction.payment_method || (channel === "passimpay_invoice" ? "passimpay" : "usdt_trc20"),
+    method: transaction.payment_method
+      || (channel === "passimpay_invoice" ? "passimpay" : channel === "cryptomus_invoice" ? "cryptomus" : "usdt_trc20"),
     channel,
     bonus: bonusPercent || undefined,
     bonus_amount: bonusAmount,
@@ -113,7 +120,7 @@ export function PendingPaymentDialog() {
         const unfinished = items.find(
           x => x.user_id === user.id
             && x.status === "draft"
-            && x.payment_channel !== "passimpay_invoice",
+            && x.payment_channel === "static_wallet",
         );
         if (!unfinished) return;
         // Re-check to avoid race with hydration creating the notif elsewhere.
@@ -278,7 +285,7 @@ export function PendingPaymentDialog() {
 
   useEffect(() => {
     const transactionRowId = pendingPayment?.transactionRowId;
-    if (!isDialogOpen || pendingPayment?.channel !== "passimpay_invoice" || !transactionRowId) return;
+    if (!isDialogOpen || !isInvoicePaymentChannel(pendingPayment?.channel) || !transactionRowId) return;
 
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -349,7 +356,7 @@ export function PendingPaymentDialog() {
   };
 
   const handleCancelPayment = async () => {
-    if (pendingPayment?.channel === "passimpay_invoice") return;
+    if (isInvoicePaymentChannel(pendingPayment?.channel)) return;
     // Static-wallet drafts may be cancelled before they are sent for review.
     if (pendingPayment?.transactionRowId) {
       try {
@@ -380,7 +387,7 @@ export function PendingPaymentDialog() {
       openDialog();
       return;
     }
-    if (pendingPayment?.channel === "passimpay_invoice") {
+    if (isInvoicePaymentChannel(pendingPayment?.channel)) {
       closeDialog();
       restorePaymentAfterPassimPay();
       triggerRefresh();
@@ -431,19 +438,20 @@ export function PendingPaymentDialog() {
     }
   };
 
-  const isPassimPay = pendingPayment?.channel === "passimpay_invoice";
-  const passimPayApproved = isPassimPay
+  const isInvoice = isInvoicePaymentChannel(pendingPayment?.channel);
+  const isCryptomus = pendingPayment?.channel === "cryptomus_invoice";
+  const passimPayApproved = isInvoice
     && pendingPayment.status === "approved"
     && !!pendingPayment.credited_at;
-  const passimPayFailed = isPassimPay
+  const passimPayFailed = isInvoice
     && (pendingPayment.status === "rejected" || pendingPayment.provider_status === "error");
-  const passimPayCancelled = isPassimPay && pendingPayment.status === "cancelled";
-  const passimPayPartial = isPassimPay
+  const passimPayCancelled = isInvoice && pendingPayment.status === "cancelled";
+  const passimPayPartial = isInvoice
     && pendingPayment.status === "pending"
     && pendingPayment.provider_status !== "error"
     && Number(pendingPayment.amount_paid) > 0
     && !passimPayApproved;
-  const passimPayCreating = isPassimPay
+  const passimPayCreating = isInvoice
     && !pendingPayment.payment_url
     && pendingPayment.provider_status === "create_unknown";
 
@@ -460,22 +468,26 @@ export function PendingPaymentDialog() {
       : 0;
   const visibleBalanceIncrease = pendingPayment?.total_balance_increase
     || (pendingPayment ? pendingPayment.amount + visibleBonusAmount : 0);
-  const visiblePassimPayCharge = getPassimPayChargeAmount(pendingPayment?.amount || 0);
+  const visibleInvoiceCharge = getInvoiceChargeAmount(pendingPayment?.channel, pendingPayment?.amount || 0);
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px] bg-card border-border">
         <DialogHeader>
           <DialogTitle>
-            {isPassimPay ? t("balance.passimpay.title") : t("balance.paymentTitle")}
-            {!isPassimPay && pendingPayment ? ` $${visibleBalanceIncrease.toLocaleString()}` : ""}
+            {isInvoice
+              ? t(isCryptomus ? "balance.cryptomus.title" : "balance.passimpay.title")
+              : t("balance.paymentTitle")}
+            {!isInvoice && pendingPayment ? ` $${visibleBalanceIncrease.toLocaleString()}` : ""}
           </DialogTitle>
           <DialogDescription>
-            {isPassimPay ? t("balance.passimpay.description") : t("balance.paymentDesc")}
+            {isInvoice
+              ? t(isCryptomus ? "balance.cryptomus.description" : "balance.passimpay.description")
+              : t("balance.paymentDesc")}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-2 space-y-4">
-          {isPassimPay ? (
+          {isInvoice ? (
             <>
               <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm">
                 <div className="flex items-center justify-between gap-4">
@@ -483,8 +495,12 @@ export function PendingPaymentDialog() {
                   <span className="font-semibold">${pendingPayment?.amount.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground">{t("balance.passimpay.fee")}</span>
-                  <span className="font-medium text-orange-500">${getPassimPayFee(pendingPayment?.amount || 0).toLocaleString()}</span>
+                  <span className="text-muted-foreground">
+                    {t(isCryptomus ? "balance.cryptomus.fee" : "balance.passimpay.fee")}
+                  </span>
+                  <span className={isCryptomus ? "font-medium text-primary" : "font-medium text-orange-500"}>
+                    ${(isCryptomus ? 0 : getPassimPayFee(pendingPayment?.amount || 0)).toLocaleString()}
+                  </span>
                 </div>
                 <div className="border-t border-primary/20 pt-2">
                   <div className="flex items-center justify-between gap-4">
@@ -528,11 +544,13 @@ export function PendingPaymentDialog() {
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {t("balance.passimpay.received")
                         .replace("{paid}", `$${Number(pendingPayment?.amount_paid || 0).toLocaleString()}`)
-                        .replace("{total}", `$${visiblePassimPayCharge.toLocaleString()}`)}
+                        .replace("{total}", `$${visibleInvoiceCharge.toLocaleString()}`)}
                     </p>
                   )}
                   {!passimPayApproved && !passimPayFailed && !passimPayCancelled && !passimPayPartial && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{t("balance.passimpay.description")}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {t(isCryptomus ? "balance.cryptomus.description" : "balance.passimpay.description")}
+                    </p>
                   )}
                 </div>
               </div>
@@ -559,7 +577,7 @@ export function PendingPaymentDialog() {
                   >
                     <ExternalLink className="mr-2 h-4 w-4" />
                     {pendingPayment?.payment_url
-                      ? `${t("balance.passimpay.open")} · $${visiblePassimPayCharge.toLocaleString()}`
+                      ? `${t("balance.passimpay.open")} · $${visibleInvoiceCharge.toLocaleString()}`
                       : t("balance.passimpay.creatingLink")}
                   </Button>
                   <Button

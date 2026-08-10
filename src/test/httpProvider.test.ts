@@ -229,6 +229,27 @@ describe("transaction HTTP contract", () => {
     });
   });
 
+  it("creates Cryptomus invoices without provider or calculated fields", async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      expect(init?.method).toBe("POST");
+      expect(JSON.parse(String(init?.body))).toEqual({
+        payment_channel: "cryptomus_invoice",
+        deposit_amount: 100,
+        currency: "USD",
+        promocode_id: "WELCOME10",
+      });
+      return jsonResponse({ success: true, errorMsg: "", data: {} });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await httpProvider.createTransaction({
+      payment_channel: "cryptomus_invoice",
+      deposit_amount: 100,
+      currency: "USD",
+      promocode_id: "WELCOME10",
+    });
+  });
+
   it("gets a PassimPay transaction by its backend id", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       expect(String(input)).toMatch(/\/api\/transactions\/transaction-id$/);

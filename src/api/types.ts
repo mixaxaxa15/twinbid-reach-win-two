@@ -7,7 +7,7 @@ export type PricingModel = "cpm" | "cpc";
 export type TrafficType = "mainstream" | "adult" | "mixed";
 export type FormatType = "banner" | "popunder" | "native" | "push";
 export type TopupStatus = "draft" | "pending" | "approved" | "rejected" | "cancelled";
-export type PaymentChannel = "static_wallet" | "passimpay_invoice";
+export type PaymentChannel = "static_wallet" | "passimpay_invoice" | "cryptomus_invoice";
 export type NotificationType = "incomplete_topup" | "low_balance" | "campaign_status" | "other";
 export type NotificationStatus = "active" | "inactive";
 

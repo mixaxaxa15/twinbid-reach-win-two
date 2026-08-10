@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { ApiPromocode, ApiUserTransaction } from "@/api/types";
 import {
+  buildCryptomusTopup,
   buildPassimPayTopup,
   buildStaticWalletTopup,
+  getInvoiceChargeAmount,
   getPassimPayChargeAmount,
   getPassimPayFee,
   getTransactionBonusAmount,
+  getTransactionChannel,
+  isInvoicePaymentChannel,
   isPassimPayPartial,
   isTransactionCredited,
   isUnfinishedStaticWalletTransaction,
@@ -50,6 +54,18 @@ describe("top-up request contract", () => {
       currency: "USD",
       promocode_id: "BONUS25",
     });
+  });
+
+  it("creates a zero-fee Cryptomus invoice with the same promo contract", () => {
+    expect(buildCryptomusTopup({ depositAmount: 100.25, promoCode: "BONUS25" })).toEqual({
+      payment_channel: "cryptomus_invoice",
+      deposit_amount: 100.25,
+      currency: "USD",
+      promocode_id: "BONUS25",
+    });
+    expect(getInvoiceChargeAmount("cryptomus_invoice", 100.25)).toBe(100.25);
+    expect(isInvoicePaymentChannel("cryptomus_invoice")).toBe(true);
+    expect(getTransactionChannel(transaction({ payment_channel: "cryptomus_invoice" }))).toBe("cryptomus_invoice");
   });
 
   it("sends the minimal static-wallet payload required by the backend", () => {
@@ -106,6 +122,10 @@ describe("top-up request contract", () => {
     }))).toBe(true);
     expect(isUnfinishedStaticWalletTransaction(transaction({
       payment_channel: "passimpay_invoice",
+      status: "pending",
+    }))).toBe(false);
+    expect(isUnfinishedStaticWalletTransaction(transaction({
+      payment_channel: "cryptomus_invoice",
       status: "pending",
     }))).toBe(false);
     expect(isUnfinishedStaticWalletTransaction(transaction({

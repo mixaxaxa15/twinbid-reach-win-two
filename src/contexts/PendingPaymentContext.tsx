@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import type { PaymentChannel, TopupStatus } from "@/api/types";
+import { isInvoicePaymentChannel } from "@/lib/topup";
 
 export interface PendingPaymentData {
   amount: number;
@@ -47,7 +48,7 @@ export function PendingPaymentProvider({ children }: { children: ReactNode }) {
   const closeDialog = useCallback(() => setDialogOpen(false), []);
   const openPayment = useCallback((payment: PendingPaymentData) => {
     setPendingPayment(current => {
-      if (payment.channel === "passimpay_invoice" && current && current.channel !== "passimpay_invoice") {
+      if (isInvoicePaymentChannel(payment.channel) && current && !isInvoicePaymentChannel(current.channel)) {
         savedStaticPaymentRef.current = current;
       }
       return payment;
@@ -56,7 +57,7 @@ export function PendingPaymentProvider({ children }: { children: ReactNode }) {
   }, []);
   const restorePaymentAfterPassimPay = useCallback(() => {
     setPendingPayment(current => {
-      if (current?.channel !== "passimpay_invoice") return current;
+      if (!isInvoicePaymentChannel(current?.channel)) return current;
       const savedStaticPayment = savedStaticPaymentRef.current;
       savedStaticPaymentRef.current = null;
       return savedStaticPayment;
