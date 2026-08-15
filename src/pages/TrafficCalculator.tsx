@@ -37,7 +37,7 @@ import { BROWSER_FILTER_KEYS, DEVICE_FILTER_KEYS, OS_FILTER_KEYS, OTHER_KEY } fr
 import { getTargetingDimensionOptions } from "@/lib/targetingDimensions";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useDeferredTouchOpen, useTouchScrollSelectionGuard } from "@/hooks/use-touch-scroll-selection-guard";
+import { useTouchScrollSelectionGuard } from "@/hooks/use-touch-scroll-selection-guard";
 
 const copy = {
   ru: {
@@ -60,10 +60,6 @@ const copy = {
     osVersions: "Версии ОС",
     browsers: "Браузеры",
     carriers: "Операторы",
-    manualValuesHint: "Введите одно или несколько значений через запятую.",
-    cityPlaceholder: "Москва, Париж",
-    osVersionPlaceholder: "Android 14, iOS 18",
-    carrierPlaceholder: "МТС, Vodafone",
     sites: "ID сайтов",
     sitesHint: "Введите один или несколько ID через запятую.",
     sitesPlaceholder: "12345,abdjhx",
@@ -118,10 +114,6 @@ const copy = {
     osVersions: "OS versions",
     browsers: "Browsers",
     carriers: "Carriers",
-    manualValuesHint: "Enter one or more values separated by commas.",
-    cityPlaceholder: "New York, Paris",
-    osVersionPlaceholder: "Android 14, iOS 18",
-    carrierPlaceholder: "T-Mobile, Vodafone",
     sites: "Site IDs",
     sitesHint: "Enter one or more IDs separated by commas.",
     sitesPlaceholder: "12345,abdjhx",
@@ -176,10 +168,6 @@ const copy = {
     osVersions: "Versiones de SO",
     browsers: "Navegadores",
     carriers: "Operadores",
-    manualValuesHint: "Introduce uno o varios valores separados por comas.",
-    cityPlaceholder: "Madrid, París",
-    osVersionPlaceholder: "Android 14, iOS 18",
-    carrierPlaceholder: "Movistar, Vodafone",
     sites: "ID de sitios",
     sitesHint: "Introduce uno o varios ID separados por comas.",
     sitesPlaceholder: "12345,abdjhx",
@@ -234,10 +222,6 @@ const copy = {
     osVersions: "Versions d’OS",
     browsers: "Navigateurs",
     carriers: "Opérateurs",
-    manualValuesHint: "Saisissez une ou plusieurs valeurs séparées par des virgules.",
-    cityPlaceholder: "Paris, Montréal",
-    osVersionPlaceholder: "Android 14, iOS 18",
-    carrierPlaceholder: "Orange, Vodafone",
     sites: "ID de sites",
     sitesHint: "Saisissez un ou plusieurs ID séparés par des virgules.",
     sitesPlaceholder: "12345,abdjhx",
@@ -386,6 +370,18 @@ export default function TrafficCalculator() {
   );
   const languageOptions = useMemo(
     () => getTargetingDimensionOptions("language", lang),
+    [lang],
+  );
+  const cityOptions = useMemo(
+    () => getTargetingDimensionOptions("city", lang),
+    [lang],
+  );
+  const osVersionOptions = useMemo(
+    () => getTargetingDimensionOptions("osVersion", lang),
+    [lang],
+  );
+  const carrierOptions = useMemo(
+    () => getTargetingDimensionOptions("carrier", lang),
     [lang],
   );
 
@@ -545,13 +541,13 @@ export default function TrafficCalculator() {
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <MultiChoice label={text.countries} text={text} mode={filters.countryMode} values={filters.country} options={countryOptions} onModeChange={(countryMode) => updateFilters({ countryMode })} onChange={(country) => updateFilters({ country })} />
-            <TextChoice label={text.cities} hint={text.manualValuesHint} placeholder={text.cityPlaceholder} text={text} mode={filters.cityMode} values={filters.city} onModeChange={(cityMode) => updateFilters({ cityMode })} onChange={(city) => updateFilters({ city })} />
+            <MultiChoice label={text.cities} text={text} mode={filters.cityMode} values={filters.city} options={cityOptions} onModeChange={(cityMode) => updateFilters({ cityMode })} onChange={(city) => updateFilters({ city })} />
             <MultiChoice label={text.languages} text={text} mode={filters.languageMode} values={filters.language} options={languageOptions} onModeChange={(languageMode) => updateFilters({ languageMode })} onChange={(language) => updateFilters({ language })} />
             <MultiChoice label={text.devices} text={text} mode={filters.deviceTypeMode} values={filters.deviceType} options={DEVICE_FILTER_KEYS.filter((item) => item !== OTHER_KEY).map(simpleOption)} onModeChange={(deviceTypeMode) => updateFilters({ deviceTypeMode })} onChange={(deviceType) => updateFilters({ deviceType })} />
             <MultiChoice label="OS" text={text} mode={filters.osMode} values={filters.os} options={OS_FILTER_KEYS.filter((item) => item !== OTHER_KEY).map(simpleOption)} onModeChange={(osMode) => updateFilters({ osMode })} onChange={(os) => updateFilters({ os })} />
-            <TextChoice label={text.osVersions} hint={text.manualValuesHint} placeholder={text.osVersionPlaceholder} text={text} mode={filters.osVersionMode} values={filters.osVersion} onModeChange={(osVersionMode) => updateFilters({ osVersionMode })} onChange={(osVersion) => updateFilters({ osVersion })} />
+            <MultiChoice label={text.osVersions} text={text} mode={filters.osVersionMode} values={filters.osVersion} options={osVersionOptions} onModeChange={(osVersionMode) => updateFilters({ osVersionMode })} onChange={(osVersion) => updateFilters({ osVersion })} />
             <MultiChoice label={text.browsers} text={text} mode={filters.browserMode} values={filters.browser} options={BROWSER_FILTER_KEYS.filter((item) => item !== OTHER_KEY).map(simpleOption)} onModeChange={(browserMode) => updateFilters({ browserMode })} onChange={(browser) => updateFilters({ browser })} />
-            <TextChoice label={text.carriers} hint={text.manualValuesHint} placeholder={text.carrierPlaceholder} text={text} mode={filters.carrierMode} values={filters.carrier} onModeChange={(carrierMode) => updateFilters({ carrierMode })} onChange={(carrier) => updateFilters({ carrier })} />
+            <MultiChoice label={text.carriers} text={text} mode={filters.carrierMode} values={filters.carrier} options={carrierOptions} onModeChange={(carrierMode) => updateFilters({ carrierMode })} onChange={(carrier) => updateFilters({ carrier })} />
             <SiteChoice
               label={text.sites}
               text={text}
@@ -606,71 +602,14 @@ function MultiChoice({ label, text, mode, values, options, onModeChange, onChang
   onModeChange: (mode: "include" | "exclude") => void;
   onChange: (values: string[]) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const deferredTouchOpen = useDeferredTouchOpen(() => setOpen((current) => !current));
   const summary = values.length
     ? (mode === "exclude" ? `${text.excluded} ${values.length}` : values.length <= 2 ? options.filter((item) => values.includes(item.value)).map((item) => item.label).join(", ") : `${values.length}`)
     : text.all;
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild><Button {...deferredTouchOpen} variant="outline" className="h-auto min-h-10 w-full min-w-0 touch-pan-y justify-between px-3 font-normal"><span className="min-w-0 truncate text-left"><span className="text-muted-foreground">{label}:</span> {summary}</span><ChevronDown className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" /></Button></DropdownMenuTrigger>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild><Button variant="outline" className="h-auto min-h-10 w-full min-w-0 justify-between px-3 font-normal"><span className="min-w-0 truncate text-left"><span className="text-muted-foreground">{label}:</span> {summary}</span><ChevronDown className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" /></Button></DropdownMenuTrigger>
       <DropdownMenuContent data-traffic-calculator-menu className="max-h-72 w-[min(16rem,calc(100vw-1rem))] overflow-y-auto"><DropdownMenuLabel>{label}</DropdownMenuLabel><div className="flex gap-1 px-2 pb-2"><button type="button" onClick={(event) => { event.preventDefault(); onModeChange("include"); }} className={cn("flex-1 rounded-md px-2 py-1.5 text-xs", mode === "include" ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground")}>{text.include}</button><button type="button" onClick={(event) => { event.preventDefault(); onModeChange("exclude"); }} className={cn("flex-1 rounded-md px-2 py-1.5 text-xs", mode === "exclude" ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground")}>{text.exclude}</button></div>{values.length > 0 && <><DropdownMenuCheckboxItem checked={false} onCheckedChange={() => onChange([])}>{text.clear}</DropdownMenuCheckboxItem><DropdownMenuSeparator /></>}{options.map((option) => <DropdownMenuCheckboxItem key={option.value} checked={values.includes(option.value)} onCheckedChange={(checked) => onChange(checked ? [...values, option.value] : values.filter((value) => value !== option.value))}>{option.label}</DropdownMenuCheckboxItem>)}</DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-function TextChoice({ label, hint, placeholder, text, mode, values, onModeChange, onChange }: {
-  label: string;
-  hint: string;
-  placeholder: string;
-  text: TextCopy;
-  mode: "include" | "exclude";
-  values: string[];
-  onModeChange: (mode: "include" | "exclude") => void;
-  onChange: (values: string[]) => void;
-}) {
-  const [value, setValue] = useState("");
-
-  const addValues = () => {
-    const additions = value
-      .split(",")
-      .map(item => item.trim())
-      .filter(Boolean)
-      .filter(item => !values.includes(item));
-    if (additions.length > 0) onChange([...values, ...additions]);
-    setValue("");
-  };
-
-  return (
-    <div className="space-y-3 rounded-lg border border-border/60 p-3">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div><Label>{label}</Label><p className="mt-1 text-xs text-muted-foreground">{hint}</p></div>
-        <div className="flex gap-1">
-          <Button type="button" size="sm" variant="outline" onClick={() => onModeChange("include")} className={cn(mode === "include" && "border-primary bg-primary/15 text-primary")}>{text.include}</Button>
-          <Button type="button" size="sm" variant="outline" onClick={() => onModeChange("exclude")} className={cn(mode === "exclude" && "border-primary bg-primary/15 text-primary")}>{text.exclude}</Button>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <Input
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          placeholder={placeholder}
-          onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addValues(); } }}
-        />
-        <Button type="button" size="icon" variant="outline" onClick={addValues} className="shrink-0"><Plus className="h-4 w-4" /></Button>
-      </div>
-      {values.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {values.map((item) => (
-            <Badge key={item} variant="outline" className={cn("gap-1", mode === "include" ? "border-green-500/30 text-green-400" : "border-red-500/30 text-red-400")}>
-              {item}
-              <button type="button" aria-label={`Remove ${item}`} onClick={() => onChange(values.filter(valueItem => valueItem !== item))}><X className="h-3 w-3" /></button>
-            </Badge>
-          ))}
-          <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-xs text-muted-foreground" onClick={() => onChange([])}>{text.clear}</Button>
-        </div>
-      )}
-    </div>
   );
 }
 

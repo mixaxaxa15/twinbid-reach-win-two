@@ -60,16 +60,18 @@ describe("targeting list controls", () => {
     expect(within(ipCard as HTMLElement).getByText("10.20.0.0/16")).toBeInTheDocument();
   });
 
-  it("adds manually entered values to the new targeting groups", () => {
+  it("selects values from the preset city list", () => {
     render(<Harness />);
 
     const cityCard = screen.getByText("Cities").closest("div.rounded-lg");
     expect(cityCard).not.toBeNull();
     fireEvent.click(within(cityCard as HTMLElement).getByRole("button", { name: "White" }));
 
-    const input = within(cityCard as HTMLElement).getByPlaceholderText("New York, Paris");
-    fireEvent.change(input, { target: { value: "Lagos, Nairobi" } });
-    fireEvent.keyDown(input, { key: "Enter" });
+    const select = within(cityCard as HTMLElement).getByRole("combobox");
+    expect(within(select).getByRole("option", { name: "Lagos" })).toBeInTheDocument();
+    expect(within(select).getByRole("option", { name: "Nairobi" })).toBeInTheDocument();
+    fireEvent.change(select, { target: { value: "Lagos" } });
+    fireEvent.change(within(cityCard as HTMLElement).getByRole("combobox"), { target: { value: "Nairobi" } });
 
     expect(within(cityCard as HTMLElement).getByText("Lagos")).toBeInTheDocument();
     expect(within(cityCard as HTMLElement).getByText("Nairobi")).toBeInTheDocument();

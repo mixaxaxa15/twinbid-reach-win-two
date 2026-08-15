@@ -1,12 +1,31 @@
 import type { Lang } from "@/contexts/LanguageContext";
 import { COUNTRIES, LANGUAGES } from "@/lib/dimensions";
 
-type TargetingDimension = "country" | "language";
+type TargetingDimension = "country" | "city" | "language" | "osVersion" | "carrier";
 
 export type TargetingDimensionOption = {
   value: string;
   label: string;
 };
+
+// Temporary dictionaries. They are intentionally kept in one shared place so
+// the campaign editor and traffic calculator always send exactly the same values.
+export const CITY_TARGETING_VALUES = [
+  "Amsterdam", "Berlin", "Dubai", "Istanbul", "Lagos", "London", "Madrid",
+  "Mexico City", "Moscow", "Mumbai", "Nairobi", "New York", "Paris",
+  "São Paulo", "Singapore", "Sydney", "Toronto", "Warsaw",
+];
+
+export const OS_VERSION_TARGETING_VALUES = [
+  "Android 10", "Android 11", "Android 12", "Android 13", "Android 14", "Android 15",
+  "iOS 15", "iOS 16", "iOS 17", "iOS 18",
+  "Windows 10", "Windows 11", "macOS 13", "macOS 14", "macOS 15",
+];
+
+export const CARRIER_TARGETING_VALUES = [
+  "AT&T", "Airtel", "Beeline", "Claro", "Etisalat", "MegaFon", "Movistar",
+  "MTS", "MTN", "Orange", "T-Mobile", "Tele2", "Verizon", "Vodafone",
+];
 
 const countryNames = Object.fromEntries(
   COUNTRIES.map((item) => [item.code, { ru: item.ru, en: item.en, es: item.es }]),
@@ -42,6 +61,16 @@ export function getTargetingDimensionOptions(
   dimension: TargetingDimension,
   lang: Lang,
 ): TargetingDimensionOption[] {
+  if (dimension === "city") {
+    return CITY_TARGETING_VALUES.map(value => ({ value, label: value }));
+  }
+  if (dimension === "osVersion") {
+    return OS_VERSION_TARGETING_VALUES.map(value => ({ value, label: value }));
+  }
+  if (dimension === "carrier") {
+    return CARRIER_TARGETING_VALUES.map(value => ({ value, label: value }));
+  }
+
   const entries = dimension === "country" ? COUNTRIES : LANGUAGES;
 
   return entries

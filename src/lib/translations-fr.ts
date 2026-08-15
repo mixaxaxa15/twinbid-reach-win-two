@@ -583,6 +583,7 @@ export const FR_TRANSLATIONS: Record<string, string> = {
   "targeting.on": "Activé",
   "targeting.freeTextPlaceholder": "Saisissez une valeur…",
   "targeting.autocompletePlaceholder": "Commencez à saisir…",
+  "targeting.selectPlaceholder": "Sélectionnez une valeur",
   "targeting.addCustom": "Ajouter",
   "targeting.sitesHint": "Ajoutez les ID de site un par un ou séparés par des virgules, sans espaces (ex. : 12345,abdjhx)",
   "targeting.sitesFormatError": "Format non valide. Utilisez des valeurs séparées par des virgules, sans espaces",

@@ -9,7 +9,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { COUNTRY_CODES, LANGUAGE_CODES } from "@/lib/dimensions";
-import { formatTargetingDimensionLabel } from "@/lib/targetingDimensions";
+import {
+  CARRIER_TARGETING_VALUES,
+  CITY_TARGETING_VALUES,
+  formatTargetingDimensionLabel,
+  OS_VERSION_TARGETING_VALUES,
+} from "@/lib/targetingDimensions";
 import {
   BROWSER_FILTER_KEYS, OS_FILTER_KEYS, DEVICE_FILTER_KEYS, OTHER_KEY,
 } from "@/lib/statFilters";
@@ -19,13 +24,13 @@ const withoutOther = (keys: string[]) => keys.filter(k => k !== OTHER_KEY);
 
 const targetingOptions: Record<string, string[]> = {
   country: COUNTRY_CODES,
-  city: [],
+  city: CITY_TARGETING_VALUES,
   language: LANGUAGE_CODES,
   deviceType: withoutOther(DEVICE_FILTER_KEYS),
   os: withoutOther(OS_FILTER_KEYS),
-  osVersion: [],
+  osVersion: OS_VERSION_TARGETING_VALUES,
   browser: withoutOther(BROWSER_FILTER_KEYS),
-  carrier: [],
+  carrier: CARRIER_TARGETING_VALUES,
   sites: [],
 };
 
@@ -295,41 +300,26 @@ function SitesInput({ items, onAdd, t }: { items: string[]; onAdd: (items: strin
   );
 }
 
-function FreeTextInput({ items, onAdd, hint, placeholder }: {
+function PresetSelectInput({ options, items, onAdd, placeholder, lang }: {
+  options: string[];
   items: string[];
-  onAdd: (items: string[]) => void;
-  hint: string;
+  onAdd: (item: string) => void;
   placeholder: string;
+  lang: import("@/contexts/LanguageContext").Lang;
 }) {
-  const [value, setValue] = useState("");
-
-  const handleAdd = () => {
-    const values = value
-      .split(",")
-      .map(item => item.trim())
-      .filter(Boolean)
-      .filter(item => !items.includes(item));
-    if (values.length > 0) onAdd(values);
-    setValue("");
-  };
+  const availableOptions = options.filter(item => !items.includes(item));
 
   return (
-    <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">{hint}</p>
-      <div className="flex gap-2">
-        <Input
-          value={value}
-          onChange={event => setValue(event.target.value)}
-          placeholder={placeholder}
-          className="flex-1 border-border bg-background"
-          onBlur={() => { if (value.trim()) handleAdd(); }}
-          onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); handleAdd(); } }}
-        />
-        <Button type="button" size="icon" variant="outline" onClick={handleAdd} className="shrink-0 border-border">
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
+    <select
+      value=""
+      onChange={event => onAdd(event.target.value)}
+      className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+    >
+      <option value="" disabled>{placeholder}</option>
+      {availableOptions.map(option => (
+        <option key={option} value={option}>{formatTargetingDimensionLabel(option, lang)}</option>
+      ))}
+    </select>
   );
 }
 
@@ -394,7 +384,7 @@ const ListItem = memo(function ListItem({ config, list: rawList, onUpdate }: {
   const isSchedule = config.key === "schedule";
   const isSites = config.key === "sites";
   const isIp = config.key === "ip";
-  const isFreeText = config.key === "city" || config.key === "osVersion" || config.key === "carrier";
+  const isPresetList = config.key === "city" || config.key === "osVersion" || config.key === "carrier";
   const commitUpdates = useCallback(
     (updates: Partial<TargetingState>) => onUpdate(config.key, updates),
     [config.key, onUpdate],
@@ -468,12 +458,13 @@ const ListItem = memo(function ListItem({ config, list: rawList, onUpdate }: {
             <SitesInput items={list.items} onAdd={(newItems) => commitUpdates({ items: [...list.items, ...newItems] })} t={t} />
           ) : isIp ? (
             <IpInput items={list.items} onAdd={(newItems) => commitUpdates({ items: [...list.items, ...newItems] })} t={t} />
-          ) : isFreeText ? (
-            <FreeTextInput
+          ) : isPresetList ? (
+            <PresetSelectInput
+              options={options}
               items={list.items}
-              onAdd={(newItems) => commitUpdates({ items: [...list.items, ...newItems] })}
-              hint={t(`targeting.${config.key}Hint`)}
-              placeholder={t(`targeting.${config.key}Placeholder`)}
+              onAdd={addItem}
+              placeholder={t("targeting.selectPlaceholder")}
+              lang={lang}
             />
           ) : (
             <AutocompleteInput

@@ -702,6 +702,7 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "targeting.on": { ru: "Вкл", en: "On" },
   "targeting.freeTextPlaceholder": { ru: "Введите значение...", en: "Enter value..." },
   "targeting.autocompletePlaceholder": { ru: "Начните вводить...", en: "Start typing..." },
+  "targeting.selectPlaceholder": { ru: "Выберите значение", en: "Select a value" },
   "targeting.addCustom": { ru: "Добавить", en: "Add" },
   "targeting.sitesHint": { ru: "Добавляйте ID сайтов по одному или через запятую без пробелов (например: 12345,abdjhx)", en: "Add site IDs one by one or separated by commas without spaces (e.g.: 12345,abdjhx)" },
   "targeting.sitesFormatError": { ru: "Неверный формат. Используйте значения через запятую без пробелов", en: "Invalid format. Use comma-separated values without spaces" },

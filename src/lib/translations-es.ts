@@ -595,6 +595,7 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "targeting.on": "On",
   "targeting.freeTextPlaceholder": "Introduce un valor...",
   "targeting.autocompletePlaceholder": "Empieza a escribir...",
+  "targeting.selectPlaceholder": "Selecciona un valor",
   "targeting.addCustom": "Añadir",
   "targeting.sitesHint": "Añade IDs de sitio uno por uno o separados por coma sin espacios (ej.: 12345,abdjhx)",
   "targeting.sitesFormatError": "Formato no válido. Usa valores separados por coma sin espacios",
