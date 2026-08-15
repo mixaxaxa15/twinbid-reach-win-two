@@ -45,4 +45,33 @@ describe("targeting list controls", () => {
     expect(within(countriesCard as HTMLElement).queryByText("Germany (DE)")).not.toBeInTheDocument();
     expect(within(countriesCard as HTMLElement).getByRole("button", { name: "White" })).toHaveClass("bg-green-600");
   });
+
+  it("accepts IPv4 CIDR subnets in IP targeting", () => {
+    render(<Harness />);
+
+    const ipCard = screen.getByText("IP addresses").closest("div.rounded-lg");
+    expect(ipCard).not.toBeNull();
+    fireEvent.click(within(ipCard as HTMLElement).getByRole("button", { name: "White" }));
+
+    const input = within(ipCard as HTMLElement).getByPlaceholderText("192.168.1.1, 10.0.0.0/24");
+    fireEvent.change(input, { target: { value: "10.20.0.0/16" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(within(ipCard as HTMLElement).getByText("10.20.0.0/16")).toBeInTheDocument();
+  });
+
+  it("adds manually entered values to the new targeting groups", () => {
+    render(<Harness />);
+
+    const cityCard = screen.getByText("Cities").closest("div.rounded-lg");
+    expect(cityCard).not.toBeNull();
+    fireEvent.click(within(cityCard as HTMLElement).getByRole("button", { name: "White" }));
+
+    const input = within(cityCard as HTMLElement).getByPlaceholderText("New York, Paris");
+    fireEvent.change(input, { target: { value: "Lagos, Nairobi" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(within(cityCard as HTMLElement).getByText("Lagos")).toBeInTheDocument();
+    expect(within(cityCard as HTMLElement).getByText("Nairobi")).toBeInTheDocument();
+  });
 });

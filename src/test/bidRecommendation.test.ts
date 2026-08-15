@@ -48,4 +48,19 @@ describe("buildRecommendBidRequest", () => {
     expect(request.site_id).toEqual(["12345", "abdjhx"]);
     expect(request.site_id_mode).toBe("exclude");
   });
+
+  it("passes city, carrier and OS version targeting to recommend_bid", () => {
+    const request = buildRecommendBidRequest("banner", "mainstream", {
+      city: { mode: "white", items: ["Paris"] },
+      carrier: { mode: "black", items: ["Orange"] },
+      osVersion: { mode: "white", items: ["iOS 18"] },
+    });
+
+    expect(request.city).toEqual(["Paris"]);
+    expect(request.city_mode).toBe("include");
+    expect(request.carrier).toEqual(["Orange"]);
+    expect(request.carrier_mode).toBe("exclude");
+    expect(request.os_version).toEqual(["iOS 18"]);
+    expect(request.os_version_mode).toBe("include");
+  });
 });

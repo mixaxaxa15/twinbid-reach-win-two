@@ -2,10 +2,13 @@ import type { TargetingState } from "@/contexts/CampaignContext";
 
 export const TARGETING_IMPORT_KEYS = [
   "country",
+  "city",
   "language",
   "deviceType",
   "os",
+  "osVersion",
   "browser",
+  "carrier",
   "schedule",
   "sites",
   "ip",
