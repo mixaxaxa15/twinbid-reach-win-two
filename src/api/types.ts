@@ -54,13 +54,10 @@ export interface ApiCampaign {
   end_ts: string | null;
   active_intervals: ScheduleInterval[];
   country: TargetingMap;
-  city?: TargetingMap;
   language: TargetingMap;
   device_type: TargetingMap;
   os: TargetingMap;
-  os_version?: TargetingMap;
   browser: TargetingMap;
-  carrier?: TargetingMap;
   site_id: TargetingMap;
   ip: TargetingMap;
   quality_type: "usual" | "high" | "ultra";
@@ -201,7 +198,7 @@ export interface ApiNotification {
 // ---- ClickHouse statistics ----
 /** Allowed values for `group_by` (single value, not array). */
 export type StatsGroupBy =
-  | "date" | "hour" | "country" | "city" | "os" | "os_version" | "browser" | "carrier" | "device_type" | "site_id" | "campaign";
+  | "date" | "hour" | "country" | "os" | "browser" | "device_type" | "site_id" | "campaign";
 
 /** Allowed keys inside `filters` — narrower than `group_by`. */
 export type StatsFilterBy = "country" | "os" | "browser" | "device_type";
@@ -244,20 +241,14 @@ export interface TrafficSegmentRequest {
   traffic_type?: TrafficType;
   country?: string[];
   country_mode?: "include" | "exclude";
-  city?: string[];
-  city_mode?: "include" | "exclude";
   language?: string[];
   language_mode?: "include" | "exclude";
   device_type?: string[];
   device_type_mode?: "include" | "exclude";
   os?: string[];
   os_mode?: "include" | "exclude";
-  os_version?: string[];
-  os_version_mode?: "include" | "exclude";
   browser?: string[];
   browser_mode?: "include" | "exclude";
-  carrier?: string[];
-  carrier_mode?: "include" | "exclude";
   site_id?: string[];
   site_id_mode?: "include" | "exclude";
 }

@@ -9,12 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { COUNTRY_CODES, LANGUAGE_CODES } from "@/lib/dimensions";
-import {
-  CARRIER_TARGETING_VALUES,
-  CITY_TARGETING_VALUES,
-  formatTargetingDimensionLabel,
-  OS_VERSION_TARGETING_VALUES,
-} from "@/lib/targetingDimensions";
+import { formatTargetingDimensionLabel } from "@/lib/targetingDimensions";
 import {
   BROWSER_FILTER_KEYS, OS_FILTER_KEYS, DEVICE_FILTER_KEYS, OTHER_KEY,
 } from "@/lib/statFilters";
@@ -24,20 +19,17 @@ const withoutOther = (keys: string[]) => keys.filter(k => k !== OTHER_KEY);
 
 const targetingOptions: Record<string, string[]> = {
   country: COUNTRY_CODES,
-  city: CITY_TARGETING_VALUES,
   language: LANGUAGE_CODES,
   deviceType: withoutOther(DEVICE_FILTER_KEYS),
   os: withoutOther(OS_FILTER_KEYS),
-  osVersion: OS_VERSION_TARGETING_VALUES,
   browser: withoutOther(BROWSER_FILTER_KEYS),
-  carrier: CARRIER_TARGETING_VALUES,
   sites: [],
 };
 
 const DAYS = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const;
 
 const targetingConfigKeys = [
-  "country", "city", "language", "deviceType", "os", "osVersion", "browser", "carrier", "schedule", "sites", "ip",
+  "country", "language", "deviceType", "os", "browser", "schedule", "sites", "ip",
 ];
 
 export const targetingConfigs = targetingConfigKeys.map(key => ({ key, labelKey: `targeting.${key}` }));
@@ -300,39 +292,11 @@ function SitesInput({ items, onAdd, t }: { items: string[]; onAdd: (items: strin
   );
 }
 
-function PresetSelectInput({ options, items, onAdd, placeholder, lang }: {
-  options: string[];
-  items: string[];
-  onAdd: (item: string) => void;
-  placeholder: string;
-  lang: import("@/contexts/LanguageContext").Lang;
-}) {
-  const availableOptions = options.filter(item => !items.includes(item));
-
-  return (
-    <select
-      value=""
-      onChange={event => onAdd(event.target.value)}
-      className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
-    >
-      <option value="" disabled>{placeholder}</option>
-      {availableOptions.map(option => (
-        <option key={option} value={option}>{formatTargetingDimensionLabel(option, lang)}</option>
-      ))}
-    </select>
-  );
-}
-
-// IP input with IPv4 and IPv4 CIDR validation
+// IP input with IPv4 validation only
 const IPV4_RE = /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
 
 function isValidIp(v: string): boolean {
-  const [address, prefix, extra] = v.split("/");
-  if (extra !== undefined || !IPV4_RE.test(address)) return false;
-  if (prefix === undefined) return true;
-  if (!/^\d{1,2}$/.test(prefix)) return false;
-  const prefixLength = Number(prefix);
-  return prefixLength >= 0 && prefixLength <= 32;
+  return IPV4_RE.test(v);
 }
 
 function IpInput({ items, onAdd, t }: { items: string[]; onAdd: (newItems: string[]) => void; t: (key: string) => string }) {
@@ -357,7 +321,7 @@ function IpInput({ items, onAdd, t }: { items: string[]; onAdd: (newItems: strin
       <p className="text-xs text-muted-foreground">{t("targeting.ipHint")}</p>
       <div className="flex gap-2">
         <Input value={value} onChange={e => setValue(e.target.value)}
-          placeholder="192.168.1.1, 10.0.0.0/24" className="bg-background border-border flex-1"
+          placeholder="192.168.1.1, 10.0.0.1" className="bg-background border-border flex-1"
           onBlur={() => { if (value.trim()) handleAdd(); }}
           onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }} />
         <Button type="button" size="icon" variant="outline" onClick={handleAdd} className="border-border shrink-0">
@@ -384,7 +348,6 @@ const ListItem = memo(function ListItem({ config, list: rawList, onUpdate }: {
   const isSchedule = config.key === "schedule";
   const isSites = config.key === "sites";
   const isIp = config.key === "ip";
-  const isPresetList = config.key === "city" || config.key === "osVersion" || config.key === "carrier";
   const commitUpdates = useCallback(
     (updates: Partial<TargetingState>) => onUpdate(config.key, updates),
     [config.key, onUpdate],
@@ -458,14 +421,6 @@ const ListItem = memo(function ListItem({ config, list: rawList, onUpdate }: {
             <SitesInput items={list.items} onAdd={(newItems) => commitUpdates({ items: [...list.items, ...newItems] })} t={t} />
           ) : isIp ? (
             <IpInput items={list.items} onAdd={(newItems) => commitUpdates({ items: [...list.items, ...newItems] })} t={t} />
-          ) : isPresetList ? (
-            <PresetSelectInput
-              options={options}
-              items={list.items}
-              onAdd={addItem}
-              placeholder={t("targeting.selectPlaceholder")}
-              lang={lang}
-            />
           ) : (
             <AutocompleteInput
               options={options} value={inputValue} onChange={setInputValue}

@@ -17,7 +17,7 @@ Base URL фронта берётся из `VITE_API_BASE_URL`. Все ручки
 - Ошибки: `{ "error": { "code": "string", "message": "string", "fields"?: { [k]: string } } }` со статусами 4xx/5xx.
 - Пагинация: query `?limit=50&offset=0`, ответ `{ items: [...], total: number }`.
 - Время: ISO 8601 в UTC (`2025-04-22T10:00:00Z`), даты — `YYYY-MM-DD`.
-- HASHMAP-таргетинги (country/city/language/device_type/os/os_version/browser/carrier/site_id/ip):
+- HASHMAP-таргетинги (country/language/device_type/os/browser/site_id/ip):
   объект `{ "<value>": 1 | 0 }`. `1` = whitelist, `0` = blacklist.
   Пустой объект `{}` = таргетинг не применён.
 
@@ -94,13 +94,10 @@ Resp: `User`.
   "end_ts": "2025-05-22T23:59:59Z",
   "active_intervals": [["mon,1","thu,2"], ["wed,3","fri,5"]],
   "country": { "US": 1, "RU": 1 },
-  "city": { "Paris": 1 },
   "language": {},
   "device_type": { "mobile": 1 },
   "os": {},
-  "os_version": { "iOS 18": 1 },
   "browser": {},
-  "carrier": { "Orange": 0 },
   "site_id": {},
   "ip": {}
 }
@@ -440,7 +437,7 @@ TwinBid API не подставляется. В локальном состоя�
 | `to`   | `string YYYY-MM-DD` | да* | `{date_to:Date}`. Пустая строка = без верхней границы. |
 | `campaign_ids` | `string[]` (UUID) | нет | `{campaign_ids:Array(UUID)}`. `[]` или отсутствует = все кампании пользователя. Поддерживается мульти-выбор: пользователь может смотреть стату по нескольким кампаниям одновременно. |
 | `creative_ids` | `string[]` (UUID) | нет | `{creative_ids:Array(UUID)}`. `[]` = все креативы. |
-| `group_by` | `StatsGroupBy` | да | **Скаляр**, не массив. При смене группировки фронт шлёт новый запрос. Допустимые значения: `date`, `hour`, `country`, `city`, `os`, `os_version`, `browser`, `carrier`, `device_type`, `site_id`, `campaign`. |
+| `group_by` | `StatsGroupBy` | да | **Скаляр**, не массив. При смене группировки фронт шлёт новый запрос. Допустимые значения: `date`, `hour`, `country`, `os`, `browser`, `device_type`, `site_id`, `campaign`. |
 | `filters.country` | `string[]` | нет | `{f_geo:Array(String)}` (колонка `geo`). |
 | `filters.browser` | `string[]` | нет | `{f_browser:Array(String)}`. |
 | `filters.os` | `string[]` | нет | `{f_os:Array(String)}`. |
@@ -473,11 +470,8 @@ TwinBid API не подставляется. В локальном состоя�
 | `hour` | `"YYYY-MM-DD HH:00"` (UTC) |
 | `campaign` | UUID кампании (string) |
 | `country` | ISO-код (`"US"`) |
-| `city` | строка |
 | `os` | строка |
-| `os_version` | строка |
 | `browser` | строка |
-| `carrier` | строка |
 | `device_type` | строка |
 | `site_id` | строка |
 
@@ -517,27 +511,20 @@ SQL целиком остаётся на бэкенде. Фронт переда
   "traffic_type": "mainstream",
   "country": ["DE", "FR"],
   "country_mode": "include",
-  "city": ["Berlin", "Paris"],
-  "city_mode": "include",
   "language": ["de"],
   "language_mode": "include",
   "device_type": ["desktop"],
   "device_type_mode": "include",
   "os": ["Windows"],
   "os_mode": "include",
-  "os_version": ["Windows 11"],
-  "os_version_mode": "include",
   "browser": ["Chrome"],
   "browser_mode": "include",
-  "carrier": ["Vodafone"],
-  "carrier_mode": "exclude",
   "site_id": ["12345", "abdjhx"],
   "site_id_mode": "exclude"
 }
 ```
 
 Поле `*_mode` равно `include` для белого списка и `exclude` для чёрного.
-Это правило также применяется к `city`, `os_version` и `carrier`.
 `site_id` содержит введённые пользователем ID сайтов. Пустой массив означает
 «все значения» независимо от режима. Поля
 `verticals`, `verticals_mode`, `pricing_model`, `bid` и `campaign_id` в эту
@@ -589,20 +576,14 @@ SQL целиком остаётся на бэкенде. Фронт переда
   "traffic_type": "mixed",
   "country": ["DE", "FR"],
   "country_mode": "include",
-  "city": ["Berlin", "Paris"],
-  "city_mode": "include",
   "language": ["de"],
   "language_mode": "include",
   "device_type": ["desktop"],
   "device_type_mode": "include",
   "os": ["Windows"],
   "os_mode": "include",
-  "os_version": ["Windows 11"],
-  "os_version_mode": "include",
   "browser": ["Chrome"],
   "browser_mode": "include",
-  "carrier": ["Vodafone"],
-  "carrier_mode": "exclude",
   "site_id": ["12345"],
   "site_id_mode": "include"
 }

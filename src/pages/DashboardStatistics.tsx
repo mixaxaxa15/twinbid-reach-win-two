@@ -48,7 +48,7 @@ import {
   type TrafficCleanerMode,
 } from "@/lib/trafficCleaner";
 
-type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "osVersion" | "country" | "city" | "carrier";
+type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "country";
 type SortKey = "label" | "impressions" | "clicks" | "spent" | "cpm" | "cpc" | "conversions" | "income";
 type SortDir = "asc" | "desc";
 
@@ -62,10 +62,7 @@ const GROUP_MAP: Record<GroupBy, { api: StatsGroupBy }> = {
   siteid:   { api: "site_id" },
   devices:  { api: "device_type" },
   os:       { api: "os" },
-  osVersion:{ api: "os_version" },
   country:  { api: "country" },
-  city:     { api: "city" },
-  carrier:  { api: "carrier" },
 };
 
 function formatDateLabel(iso: string): string {
@@ -193,8 +190,7 @@ export default function DashboardStatistics() {
 
   const groupLabels: Record<GroupBy, string> = {
     dates: t("stats.byDates"), hours: t("stats.byHours"), browsers: t("stats.byBrowsers"),
-    siteid: t("stats.bySiteId"), devices: t("stats.byDevices"), os: t("stats.byOS"),
-    osVersion: t("stats.byOsVersion"), country: t("stats.byCountry"), city: t("stats.byCity"), carrier: t("stats.byCarrier"),
+    siteid: t("stats.bySiteId"), devices: t("stats.byDevices"), os: t("stats.byOS"), country: t("stats.byCountry"),
   };
 
   // Statistics are available for every campaign shown in the campaigns
@@ -753,16 +749,7 @@ export default function DashboardStatistics() {
     confirmedIncome: sortedData.reduce((s, r) => s + r.confirmedIncome, 0),
   }), [sortedData]);
 
-  const labelHeader = appliedGroupBy === "dates" ? t("stats.date")
-    : appliedGroupBy === "hours" ? t("stats.dateAndHour")
-      : appliedGroupBy === "browsers" ? t("stats.browser")
-        : appliedGroupBy === "siteid" ? "SiteID"
-          : appliedGroupBy === "os" ? t("stats.os")
-            : appliedGroupBy === "osVersion" ? t("stats.osVersion")
-              : appliedGroupBy === "country" ? t("stats.country")
-                : appliedGroupBy === "city" ? t("stats.city")
-                  : appliedGroupBy === "carrier" ? t("stats.carrier")
-                    : t("stats.device");
+  const labelHeader = appliedGroupBy === "dates" ? t("stats.date") : appliedGroupBy === "hours" ? t("stats.dateAndHour") : appliedGroupBy === "browsers" ? t("stats.browser") : appliedGroupBy === "siteid" ? "SiteID" : appliedGroupBy === "os" ? t("stats.os") : appliedGroupBy === "country" ? t("stats.country") : t("stats.device");
   const canSortByLabel = appliedGroupBy === "dates" || appliedGroupBy === "hours";
 
   const handleDownloadCsv = useCallback(() => {

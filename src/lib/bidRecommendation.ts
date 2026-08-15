@@ -34,13 +34,10 @@ export function buildRecommendBidRequest(
   lists: Record<string, TargetingState>,
 ): RecommendBidRequest {
   const country = readList(lists, "country");
-  const city = readList(lists, "city");
   const language = readList(lists, "language");
   const deviceType = readList(lists, "deviceType");
   const os = readList(lists, "os");
-  const osVersion = readList(lists, "osVersion");
   const browser = readList(lists, "browser");
-  const carrier = readList(lists, "carrier");
   const sites = readList(lists, "sites");
 
   return {
@@ -48,20 +45,14 @@ export function buildRecommendBidRequest(
     traffic_type: trafficType,
     country: country.items,
     country_mode: country.mode,
-    city: city.items,
-    city_mode: city.mode,
     language: language.items,
     language_mode: language.mode,
     device_type: deviceType.items,
     device_type_mode: deviceType.mode,
     os: os.items,
     os_mode: os.mode,
-    os_version: osVersion.items,
-    os_version_mode: osVersion.mode,
     browser: browser.items,
     browser_mode: browser.mode,
-    carrier: carrier.items,
-    carrier_mode: carrier.mode,
     site_id: sites.items,
     site_id_mode: sites.mode,
   };
