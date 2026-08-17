@@ -346,14 +346,12 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "stats.bySiteId": { ru: "По SiteID", en: "By SiteID" },
   "stats.byDevices": { ru: "По устройствам", en: "By devices" },
   "stats.byOS": { ru: "По ОС", en: "By OS" },
-  "stats.byCity": { ru: "По городам", en: "By cities" },
   "stats.byCountry": { ru: "По странам", en: "By countries" },
   "stats.date": { ru: "Дата", en: "Date" },
   "stats.dateAndHour": { ru: "Дата и час", en: "Date and hour" },
   "stats.browser": { ru: "Браузер", en: "Browser" },
   "stats.device": { ru: "Устройство", en: "Device" },
   "stats.os": { ru: "ОС", en: "OS" },
-  "stats.city": { ru: "Город", en: "City" },
   "stats.country": { ru: "Страна", en: "Country" },
   "stats.total": { ru: "Итого", en: "Total" },
   "stats.noData": { ru: "Нет данных для выбранных фильтров", en: "No data for selected filters" },
@@ -684,7 +682,6 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   // Targeting Section
   "targeting.description": { ru: "Для каждого параметра выберите режим: Whitelist (только эти значения) или Blacklist (исключить эти значения)", en: "For each parameter choose a mode: Whitelist (only these values) or Blacklist (exclude these values)" },
   "targeting.country": { ru: "Страны", en: "Countries" },
-  "targeting.city": { ru: "Города", en: "Cities" },
   "targeting.deviceType": { ru: "Тип устройства", en: "Device type" },
   "targeting.os": { ru: "ОС", en: "OS" },
   "targeting.browser": { ru: "Браузер", en: "Browser" },
@@ -720,8 +717,6 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "targeting.scheduleRequired": { ru: "Выберите хотя бы один активный час в расписании", en: "Select at least one active hour in the schedule" },
   "targeting.ipHint": { ru: "Введите IPv4-адреса или CIDR-подсети через запятую (например, 10.0.0.0/24)", en: "Enter IPv4 addresses or CIDR subnets, comma-separated (for example, 10.0.0.0/24)" },
   "targeting.ipFormatError": { ru: "Неверный формат. Допускаются IPv4-адреса и CIDR-подсети", en: "Invalid format. IPv4 addresses and CIDR subnets are allowed" },
-  "targeting.cityHint": { ru: "Добавляйте города по одному или через запятую", en: "Add cities one by one or comma-separated" },
-  "targeting.cityPlaceholder": { ru: "Москва, Paris", en: "New York, Paris" },
 
   // Days of week
   "day.monday": { ru: "Понедельник", en: "Monday" },

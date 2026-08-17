@@ -163,40 +163,6 @@ describe("CampaignProvider mutation requests", () => {
     );
   });
 
-  it("maps city targeting to the backend field", async () => {
-    const { result } = renderHook(() => useCampaigns(), { wrapper });
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    await act(async () => {
-      await result.current.addCampaign({
-        ...campaignDraft,
-        creatives: [],
-        targeting: {
-          city: { mode: "white", items: ["Paris"] },
-        },
-      });
-    });
-
-    expect(apiMock.createCampaign).toHaveBeenCalledWith(expect.objectContaining({
-      city: { isWhiteList: true, objects: ["Paris"] },
-    }));
-  });
-
-  it("restores city targeting when editing a campaign", async () => {
-    apiMock.listCampaigns.mockResolvedValue({
-      items: [{
-        ...apiCampaign,
-        city: { isWhiteList: true, objects: ["Paris"] },
-      }],
-      total: 1,
-    });
-
-    const { result } = renderHook(() => useCampaigns(), { wrapper });
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    expect(result.current.campaigns[0].targeting.city).toEqual({ mode: "white", items: ["Paris"] });
-  });
-
   it("keeps the technical banner size on status updates", async () => {
     apiMock.listCampaigns.mockResolvedValue({
       items: [{ ...apiCampaign, format_type: "banner", w: null, h: null }],

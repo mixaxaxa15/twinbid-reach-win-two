@@ -394,7 +394,6 @@ export const mockProvider = {
           return out;
         }
         case "country":     return ["US","GB","DE","FR","BR","IN","JP","RU","AU","CA","ES","IT","KR","TR","PL"];
-        case "city":        return ["New York","London","Berlin","Paris","São Paulo","Mumbai","Tokyo"];
         case "browser":     return ["Chrome","Safari","Firefox","Edge","Opera","Samsung Internet"];
         case "device_type": return ["Mobile","Desktop","Tablet","Smart TV"];
         case "os":          return ["Android","iOS","Windows","macOS","Linux","ChromeOS"];
@@ -427,8 +426,6 @@ export const mockProvider = {
       traffic: req.traffic_type,
       country: req.country,
       countryMode: req.country_mode,
-      city: req.city,
-      cityMode: req.city_mode,
       language: req.language,
       languageMode: req.language_mode,
       devices: req.device_type,
@@ -441,7 +438,7 @@ export const mockProvider = {
     let hash = 2166136261;
     for (let i = 0; i < seed.length; i += 1) hash = Math.imul(hash ^ seed.charCodeAt(i), 16777619);
     const normalized = ((hash >>> 0) % 10000) / 10000;
-    const restrictions = [req.country, req.city, req.language, req.device_type, req.os, req.browser]
+    const restrictions = [req.country, req.language, req.device_type, req.os, req.browser]
       .filter((items) => Array.isArray(items) && items.length > 0).length;
     const formatFactor: Record<string, number> = { banner: 1, native: 0.66, push: 0.48, popunder: 0.82 };
     const basePotential = Math.round((42_000 + normalized * 118_000) * (formatFactor[req.format_type || "banner"] || 0.7));

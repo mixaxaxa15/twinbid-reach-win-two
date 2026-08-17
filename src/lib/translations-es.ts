@@ -316,14 +316,12 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "stats.bySiteId": "Por SiteID",
   "stats.byDevices": "Por dispositivos",
   "stats.byOS": "Por SO",
-  "stats.byCity": "Por ciudades",
   "stats.byCountry": "Por países",
   "stats.date": "Fecha",
   "stats.dateAndHour": "Fecha y hora",
   "stats.browser": "Navegador",
   "stats.device": "Dispositivo",
   "stats.os": "SO",
-  "stats.city": "Ciudad",
   "stats.country": "País",
   "stats.total": "Total",
   "stats.noData": "Sin datos para los filtros seleccionados",
@@ -577,7 +575,6 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   // Targeting Section
   "targeting.description": "Para cada parámetro elige un modo: Whitelist (solo estos valores) o Blacklist (excluir estos valores)",
   "targeting.country": "Países",
-  "targeting.city": "Ciudades",
   "targeting.deviceType": "Tipo de dispositivo",
   "targeting.os": "SO",
   "targeting.browser": "Navegador",
@@ -613,8 +610,6 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "targeting.scheduleRequired": "Selecciona al menos una hora activa en el horario",
   "targeting.ipHint": "Introduce direcciones IPv4 o subredes CIDR separadas por comas (por ejemplo, 10.0.0.0/24)",
   "targeting.ipFormatError": "Formato no válido. Se permiten direcciones IPv4 y subredes CIDR",
-  "targeting.cityHint": "Añade ciudades una a una o separadas por comas",
-  "targeting.cityPlaceholder": "Madrid, Paris",
 
   // Days of week
   "day.monday": "Lunes",

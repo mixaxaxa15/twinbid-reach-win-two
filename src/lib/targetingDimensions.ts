@@ -1,20 +1,12 @@
 import type { Lang } from "@/contexts/LanguageContext";
 import { COUNTRIES, LANGUAGES } from "@/lib/dimensions";
 
-type TargetingDimension = "country" | "city" | "language";
+type TargetingDimension = "country" | "language";
 
 export type TargetingDimensionOption = {
   value: string;
   label: string;
 };
-
-// Temporary dictionaries. They are intentionally kept in one shared place so
-// the campaign editor and traffic calculator always send exactly the same values.
-export const CITY_TARGETING_VALUES = [
-  "Amsterdam", "Berlin", "Dubai", "Istanbul", "Lagos", "London", "Madrid",
-  "Mexico City", "Moscow", "Mumbai", "Nairobi", "New York", "Paris",
-  "São Paulo", "Singapore", "Sydney", "Toronto", "Warsaw",
-];
 
 const countryNames = Object.fromEntries(
   COUNTRIES.map((item) => [item.code, { ru: item.ru, en: item.en, es: item.es }]),
@@ -50,9 +42,6 @@ export function getTargetingDimensionOptions(
   dimension: TargetingDimension,
   lang: Lang,
 ): TargetingDimensionOption[] {
-  if (dimension === "city") {
-    return CITY_TARGETING_VALUES.map(value => ({ value, label: value }));
-  }
   const entries = dimension === "country" ? COUNTRIES : LANGUAGES;
 
   return entries

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { COUNTRIES, LANGUAGES } from "@/lib/dimensions";
 import {
-  CITY_TARGETING_VALUES,
   formatTargetingDimensionLabel,
   getTargetingDimensionOptions,
 } from "@/lib/targetingDimensions";
@@ -32,9 +31,5 @@ describe("shared campaign and calculator targeting dimensions", () => {
     expect(formatTargetingDimensionLabel("en", "es")).toBe("Inglés (en)");
     expect(formatTargetingDimensionLabel("FR", "fr")).toBe("France (FR)");
     expect(formatTargetingDimensionLabel("fr", "fr")).toBe("français (fr)");
-  });
-
-  it("provides shared temporary lists for the new targeting dimensions", () => {
-    expect(getTargetingDimensionOptions("city", "en").map(option => option.value)).toEqual(CITY_TARGETING_VALUES);
   });
 });

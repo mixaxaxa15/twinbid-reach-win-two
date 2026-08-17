@@ -49,12 +49,4 @@ describe("buildRecommendBidRequest", () => {
     expect(request.site_id_mode).toBe("exclude");
   });
 
-  it("passes city targeting to recommend_bid", () => {
-    const request = buildRecommendBidRequest("banner", "mainstream", {
-      city: { mode: "white", items: ["Paris"] },
-    });
-
-    expect(request.city).toEqual(["Paris"]);
-    expect(request.city_mode).toBe("include");
-  });
 });

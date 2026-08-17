@@ -54,7 +54,6 @@ const copy = {
     format: "Формат",
     trafficType: "Тип трафика",
     countries: "Страны",
-    cities: "Города",
     languages: "Языки",
     devices: "Устройства",
     browsers: "Браузеры",
@@ -106,7 +105,6 @@ const copy = {
     format: "Format",
     trafficType: "Traffic type",
     countries: "Countries",
-    cities: "Cities",
     languages: "Languages",
     devices: "Devices",
     browsers: "Browsers",
@@ -158,7 +156,6 @@ const copy = {
     format: "Formato",
     trafficType: "Tipo de tráfico",
     countries: "Países",
-    cities: "Ciudades",
     languages: "Idiomas",
     devices: "Dispositivos",
     browsers: "Navegadores",
@@ -210,7 +207,6 @@ const copy = {
     format: "Format",
     trafficType: "Type de trafic",
     countries: "Pays",
-    cities: "Villes",
     languages: "Langues",
     devices: "Appareils",
     browsers: "Navigateurs",
@@ -262,8 +258,6 @@ type FilterState = {
   trafficType: "mainstream" | "adult" | "mixed";
   country: string[];
   countryMode: "include" | "exclude";
-  city: string[];
-  cityMode: "include" | "exclude";
   language: string[];
   languageMode: "include" | "exclude";
   deviceType: string[];
@@ -281,8 +275,6 @@ const defaults: FilterState = {
   trafficType: "mainstream",
   country: [],
   countryMode: "include",
-  city: [],
-  cityMode: "include",
   language: [],
   languageMode: "include",
   deviceType: [],
@@ -303,8 +295,6 @@ function fromCampaign(campaign: Campaign): FilterState {
     trafficType: campaign.trafficType,
     country: items("country"),
     countryMode: mode("country"),
-    city: items("city"),
-    cityMode: mode("city"),
     language: items("language"),
     languageMode: mode("language"),
     deviceType: items("deviceType"),
@@ -352,10 +342,6 @@ export default function TrafficCalculator() {
     () => getTargetingDimensionOptions("language", lang),
     [lang],
   );
-  const cityOptions = useMemo(
-    () => getTargetingDimensionOptions("city", lang),
-    [lang],
-  );
   const resetResult = () => {
     setResult(null);
     setActual(null);
@@ -391,8 +377,6 @@ export default function TrafficCalculator() {
         traffic_type: filters.trafficType,
         country: filters.country,
         country_mode: filters.countryMode,
-        city: filters.city,
-        city_mode: filters.cityMode,
         language: filters.language,
         language_mode: filters.languageMode,
         device_type: filters.deviceType,
@@ -508,7 +492,6 @@ export default function TrafficCalculator() {
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <MultiChoice label={text.countries} text={text} mode={filters.countryMode} values={filters.country} options={countryOptions} onModeChange={(countryMode) => updateFilters({ countryMode })} onChange={(country) => updateFilters({ country })} />
-            <MultiChoice label={text.cities} text={text} mode={filters.cityMode} values={filters.city} options={cityOptions} onModeChange={(cityMode) => updateFilters({ cityMode })} onChange={(city) => updateFilters({ city })} />
             <MultiChoice label={text.languages} text={text} mode={filters.languageMode} values={filters.language} options={languageOptions} onModeChange={(languageMode) => updateFilters({ languageMode })} onChange={(language) => updateFilters({ language })} />
             <MultiChoice label={text.devices} text={text} mode={filters.deviceTypeMode} values={filters.deviceType} options={DEVICE_FILTER_KEYS.filter((item) => item !== OTHER_KEY).map(simpleOption)} onModeChange={(deviceTypeMode) => updateFilters({ deviceTypeMode })} onChange={(deviceType) => updateFilters({ deviceType })} />
             <MultiChoice label="OS" text={text} mode={filters.osMode} values={filters.os} options={OS_FILTER_KEYS.filter((item) => item !== OTHER_KEY).map(simpleOption)} onModeChange={(osMode) => updateFilters({ osMode })} onChange={(os) => updateFilters({ os })} />
