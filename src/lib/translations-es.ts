@@ -318,7 +318,6 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "stats.byOS": "Por SO",
   "stats.byOsVersion": "Por versión de SO",
   "stats.byCity": "Por ciudades",
-  "stats.byCarrier": "Por operadores",
   "stats.byCountry": "Por países",
   "stats.date": "Fecha",
   "stats.dateAndHour": "Fecha y hora",
@@ -327,7 +326,6 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "stats.os": "SO",
   "stats.osVersion": "Versión de SO",
   "stats.city": "Ciudad",
-  "stats.carrier": "Operador",
   "stats.country": "País",
   "stats.total": "Total",
   "stats.noData": "Sin datos para los filtros seleccionados",
@@ -586,7 +584,6 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "targeting.os": "SO",
   "targeting.osVersion": "Versión de SO",
   "targeting.browser": "Navegador",
-  "targeting.carrier": "Operador",
   "targeting.schedule": "Programación de impresiones",
   "targeting.sites": "ID de sitio",
   "targeting.ip": "Direcciones IP",
@@ -623,8 +620,6 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "targeting.cityPlaceholder": "Madrid, Paris",
   "targeting.osVersionHint": "Añade versiones de SO una a una o separadas por comas",
   "targeting.osVersionPlaceholder": "Android 14, iOS 18",
-  "targeting.carrierHint": "Añade operadores uno a uno o separados por comas",
-  "targeting.carrierPlaceholder": "Movistar, Vodafone",
 
   // Days of week
   "day.monday": "Lunes",

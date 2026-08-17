@@ -179,7 +179,7 @@ function verticalsToApiArray(verticals: readonly string[] | undefined): Record<s
 
 const TARGET_KEY_MAP = [
   ["country", "country"], ["city", "city"], ["language", "language"], ["deviceType", "device_type"],
-  ["os", "os"], ["osVersion", "os_version"], ["browser", "browser"], ["carrier", "carrier"],
+  ["os", "os"], ["osVersion", "os_version"], ["browser", "browser"],
   ["sites", "site_id"], ["ip", "ip"],
 ] as const;
 type TargetKey = typeof TARGET_KEY_MAP[number][1];

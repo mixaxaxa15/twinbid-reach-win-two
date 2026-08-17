@@ -8,7 +8,6 @@ export const TARGETING_IMPORT_KEYS = [
   "os",
   "osVersion",
   "browser",
-  "carrier",
   "schedule",
   "sites",
   "ip",

@@ -348,7 +348,6 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "stats.byOS": { ru: "По ОС", en: "By OS" },
   "stats.byOsVersion": { ru: "По версии ОС", en: "By OS version" },
   "stats.byCity": { ru: "По городам", en: "By cities" },
-  "stats.byCarrier": { ru: "По операторам", en: "By carriers" },
   "stats.byCountry": { ru: "По странам", en: "By countries" },
   "stats.date": { ru: "Дата", en: "Date" },
   "stats.dateAndHour": { ru: "Дата и час", en: "Date and hour" },
@@ -357,7 +356,6 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "stats.os": { ru: "ОС", en: "OS" },
   "stats.osVersion": { ru: "Версия ОС", en: "OS version" },
   "stats.city": { ru: "Город", en: "City" },
-  "stats.carrier": { ru: "Оператор", en: "Carrier" },
   "stats.country": { ru: "Страна", en: "Country" },
   "stats.total": { ru: "Итого", en: "Total" },
   "stats.noData": { ru: "Нет данных для выбранных фильтров", en: "No data for selected filters" },
@@ -693,7 +691,6 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "targeting.os": { ru: "ОС", en: "OS" },
   "targeting.osVersion": { ru: "Версия ОС", en: "OS version" },
   "targeting.browser": { ru: "Браузер", en: "Browser" },
-  "targeting.carrier": { ru: "Оператор", en: "Carrier" },
   "targeting.schedule": { ru: "Расписание показов", en: "Display schedule" },
   "targeting.sites": { ru: "ID сайта", en: "Site ID" },
   "targeting.ip": { ru: "IP-адреса", en: "IP addresses" },
@@ -730,8 +727,6 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "targeting.cityPlaceholder": { ru: "Москва, Paris", en: "New York, Paris" },
   "targeting.osVersionHint": { ru: "Добавляйте версии ОС по одной или через запятую", en: "Add OS versions one by one or comma-separated" },
   "targeting.osVersionPlaceholder": { ru: "Android 14, iOS 18", en: "Android 14, iOS 18" },
-  "targeting.carrierHint": { ru: "Добавляйте операторов по одному или через запятую", en: "Add carriers one by one or comma-separated" },
-  "targeting.carrierPlaceholder": { ru: "МТС, Vodafone", en: "T-Mobile, Vodafone" },
 
   // Days of week
   "day.monday": { ru: "Понедельник", en: "Monday" },

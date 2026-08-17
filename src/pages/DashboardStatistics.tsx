@@ -48,7 +48,7 @@ import {
   type TrafficCleanerMode,
 } from "@/lib/trafficCleaner";
 
-type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "osVersion" | "country" | "city" | "carrier";
+type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "osVersion" | "country" | "city";
 type SortKey = "label" | "impressions" | "clicks" | "spent" | "cpm" | "cpc" | "conversions" | "income";
 type SortDir = "asc" | "desc";
 
@@ -65,7 +65,6 @@ const GROUP_MAP: Record<GroupBy, { api: StatsGroupBy }> = {
   osVersion:{ api: "os_version" },
   country:  { api: "country" },
   city:     { api: "city" },
-  carrier:  { api: "carrier" },
 };
 
 function formatDateLabel(iso: string): string {
@@ -194,7 +193,7 @@ export default function DashboardStatistics() {
   const groupLabels: Record<GroupBy, string> = {
     dates: t("stats.byDates"), hours: t("stats.byHours"), browsers: t("stats.byBrowsers"),
     siteid: t("stats.bySiteId"), devices: t("stats.byDevices"), os: t("stats.byOS"),
-    osVersion: t("stats.byOsVersion"), country: t("stats.byCountry"), city: t("stats.byCity"), carrier: t("stats.byCarrier"),
+    osVersion: t("stats.byOsVersion"), country: t("stats.byCountry"), city: t("stats.byCity"),
   };
 
   // Statistics are available for every campaign shown in the campaigns
@@ -761,8 +760,7 @@ export default function DashboardStatistics() {
             : appliedGroupBy === "osVersion" ? t("stats.osVersion")
               : appliedGroupBy === "country" ? t("stats.country")
                 : appliedGroupBy === "city" ? t("stats.city")
-                  : appliedGroupBy === "carrier" ? t("stats.carrier")
-                    : t("stats.device");
+                  : t("stats.device");
   const canSortByLabel = appliedGroupBy === "dates" || appliedGroupBy === "hours";
 
   const handleDownloadCsv = useCallback(() => {

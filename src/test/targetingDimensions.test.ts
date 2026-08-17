@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { COUNTRIES, LANGUAGES } from "@/lib/dimensions";
 import {
-  CARRIER_TARGETING_VALUES,
   CITY_TARGETING_VALUES,
   formatTargetingDimensionLabel,
   getTargetingDimensionOptions,
@@ -39,6 +38,5 @@ describe("shared campaign and calculator targeting dimensions", () => {
   it("provides shared temporary lists for the new targeting dimensions", () => {
     expect(getTargetingDimensionOptions("city", "en").map(option => option.value)).toEqual(CITY_TARGETING_VALUES);
     expect(getTargetingDimensionOptions("osVersion", "en").map(option => option.value)).toEqual(OS_VERSION_TARGETING_VALUES);
-    expect(getTargetingDimensionOptions("carrier", "en").map(option => option.value)).toEqual(CARRIER_TARGETING_VALUES);
   });
 });

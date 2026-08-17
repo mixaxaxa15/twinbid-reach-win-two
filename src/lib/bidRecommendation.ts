@@ -40,7 +40,6 @@ export function buildRecommendBidRequest(
   const os = readList(lists, "os");
   const osVersion = readList(lists, "osVersion");
   const browser = readList(lists, "browser");
-  const carrier = readList(lists, "carrier");
   const sites = readList(lists, "sites");
 
   return {
@@ -60,8 +59,6 @@ export function buildRecommendBidRequest(
     os_version_mode: osVersion.mode,
     browser: browser.items,
     browser_mode: browser.mode,
-    carrier: carrier.items,
-    carrier_mode: carrier.mode,
     site_id: sites.items,
     site_id_mode: sites.mode,
   };

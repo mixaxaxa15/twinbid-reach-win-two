@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { COUNTRY_CODES, LANGUAGE_CODES } from "@/lib/dimensions";
 import {
-  CARRIER_TARGETING_VALUES,
   CITY_TARGETING_VALUES,
   formatTargetingDimensionLabel,
   OS_VERSION_TARGETING_VALUES,
@@ -30,14 +29,13 @@ const targetingOptions: Record<string, string[]> = {
   os: withoutOther(OS_FILTER_KEYS),
   osVersion: OS_VERSION_TARGETING_VALUES,
   browser: withoutOther(BROWSER_FILTER_KEYS),
-  carrier: CARRIER_TARGETING_VALUES,
   sites: [],
 };
 
 const DAYS = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const;
 
 const targetingConfigKeys = [
-  "country", "city", "language", "deviceType", "os", "osVersion", "browser", "carrier", "schedule", "sites", "ip",
+  "country", "city", "language", "deviceType", "os", "osVersion", "browser", "schedule", "sites", "ip",
 ];
 
 export const targetingConfigs = targetingConfigKeys.map(key => ({ key, labelKey: `targeting.${key}` }));
@@ -384,7 +382,7 @@ const ListItem = memo(function ListItem({ config, list: rawList, onUpdate }: {
   const isSchedule = config.key === "schedule";
   const isSites = config.key === "sites";
   const isIp = config.key === "ip";
-  const isPresetList = config.key === "city" || config.key === "osVersion" || config.key === "carrier";
+  const isPresetList = config.key === "city" || config.key === "osVersion";
   const commitUpdates = useCallback(
     (updates: Partial<TargetingState>) => onUpdate(config.key, updates),
     [config.key, onUpdate],

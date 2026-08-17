@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import type { DateRange } from "react-day-picker";
 
-type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "osVersion" | "country" | "city" | "carrier";
+type GroupBy = "dates" | "hours" | "browsers" | "siteid" | "devices" | "os" | "osVersion" | "country" | "city";
 type ChartMetric = "impressions" | "clicks" | "spent";
 type SortKey = "label" | "impressions" | "clicks" | "spent" | "cpm" | "cpc" | "conversions" | "income";
 type SortDir = "asc" | "desc";
