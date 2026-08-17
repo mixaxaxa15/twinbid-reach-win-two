@@ -346,7 +346,6 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "stats.bySiteId": { ru: "По SiteID", en: "By SiteID" },
   "stats.byDevices": { ru: "По устройствам", en: "By devices" },
   "stats.byOS": { ru: "По ОС", en: "By OS" },
-  "stats.byOsVersion": { ru: "По версии ОС", en: "By OS version" },
   "stats.byCity": { ru: "По городам", en: "By cities" },
   "stats.byCountry": { ru: "По странам", en: "By countries" },
   "stats.date": { ru: "Дата", en: "Date" },
@@ -354,7 +353,6 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "stats.browser": { ru: "Браузер", en: "Browser" },
   "stats.device": { ru: "Устройство", en: "Device" },
   "stats.os": { ru: "ОС", en: "OS" },
-  "stats.osVersion": { ru: "Версия ОС", en: "OS version" },
   "stats.city": { ru: "Город", en: "City" },
   "stats.country": { ru: "Страна", en: "Country" },
   "stats.total": { ru: "Итого", en: "Total" },
@@ -689,7 +687,6 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "targeting.city": { ru: "Города", en: "Cities" },
   "targeting.deviceType": { ru: "Тип устройства", en: "Device type" },
   "targeting.os": { ru: "ОС", en: "OS" },
-  "targeting.osVersion": { ru: "Версия ОС", en: "OS version" },
   "targeting.browser": { ru: "Браузер", en: "Browser" },
   "targeting.schedule": { ru: "Расписание показов", en: "Display schedule" },
   "targeting.sites": { ru: "ID сайта", en: "Site ID" },
@@ -725,8 +722,6 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "targeting.ipFormatError": { ru: "Неверный формат. Допускаются IPv4-адреса и CIDR-подсети", en: "Invalid format. IPv4 addresses and CIDR subnets are allowed" },
   "targeting.cityHint": { ru: "Добавляйте города по одному или через запятую", en: "Add cities one by one or comma-separated" },
   "targeting.cityPlaceholder": { ru: "Москва, Paris", en: "New York, Paris" },
-  "targeting.osVersionHint": { ru: "Добавляйте версии ОС по одной или через запятую", en: "Add OS versions one by one or comma-separated" },
-  "targeting.osVersionPlaceholder": { ru: "Android 14, iOS 18", en: "Android 14, iOS 18" },
 
   // Days of week
   "day.monday": { ru: "Понедельник", en: "Monday" },

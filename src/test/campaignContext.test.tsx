@@ -163,7 +163,7 @@ describe("CampaignProvider mutation requests", () => {
     );
   });
 
-  it("maps city and OS version targeting to backend fields", async () => {
+  it("maps city targeting to the backend field", async () => {
     const { result } = renderHook(() => useCampaigns(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -173,23 +173,20 @@ describe("CampaignProvider mutation requests", () => {
         creatives: [],
         targeting: {
           city: { mode: "white", items: ["Paris"] },
-          osVersion: { mode: "white", items: ["iOS 18"] },
         },
       });
     });
 
     expect(apiMock.createCampaign).toHaveBeenCalledWith(expect.objectContaining({
       city: { isWhiteList: true, objects: ["Paris"] },
-      os_version: { isWhiteList: true, objects: ["iOS 18"] },
     }));
   });
 
-  it("restores city and OS version targeting when editing a campaign", async () => {
+  it("restores city targeting when editing a campaign", async () => {
     apiMock.listCampaigns.mockResolvedValue({
       items: [{
         ...apiCampaign,
         city: { isWhiteList: true, objects: ["Paris"] },
-        os_version: { isWhiteList: true, objects: ["iOS 18"] },
       }],
       total: 1,
     });
@@ -198,7 +195,6 @@ describe("CampaignProvider mutation requests", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.campaigns[0].targeting.city).toEqual({ mode: "white", items: ["Paris"] });
-    expect(result.current.campaigns[0].targeting.osVersion).toEqual({ mode: "white", items: ["iOS 18"] });
   });
 
   it("keeps the technical banner size on status updates", async () => {

@@ -12,7 +12,6 @@ import { COUNTRY_CODES, LANGUAGE_CODES } from "@/lib/dimensions";
 import {
   CITY_TARGETING_VALUES,
   formatTargetingDimensionLabel,
-  OS_VERSION_TARGETING_VALUES,
 } from "@/lib/targetingDimensions";
 import {
   BROWSER_FILTER_KEYS, OS_FILTER_KEYS, DEVICE_FILTER_KEYS, OTHER_KEY,
@@ -27,7 +26,6 @@ const targetingOptions: Record<string, string[]> = {
   language: LANGUAGE_CODES,
   deviceType: withoutOther(DEVICE_FILTER_KEYS),
   os: withoutOther(OS_FILTER_KEYS),
-  osVersion: OS_VERSION_TARGETING_VALUES,
   browser: withoutOther(BROWSER_FILTER_KEYS),
   sites: [],
 };
@@ -35,7 +33,7 @@ const targetingOptions: Record<string, string[]> = {
 const DAYS = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const;
 
 const targetingConfigKeys = [
-  "country", "city", "language", "deviceType", "os", "osVersion", "browser", "schedule", "sites", "ip",
+  "country", "city", "language", "deviceType", "os", "browser", "schedule", "sites", "ip",
 ];
 
 export const targetingConfigs = targetingConfigKeys.map(key => ({ key, labelKey: `targeting.${key}` }));
@@ -382,7 +380,7 @@ const ListItem = memo(function ListItem({ config, list: rawList, onUpdate }: {
   const isSchedule = config.key === "schedule";
   const isSites = config.key === "sites";
   const isIp = config.key === "ip";
-  const isPresetList = config.key === "city" || config.key === "osVersion";
+  const isPresetList = config.key === "city";
   const commitUpdates = useCallback(
     (updates: Partial<TargetingState>) => onUpdate(config.key, updates),
     [config.key, onUpdate],

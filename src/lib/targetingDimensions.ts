@@ -1,7 +1,7 @@
 import type { Lang } from "@/contexts/LanguageContext";
 import { COUNTRIES, LANGUAGES } from "@/lib/dimensions";
 
-type TargetingDimension = "country" | "city" | "language" | "osVersion";
+type TargetingDimension = "country" | "city" | "language";
 
 export type TargetingDimensionOption = {
   value: string;
@@ -14,12 +14,6 @@ export const CITY_TARGETING_VALUES = [
   "Amsterdam", "Berlin", "Dubai", "Istanbul", "Lagos", "London", "Madrid",
   "Mexico City", "Moscow", "Mumbai", "Nairobi", "New York", "Paris",
   "São Paulo", "Singapore", "Sydney", "Toronto", "Warsaw",
-];
-
-export const OS_VERSION_TARGETING_VALUES = [
-  "Android 10", "Android 11", "Android 12", "Android 13", "Android 14", "Android 15",
-  "iOS 15", "iOS 16", "iOS 17", "iOS 18",
-  "Windows 10", "Windows 11", "macOS 13", "macOS 14", "macOS 15",
 ];
 
 const countryNames = Object.fromEntries(
@@ -58,9 +52,6 @@ export function getTargetingDimensionOptions(
 ): TargetingDimensionOption[] {
   if (dimension === "city") {
     return CITY_TARGETING_VALUES.map(value => ({ value, label: value }));
-  }
-  if (dimension === "osVersion") {
-    return OS_VERSION_TARGETING_VALUES.map(value => ({ value, label: value }));
   }
   const entries = dimension === "country" ? COUNTRIES : LANGUAGES;
 

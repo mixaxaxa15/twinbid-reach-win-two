@@ -305,7 +305,6 @@ export const FR_TRANSLATIONS: Record<string, string> = {
   "stats.bySiteId": "Par SiteID",
   "stats.byDevices": "Par appareil",
   "stats.byOS": "Par OS",
-  "stats.byOsVersion": "Par version d’OS",
   "stats.byCity": "Par ville",
   "stats.byCountry": "Par pays",
   "stats.date": "Date",
@@ -313,7 +312,6 @@ export const FR_TRANSLATIONS: Record<string, string> = {
   "stats.browser": "Navigateur",
   "stats.device": "Appareil",
   "stats.os": "OS",
-  "stats.osVersion": "Version d’OS",
   "stats.city": "Ville",
   "stats.country": "Pays",
   "stats.total": "Total",
@@ -570,7 +568,6 @@ export const FR_TRANSLATIONS: Record<string, string> = {
   "targeting.city": "Villes",
   "targeting.deviceType": "Type d’appareil",
   "targeting.os": "OS",
-  "targeting.osVersion": "Version d’OS",
   "targeting.browser": "Navigateur",
   "targeting.schedule": "Calendrier de diffusion",
   "targeting.sites": "ID de site",
@@ -606,8 +603,6 @@ export const FR_TRANSLATIONS: Record<string, string> = {
   "targeting.ipFormatError": "Format non valide. Les adresses IPv4 et les sous-réseaux CIDR sont acceptés",
   "targeting.cityHint": "Ajoutez les villes une par une ou séparées par des virgules",
   "targeting.cityPlaceholder": "Paris, Montréal",
-  "targeting.osVersionHint": "Ajoutez les versions d’OS une par une ou séparées par des virgules",
-  "targeting.osVersionPlaceholder": "Android 14, iOS 18",
 
   // Days
   "day.monday": "Lundi",

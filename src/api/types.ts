@@ -58,7 +58,6 @@ export interface ApiCampaign {
   language: TargetingMap;
   device_type: TargetingMap;
   os: TargetingMap;
-  os_version?: TargetingMap;
   browser: TargetingMap;
   site_id: TargetingMap;
   ip: TargetingMap;
@@ -200,7 +199,7 @@ export interface ApiNotification {
 // ---- ClickHouse statistics ----
 /** Allowed values for `group_by` (single value, not array). */
 export type StatsGroupBy =
-  | "date" | "hour" | "country" | "city" | "os" | "os_version" | "browser" | "device_type" | "site_id" | "campaign";
+  | "date" | "hour" | "country" | "city" | "os" | "browser" | "device_type" | "site_id" | "campaign";
 
 /** Allowed keys inside `filters` — narrower than `group_by`. */
 export type StatsFilterBy = "country" | "os" | "browser" | "device_type";
@@ -251,8 +250,6 @@ export interface TrafficSegmentRequest {
   device_type_mode?: "include" | "exclude";
   os?: string[];
   os_mode?: "include" | "exclude";
-  os_version?: string[];
-  os_version_mode?: "include" | "exclude";
   browser?: string[];
   browser_mode?: "include" | "exclude";
   site_id?: string[];

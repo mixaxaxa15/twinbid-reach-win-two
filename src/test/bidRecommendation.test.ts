@@ -49,15 +49,12 @@ describe("buildRecommendBidRequest", () => {
     expect(request.site_id_mode).toBe("exclude");
   });
 
-  it("passes city and OS version targeting to recommend_bid", () => {
+  it("passes city targeting to recommend_bid", () => {
     const request = buildRecommendBidRequest("banner", "mainstream", {
       city: { mode: "white", items: ["Paris"] },
-      osVersion: { mode: "white", items: ["iOS 18"] },
     });
 
     expect(request.city).toEqual(["Paris"]);
     expect(request.city_mode).toBe("include");
-    expect(request.os_version).toEqual(["iOS 18"]);
-    expect(request.os_version_mode).toBe("include");
   });
 });

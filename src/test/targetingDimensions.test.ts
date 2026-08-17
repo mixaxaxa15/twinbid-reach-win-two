@@ -4,7 +4,6 @@ import {
   CITY_TARGETING_VALUES,
   formatTargetingDimensionLabel,
   getTargetingDimensionOptions,
-  OS_VERSION_TARGETING_VALUES,
 } from "@/lib/targetingDimensions";
 
 describe("shared campaign and calculator targeting dimensions", () => {
@@ -37,6 +36,5 @@ describe("shared campaign and calculator targeting dimensions", () => {
 
   it("provides shared temporary lists for the new targeting dimensions", () => {
     expect(getTargetingDimensionOptions("city", "en").map(option => option.value)).toEqual(CITY_TARGETING_VALUES);
-    expect(getTargetingDimensionOptions("osVersion", "en").map(option => option.value)).toEqual(OS_VERSION_TARGETING_VALUES);
   });
 });

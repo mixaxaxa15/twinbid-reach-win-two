@@ -6,7 +6,6 @@ export const TARGETING_IMPORT_KEYS = [
   "language",
   "deviceType",
   "os",
-  "osVersion",
   "browser",
   "schedule",
   "sites",

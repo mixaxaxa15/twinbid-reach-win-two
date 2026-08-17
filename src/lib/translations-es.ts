@@ -316,7 +316,6 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "stats.bySiteId": "Por SiteID",
   "stats.byDevices": "Por dispositivos",
   "stats.byOS": "Por SO",
-  "stats.byOsVersion": "Por versión de SO",
   "stats.byCity": "Por ciudades",
   "stats.byCountry": "Por países",
   "stats.date": "Fecha",
@@ -324,7 +323,6 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "stats.browser": "Navegador",
   "stats.device": "Dispositivo",
   "stats.os": "SO",
-  "stats.osVersion": "Versión de SO",
   "stats.city": "Ciudad",
   "stats.country": "País",
   "stats.total": "Total",
@@ -582,7 +580,6 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "targeting.city": "Ciudades",
   "targeting.deviceType": "Tipo de dispositivo",
   "targeting.os": "SO",
-  "targeting.osVersion": "Versión de SO",
   "targeting.browser": "Navegador",
   "targeting.schedule": "Programación de impresiones",
   "targeting.sites": "ID de sitio",
@@ -618,8 +615,6 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "targeting.ipFormatError": "Formato no válido. Se permiten direcciones IPv4 y subredes CIDR",
   "targeting.cityHint": "Añade ciudades una a una o separadas por comas",
   "targeting.cityPlaceholder": "Madrid, Paris",
-  "targeting.osVersionHint": "Añade versiones de SO una a una o separadas por comas",
-  "targeting.osVersionPlaceholder": "Android 14, iOS 18",
 
   // Days of week
   "day.monday": "Lunes",
