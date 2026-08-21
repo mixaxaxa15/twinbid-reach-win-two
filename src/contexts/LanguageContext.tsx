@@ -177,6 +177,7 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "sidebar.campaigns": { ru: "Кампании", en: "Campaigns" },
   "sidebar.statistics": { ru: "Статистика", en: "Statistics" },
   "sidebar.trafficCalculator": { ru: "Калькулятор трафика", en: "Traffic calculator" },
+  "sidebar.postback": { ru: "Postback", en: "Postback" },
   "sidebar.balance": { ru: "Баланс", en: "Balance" },
   "sidebar.settings": { ru: "Настройки", en: "Settings" },
   "sidebar.logout": { ru: "Выйти", en: "Log out" },
@@ -608,6 +609,29 @@ const translations: Record<string, Record<"ru" | "en", string>> = {
   "postback.help3": {
     ru: "Ссылка статичная и не меняется — её можно использовать для всех кампаний.",
     en: "The link is static and does not change — you can use it for all campaigns.",
+  },
+  "postback.pageTitle": { ru: "Postback", en: "Postback" },
+  "postback.pageSubtitle": {
+    ru: "Настройте передачу конверсий из трекера или CPA-сети в TwinBid.",
+    en: "Set up conversion delivery from your tracker or CPA network to TwinBid.",
+  },
+  "postback.setupTitle": { ru: "Настройка Postback", en: "Postback setup" },
+  "postback.parametersTitle": { ru: "Параметры ссылки", en: "URL parameters" },
+  "postback.clickIdDescription": {
+    ru: "Уникальный ID клика. Обязательный параметр для работы системы.",
+    en: "The unique click ID. This parameter is required for the system to work.",
+  },
+  "postback.payoutDescription": {
+    ru: "Сумма выплаты за целевое действие. Необязательный параметр.",
+    en: "The payout amount for the target action. This parameter is optional.",
+  },
+  "postback.statusDescription": {
+    ru: "Статус события. Необязательный параметр.",
+    en: "The event status. This parameter is optional.",
+  },
+  "postback.optionalParametersHint": {
+    ru: "Необязательные параметры можно удалить из ссылки — система продолжит работать, если они вам не нужны или ваш трекер либо CPA-сеть их не поддерживает.",
+    en: "Optional parameters can be removed from the URL. The system will continue to work if you do not need them or your tracker or CPA network does not support them.",
   },
   "postback.payoutLabel": { ru: "Выплата за конверсию", en: "Conversion payout" },
   "postback.payoutHint": {
