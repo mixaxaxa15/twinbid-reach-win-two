@@ -2,6 +2,7 @@
 export const FR_TRANSLATIONS: Record<string, string> = {
   // Header / Nav
   "nav.benefits": "Avantages",
+  "nav.howWorks": "Fonctionnement",
   "nav.formats": "Formats",
   "nav.howToStart": "Comment commencer",
   "nav.login": "Se connecter",
@@ -16,6 +17,7 @@ export const FR_TRANSLATIONS: Record<string, string> = {
   "hero.subtitleEnd": "depuis une interface unique pour l’achat, l’analyse et l’optimisation.",
   "hero.cta": "S’inscrire",
   "hero.learnMore": "En savoir plus",
+  "hero.telegram": "Notre canal Telegram",
   "hero.statSites": "Sites",
   "hero.statNetworks": "Régies publicitaires",
   "hero.statSupport": "Assistance",
@@ -59,10 +61,10 @@ export const FR_TRANSLATIONS: Record<string, string> = {
   "formats.title": "Formats ",
   "formats.title2": "publicitaires",
   "formats.subtitle": "Choisissez le format le mieux adapté à votre campagne",
-  "formats.popunder.desc": "Publicité plein écran ouverte dans un nouvel onglet. Visibilité maximale et CTR élevé.",
-  "formats.native.desc": "Publicité intégrée naturellement au style du site. Une forte confiance des utilisateurs.",
-  "formats.banner.desc": "Bannières classiques de différentes tailles. Notoriété de marque et large couverture.",
-  "formats.push.desc": "Notifications push directement sur la page, sans abonnement. Attirez immédiatement l’attention.",
+  "formats.popunder.desc": "La page publicitaire s’ouvre dans un nouvel onglet après une action de l’utilisateur. Ce format offre un maximum d’espace à l’offre et convient aux campagnes qui recherchent une large portée et des visites rapides vers la landing page.",
+  "formats.native.desc": "L’annonce s’insère directement dans un article ou un fil et reprend la structure du contenu : image, titre et courte description. Elle est perçue comme une partie de la page plutôt que comme une bannière classique.",
+  "formats.banner.desc": "Un format graphique classique pour renforcer la visibilité de la marque. Les dimensions courantes permettent de placer la création dans l’en-tête, la colonne latérale ou entre les blocs de contenu.",
+  "formats.push.desc": "Une notification compacte s’affiche au-dessus de la page ouverte sans demander d’abonnement. Elle convient aux promotions, aux offres courtes et aux messages qui doivent attirer rapidement l’attention.",
 
   // Steps
   "steps.title1": "Comment ",

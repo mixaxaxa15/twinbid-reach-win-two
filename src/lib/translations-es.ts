@@ -2,6 +2,7 @@
 export const ES_TRANSLATIONS: Record<string, string> = {
   // Header / Nav
   "nav.benefits": "Ventajas",
+  "nav.howWorks": "Cómo funciona",
   "nav.formats": "Formatos",
   "nav.howToStart": "Cómo empezar",
   "nav.login": "Iniciar sesión",
@@ -16,6 +17,7 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "hero.subtitleEnd": "a través de un único panel de compra, analítica y optimización.",
   "hero.cta": "Registrarse",
   "hero.learnMore": "Saber más",
+  "hero.telegram": "Nuestro canal de Telegram",
   "hero.statSites": "Sitios",
   "hero.statNetworks": "Redes publicitarias",
   "hero.statSupport": "Soporte",
@@ -59,10 +61,10 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   "formats.title": "Formatos ",
   "formats.title2": "publicitarios",
   "formats.subtitle": "Elige el formato óptimo para tu campaña",
-  "formats.popunder.desc": "Anuncio a pantalla completa que se abre en una pestaña nueva. Máxima visibilidad y alto CTR.",
-  "formats.native.desc": "Publicidad integrada de forma orgánica al estilo del sitio. Alta confianza del usuario.",
-  "formats.banner.desc": "Banners clásicos de varios tamaños. Reconocimiento de marca y amplio alcance.",
-  "formats.push.desc": "Notificaciones push directamente en la página sin suscripción. Atención instantánea.",
+  "formats.popunder.desc": "La página publicitaria se abre en una pestaña nueva después de una acción del usuario. El formato ofrece el máximo espacio para la oferta y funciona bien cuando se busca alcance y visitas rápidas a la landing.",
+  "formats.native.desc": "El anuncio se integra dentro de un artículo o feed y adopta la estructura del contenido: imagen, titular y descripción breve. Se percibe como parte de la página, no como un banner convencional.",
+  "formats.banner.desc": "Un formato gráfico clásico para reforzar la presencia de marca. Los tamaños más habituales permiten colocar la creatividad en la cabecera, la barra lateral o entre bloques de contenido.",
+  "formats.push.desc": "Una notificación compacta aparece sobre la página abierta sin exigir suscripción. Es adecuada para promociones, ofertas breves y mensajes que necesitan captar la atención de inmediato.",
 
   // Steps
   "steps.title1": "¿Cómo ",
