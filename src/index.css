@@ -684,9 +684,10 @@
   .landing-format-counter { animation-play-state: paused; }
 }
 
-+/* Landing 2026 — Signal Editorial (v1) with the Obsidian opening (v2).
+/* Landing 2026 — Signal Editorial (v1) with the Obsidian opening (v2).
    Everything is scoped to the public landing so product UI remains intact. */
 .landing-shell {
+  --font-sans: "Manrope", "Inter", system-ui, sans-serif;
   --editorial-paper: 165 10% 89%;
   --editorial-ink: 200 15% 6%;
   --editorial-line: 170 8% 72%;
@@ -1840,6 +1841,29 @@
   .operations-chart-bars i > span { transform: scaleY(1); }
 }
 
+/* The auth dialog is portalled outside .landing-shell, so its typography is
+   scoped explicitly without affecting the advertiser dashboard. */
+.landing-auth-dialog {
+  font-family: "Manrope", "Inter", system-ui, sans-serif;
+}
+
+.landing-auth-dialog > button:last-child {
+  top: 18px;
+  right: 18px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid hsl(var(--foreground) / .1);
+  border-radius: 999px;
+  background: hsl(var(--foreground) / .035);
+  color: hsl(var(--foreground) / .62);
+}
+
+.landing-auth-dialog > button:last-child:hover {
+  border-color: hsl(var(--primary) / .45);
+  color: hsl(var(--foreground));
+}
 
 /* Hide number input spinners */
 input[type="number"]::-webkit-inner-spin-button,
