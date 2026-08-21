@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --font-sans: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
+  --font-sans: "Manrope", "Inter", system-ui, sans-serif;
 }
 
 /* TwinBid — Midnight Blueprint applied to mint/coral palette.
@@ -138,7 +138,7 @@
 
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-background text-foreground antialiased; font-feature-settings: "ss01", "cv11"; }
+  body { @apply bg-background text-foreground antialiased; font-family: var(--font-sans); font-feature-settings: "ss01", "cv11"; }
   html { scroll-behavior: smooth; }
   h1, h2, h3, h4 { font-family: var(--font-sans); letter-spacing: -0.015em; font-weight: 300; }
 
@@ -178,11 +178,11 @@
 .dashboard-light .text-orange-400 { color: hsl(25 86% 38%); }
 
 @layer utilities {
-  .font-display { font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif; letter-spacing: -0.02em; }
+  .font-display { font-family: var(--font-sans); letter-spacing: -0.02em; }
   .font-mono-eyebrow { font-family: "JetBrains Mono", ui-monospace, monospace; font-feature-settings: "tnum"; }
 
   .text-monument {
-    font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-weight: 300;
     font-size: clamp(36px, 8.5vw, 120px);
     line-height: 0.95;
@@ -194,7 +194,7 @@
   }
 
   .text-hero-monument {
-    font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-weight: 300;
     font-size: clamp(36px, 7.5vw, 104px);
     line-height: 1.08;
@@ -206,7 +206,7 @@
     padding-bottom: 0.08em;
   }
   .text-display-xl {
-    font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-weight: 300;
     font-size: clamp(28px, 5.5vw, 90px);
     line-height: 1.05;
@@ -216,7 +216,7 @@
     hyphens: none;
   }
   .text-display {
-    font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-weight: 300;
     font-size: clamp(30px, 5vw, 72px);
     line-height: 1.1;
@@ -466,7 +466,7 @@
 }
 
 .landing-hero-title {
-  font-family: "Space Grotesk", "Manrope", "Inter", system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: clamp(52px, 7.1vw, 112px);
   font-weight: 300;
   line-height: 0.95;
@@ -687,7 +687,6 @@
 /* Landing 2026 — Signal Editorial (v1) with the Obsidian opening (v2).
    Everything is scoped to the public landing so product UI remains intact. */
 .landing-shell {
-  --font-sans: "Manrope", "Inter", system-ui, sans-serif;
   --editorial-paper: 165 10% 89%;
   --editorial-ink: 200 15% 6%;
   --editorial-line: 170 8% 72%;
