@@ -40,8 +40,8 @@ export const targetingConfigs = targetingConfigKeys.map(key => ({ key, labelKey:
 interface TargetingSectionProps {
   lists: Record<string, TargetingState>;
   onUpdate: (key: string, updates: Partial<TargetingState>) => void;
-  allowVpnTraffic?: boolean;
-  onAllowVpnTrafficChange?: (allowed: boolean) => void;
+  blockVpnTraffic?: boolean;
+  onBlockVpnTrafficChange?: (blocked: boolean) => void;
 }
 
 const AutocompleteInput = memo(function AutocompleteInput({
@@ -500,8 +500,8 @@ const ListItem = memo(function ListItem({ config, list: rawList, onUpdate }: {
 export function TargetingSection({
   lists,
   onUpdate,
-  allowVpnTraffic = true,
-  onAllowVpnTrafficChange,
+  blockVpnTraffic = false,
+  onBlockVpnTrafficChange,
 }: TargetingSectionProps) {
   const { t } = useLanguage();
 
@@ -534,17 +534,17 @@ export function TargetingSection({
       <div className="flex min-w-0 items-center justify-between gap-4 rounded-lg border border-border/50 bg-background/50 p-3 sm:p-4">
         <div className="min-w-0 space-y-1">
           <Label htmlFor="vpn-traffic-toggle" className="font-medium">
-            {t("targeting.vpnTraffic")}
+            {t("targeting.blockVpnTraffic")}
           </Label>
           <p className="text-xs text-muted-foreground">
-            {t(allowVpnTraffic ? "targeting.vpnTrafficEnabled" : "targeting.vpnTrafficDisabled")}
+            {t(blockVpnTraffic ? "targeting.blockVpnTrafficEnabled" : "targeting.blockVpnTrafficDisabled")}
           </p>
         </div>
         <Switch
           id="vpn-traffic-toggle"
-          checked={allowVpnTraffic}
-          onCheckedChange={onAllowVpnTrafficChange}
-          aria-label={t("targeting.vpnTraffic")}
+          checked={blockVpnTraffic}
+          onCheckedChange={onBlockVpnTrafficChange}
+          aria-label={t("targeting.blockVpnTraffic")}
           className="shrink-0"
         />
       </div>
