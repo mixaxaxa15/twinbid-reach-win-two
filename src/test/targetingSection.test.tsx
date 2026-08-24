@@ -26,6 +26,20 @@ function Harness() {
   );
 }
 
+function VpnHarness() {
+  const [allowed, setAllowed] = useState(true);
+  return (
+    <LanguageProvider>
+      <TargetingSection
+        lists={{}}
+        onUpdate={() => undefined}
+        allowVpnTraffic={allowed}
+        onAllowVpnTrafficChange={setAllowed}
+      />
+    </LanguageProvider>
+  );
+}
+
 describe("targeting list controls", () => {
   beforeEach(() => {
     window.localStorage.setItem("twinbid_lang", "en");
@@ -58,5 +72,17 @@ describe("targeting list controls", () => {
     fireEvent.keyDown(input, { key: "Enter" });
 
     expect(within(ipCard as HTMLElement).getByText("10.20.0.0/16")).toBeInTheDocument();
+  });
+
+  it("enables VPN traffic by default and lets the advertiser disable it", () => {
+    render(<VpnHarness />);
+
+    const toggle = screen.getByRole("switch", { name: "VPN traffic" });
+    expect(toggle).toBeChecked();
+    expect(screen.getByText("Allowed for this campaign")).toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    expect(toggle).not.toBeChecked();
+    expect(screen.getByText("Excluded from this campaign")).toBeInTheDocument();
   });
 });

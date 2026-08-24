@@ -76,6 +76,7 @@ const campaignDraft: Omit<Campaign, "id"> = {
   endDate: "2026-07-27",
   creatives: [{ id: "local-1", name: "Landing", url: "http://example.com" }],
   targeting: {},
+  allowVpnTraffic: true,
   evenSpend: false,
   trafficType: "mainstream",
   verticals: [],
@@ -163,6 +164,24 @@ describe("CampaignProvider mutation requests", () => {
     );
   });
 
+  it("allows VPN traffic by default and sends an explicit opt-out", async () => {
+    const { result } = renderHook(() => useCampaigns(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let id: string | undefined;
+    await act(async () => {
+      id = await result.current.addCampaign({ ...campaignDraft, creatives: [] });
+    });
+    expect(apiMock.createCampaign).toHaveBeenCalledWith(
+      expect.objectContaining({ vpn: true }),
+    );
+
+    await act(async () => {
+      await result.current.updateCampaign(id!, { allowVpnTraffic: false });
+    });
+    expect(apiMock.patchCampaign).toHaveBeenCalledWith(id, { vpn: false });
+  });
+
   it("keeps the technical banner size on status updates", async () => {
     apiMock.listCampaigns.mockResolvedValue({
       items: [{ ...apiCampaign, format_type: "banner", w: null, h: null }],
@@ -214,6 +233,7 @@ describe("CampaignProvider mutation requests", () => {
     expect(apiMock.listCampaigns).toHaveBeenCalledTimes(1);
     expect(apiMock.readCreatives).not.toHaveBeenCalled();
     expect(result.current.campaigns.every(campaign => campaign.creatives.length === 0)).toBe(true);
+    expect(result.current.campaigns.every(campaign => campaign.allowVpnTraffic)).toBe(true);
   });
 
   it("does not show campaigns returned with deleted status", async () => {

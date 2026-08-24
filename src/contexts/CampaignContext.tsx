@@ -140,6 +140,8 @@ export interface Campaign {
   /** UI-only marker: creatives were explicitly loaded for this campaign. */
   creativesLoaded?: boolean;
   targeting: Record<string, TargetingState>;
+  /** VPN traffic is allowed unless the advertiser explicitly disables it. */
+  allowVpnTraffic: boolean;
   evenSpend: boolean;
   bannerSize?: string;
   brandName?: string;
@@ -280,6 +282,9 @@ function mapApiCampaignToUi(c: ApiCampaign, creatives: Creative[], creativesLoad
     creatives,
     creativesLoaded,
     targeting: readApiTargeting(c),
+    // Older campaigns may not have this field yet. Preserve the product
+    // default (VPN traffic enabled) when the backend omits it.
+    allowVpnTraffic: c.vpn !== false,
     evenSpend: !!c.evenness_by_slot_mode,
     bannerSize: c.w && c.h ? `${c.w}x${c.h}` : undefined,
     brandName: c.brand_name || undefined,
@@ -373,6 +378,7 @@ function buildApiCampaignBody(c: Omit<Campaign, "id">): Omit<ApiCampaign, "campa
     start_ts: startTimestamp(c.startDate),
     end_ts: endTimestamp(c.endDate),
     active_intervals: scheduleToActiveIntervals(c.targeting.schedule),
+    vpn: c.allowVpnTraffic !== false,
     quality_type: uiQualityToApi(c.trafficQuality),
     ...buildApiTargeting(c.targeting),
   };
@@ -425,6 +431,7 @@ function buildApiCampaignPatch(updates: Partial<Campaign>): Partial<ApiCampaign>
     Object.assign(p, buildApiTargeting(updates.targeting));
     p.active_intervals = scheduleToActiveIntervals(updates.targeting.schedule);
   }
+  if (updates.allowVpnTraffic !== undefined) p.vpn = updates.allowVpnTraffic;
   return p;
 }
 

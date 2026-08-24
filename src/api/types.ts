@@ -60,6 +60,8 @@ export interface ApiCampaign {
   browser: TargetingMap;
   site_id: TargetingMap;
   ip: TargetingMap;
+  /** Whether traffic identified as VPN traffic is allowed for the campaign. */
+  vpn?: boolean;
   quality_type: "usual" | "high" | "ultra";
   /** Fixed reward per conversion (USD). Used in statistics when the postback does not deliver a payout value. */
   payout?: number | null;
