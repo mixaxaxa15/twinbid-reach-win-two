@@ -3,7 +3,7 @@ import type {
   ApiUser, ApiCampaign, ApiCreative, ApiCreativeImage, ApiUserTransaction, ApiPromocode,
   ApiNotification, StatsQueryRequest, StatsQueryResponse,
   CalculatorResponse, RecommendBidResponse,
-  AuthResponse, AuthTokens, ApiEnvelope,
+  AuthResponse, AuthTokens, ApiEnvelope, PartnerStatsResponse,
 } from "./types";
 import type { RawApiProvider } from "./mockProvider";
 import { API_BASE_URL } from "./config";
@@ -70,6 +70,10 @@ export const httpProvider: RawApiProvider = {
   // profile
   getProfile:   ()     => http<ApiEnvelope<ApiUser>>("/api/profile"),
   patchProfile: (p)    => http<ApiEnvelope<ApiUser>>("/api/profile", { method: "PATCH", body: p }),
+
+  // TwinBid Partners — the backend resolves the authenticated partner and
+  // returns both their public code and aggregate financial statistics.
+  getPartnerStats: () => http<ApiEnvelope<PartnerStatsResponse>>("/api/partners/stats"),
 
   // campaigns
   listCampaigns:   ()      => http<ApiEnvelope<{ items: ApiCampaign[]; total: number }>>("/api/campaigns"),

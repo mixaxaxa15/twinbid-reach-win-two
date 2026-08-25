@@ -26,7 +26,11 @@ Base URL фронта берётся из `VITE_API_BASE_URL`. Все ручки
 ## 1. Auth (Postgres `users`)
 
 ### POST `/api/auth/signup`
-Body: `{ email, password, full_name?, manager_telegram }` (manager_telegram приходит с фронта как константа, по умолчанию `"GregTwinbid"`).
+Body: `{ email, password, full_name?, manager_telegram, utm_source?, partner? }` (manager_telegram приходит с фронта как константа, по умолчанию `"GregTwinbid"`).
+
+`partner` — код из URL-параметра `?partner=CODE`. Если он передан, backend
+записывает значение в колонку `users.partner`. Параметр не смешивается с
+`utm_source` и не переименовывается в `ref`.
 Resp 201: `{ access_token, refresh_token, user: User }`
 
 ### POST `/api/auth/login`
@@ -67,6 +71,27 @@ Body: any subset of `{ name, telegram, timezone, email_notifications, campaign_s
 Resp: `User`.
 
 > Поле `manager_telegram` не редактируется через фронт — только админом со стороны бэка.
+
+### GET `/api/partners/stats`
+
+Auth required. Backend определяет партнёра по JWT и возвращает его публичный
+affiliate-код вместе с общей статистикой по всем закреплённым рекламодателям.
+
+```json
+{
+  "partner": "TBK7MP3XQA9D2F4",
+  "advertisers": 8,
+  "turnover": 61400.00,
+  "income": 4820.35,
+  "withdrawn": 1200.00
+}
+```
+
+- `partner` — код для ссылки `https://twinbid.io/?partner=CODE`;
+- `advertisers` — количество закреплённых рекламодателей;
+- `turnover` — общая сумма, потраченная этими рекламодателями;
+- `income` — начисленный партнёрский доход;
+- `withdrawn` — уже выведенные партнёром средства.
 
 ---
 
@@ -110,8 +135,10 @@ Resp: `User`.
 > `h: 999, w: 999`, необходимый для Telegram-модерации. Фактические `h/w`
 > передаются отдельно в каждом креативе, поэтому в одной banner-кампании
 > могут одновременно работать креативы разных размеров.
-> `block_vpn=true` — исключать трафик, классифицированный как VPN/Proxy/Tor/Residential Proxy/Hosting-Datacenter.
-> `block_vpn=false` — VPN-фильтрация отключена. Для новых кампаний фронт по умолчанию отправляет `false`.
+> `block_vpn=true` — исключать VPN-classified traffic, включая VPN, Proxy, Tor,
+> Residential Proxy и Hosting/Datacenter. `block_vpn=false` — VPN-фильтрация
+> отключена. Для новых кампаний фронт по умолчанию отправляет `false`. Если у
+> старой кампании поле `block_vpn` отсутствует, фронт также трактует его как `false`.
 
 ### GET `/api/campaigns?status=&limit=&offset=` → `{ items: Campaign[], total }`
 ### GET `/api/campaigns/:id` → `Campaign`

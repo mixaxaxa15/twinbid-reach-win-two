@@ -31,6 +31,19 @@ export interface ApiUser {
   low_balance_notifications: boolean;
   balance_treshold: number;
   utm_source?: string | null;
+  /** Partner code used during registration, stored in Postgres users.partner. */
+  partner?: string | null;
+}
+
+/** Aggregated TwinBid Partners dashboard data for the authenticated user. */
+export interface PartnerStatsResponse {
+  /** Public affiliate code used in `?partner=...` links. */
+  partner: string;
+  advertisers: number;
+  /** Total amount spent by all advertisers assigned to this partner. */
+  turnover: number;
+  income: number;
+  withdrawn: number;
 }
 
 export interface ApiCampaign {
@@ -60,7 +73,7 @@ export interface ApiCampaign {
   browser: TargetingMap;
   site_id: TargetingMap;
   ip: TargetingMap;
-  /** `true` means VPN-classified traffic is blocked for the campaign. */
+  /** When true, VPN-classified traffic is blocked for the campaign. */
   block_vpn?: boolean;
   quality_type: "usual" | "high" | "ultra";
   /** Fixed reward per conversion (USD). Used in statistics when the postback does not deliver a payout value. */

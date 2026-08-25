@@ -3,7 +3,7 @@ import type {
   ApiCreateTransactionRequest, ApiPatchTransactionRequest,
   ApiNotification, StatsQueryRequest, StatsQueryResponse, StatsSummary,
   CalculatorRequest, CalculatorResponse, RecommendBidRequest, RecommendBidResponse,
-  AuthResponse, AuthTokens, ApiEnvelope,
+  AuthResponse, AuthTokens, ApiEnvelope, PartnerStatsResponse,
 } from "./types";
 
 // -- Persistence (so the mock survives page reloads) -----------------------
@@ -98,7 +98,7 @@ const promoFixtures: Record<string, { id: string; bonus_percent: number }> = {
  */
 export const mockProvider = {
   // -- auth ---------------------------------------------------------------
-  async signup(body: { email: string; password: string; full_name?: string; telegram: string; manager_telegram: string; utm_source?: string }): Promise<ApiEnvelope<AuthResponse>> {
+  async signup(body: { email: string; password: string; full_name?: string; telegram: string; manager_telegram: string; utm_source?: string; partner?: string }): Promise<ApiEnvelope<AuthResponse>> {
     state.user = {
       ...defaultUser,
       login: body.email,
@@ -107,6 +107,7 @@ export const mockProvider = {
       telegram: body.telegram,
       manager_telegram: body.manager_telegram,
       utm_source: body.utm_source ?? null,
+      partner: body.partner ?? null,
     };
     saveState();
     saveSession({ user_id: "mock-user", email: body.email, full_name: body.full_name || "" });
@@ -141,6 +142,16 @@ export const mockProvider = {
     state.user = { ...state.user, ...patch };
     saveState();
     return ok(state.user);
+  },
+
+  async getPartnerStats(): Promise<ApiEnvelope<PartnerStatsResponse>> {
+    return ok({
+      partner: "TBDEMO2026PARTNER",
+      advertisers: 0,
+      turnover: 0,
+      income: 0,
+      withdrawn: 0,
+    });
   },
 
   // -- campaigns ----------------------------------------------------------
