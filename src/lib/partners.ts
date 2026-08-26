@@ -1,26 +1,34 @@
 const PARTNER_STORAGE_KEY = "twinbid_partner";
 const PARTNER_CODE_PATTERN = /^[A-Za-z0-9_-]{6,64}$/;
+const PARTNER_ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const PARTNER_ID_RANDOM_LENGTH = 10;
 
 /**
- * Build a stable, non-sequential public referral code from the authenticated
- * user's identity. It deliberately exposes neither a database id nor email.
+ * Generate a random public partner id once during signup.
+ * It deliberately uses no user or database data as its source.
  */
-export function createPartnerCode(identity: string): string {
-  const source = identity.trim().toLowerCase() || "twinbid-partner";
-  let first = 0x811c9dc5;
-  let second = 0x9e3779b9;
-
-  for (let index = 0; index < source.length; index += 1) {
-    const code = source.charCodeAt(index);
-    first = Math.imul(first ^ code, 0x01000193) >>> 0;
-    second = Math.imul(second ^ (code + index), 0x85ebca6b) >>> 0;
+export function generatePartnerId(): string {
+  const cryptoApi = globalThis.crypto;
+  if (!cryptoApi?.getRandomValues) {
+    throw new Error("Secure random number generation is unavailable");
   }
 
-  return `TB${first.toString(36).padStart(7, "0")}${second.toString(36).padStart(7, "0")}`.toUpperCase();
-}
+  const characters: string[] = [];
+  const unbiasedLimit = Math.floor(256 / PARTNER_ID_ALPHABET.length) * PARTNER_ID_ALPHABET.length;
 
-export function createPartnerLink(identity: string, origin?: string): string {
-  return createPartnerLinkFromCode(createPartnerCode(identity), origin);
+  while (characters.length < PARTNER_ID_RANDOM_LENGTH) {
+    const randomBytes = new Uint8Array(PARTNER_ID_RANDOM_LENGTH - characters.length);
+    cryptoApi.getRandomValues(randomBytes);
+    for (const value of randomBytes) {
+      if (value >= unbiasedLimit) continue;
+      characters.push(PARTNER_ID_ALPHABET[value % PARTNER_ID_ALPHABET.length]);
+      if (characters.length === PARTNER_ID_RANDOM_LENGTH) break;
+    }
+  }
+
+  const randomPart = characters.join("");
+
+  return `TB${randomPart}`;
 }
 
 export function createPartnerLinkFromCode(code: string, origin?: string): string {

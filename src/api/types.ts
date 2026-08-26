@@ -4,6 +4,7 @@
 
 export type CampaignStatus = "active" | "paused" | "draft" | "completed" | "moderation" | "no_budget" | "waiting" | "deleted";
 export type PricingModel = "cpm" | "cpc";
+export type CampaignTypeModel = 1 | 2;
 export type TrafficType = "mainstream" | "adult" | "mixed";
 export type FormatType = "banner" | "popunder" | "native" | "push";
 export type TopupStatus = "draft" | "pending" | "approved" | "rejected" | "cancelled";
@@ -31,7 +32,22 @@ export interface ApiUser {
   low_balance_notifications: boolean;
   balance_treshold: number;
   utm_source?: string | null;
-  /** Partner code used during registration, stored in Postgres users.partner. */
+  /** User's own permanent public partner ID, created during signup. */
+  partner_id: string;
+  /** Partner ID of the user who referred this user. */
+  partner?: string | null;
+}
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  full_name?: string;
+  telegram: string;
+  manager_telegram: string;
+  utm_source?: string;
+  /** User's own permanent public partner ID. */
+  partner_id: string;
+  /** Partner ID captured from `?partner=...`, when present. */
   partner?: string | null;
 }
 
@@ -42,7 +58,6 @@ export interface PartnerStatsResponse {
   advertisers: number;
   /** Total amount spent by all advertisers assigned to this partner. */
   turnover: number;
-  income: number;
   withdrawn: number;
 }
 
@@ -58,6 +73,8 @@ export interface ApiCampaign {
   traffic_type: TrafficType;
   vertical: Record<string, 0 | 1>;
   pricing_model: PricingModel;
+  /** 1 = standard CPM/CPC bidding, 2 = TwinBid CPM optimization. */
+  type_model?: CampaignTypeModel;
   base_price: number;
   evenness_by_slot_mode: boolean;
   goal_total_dollars: number;

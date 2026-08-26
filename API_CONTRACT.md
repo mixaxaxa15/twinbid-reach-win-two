@@ -26,11 +26,16 @@ Base URL фронта берётся из `VITE_API_BASE_URL`. Все ручки
 ## 1. Auth (Postgres `users`)
 
 ### POST `/api/auth/signup`
-Body: `{ email, password, full_name?, manager_telegram, utm_source?, partner? }` (manager_telegram приходит с фронта как константа, по умолчанию `"GregTwinbid"`).
+Body: `{ email, password, full_name?, manager_telegram, utm_source?, partner_id, partner? }` (manager_telegram приходит с фронта как константа, по умолчанию `"GregTwinbid"`).
+
+`partner_id` — собственный постоянный партнёрский ID нового пользователя. Frontend
+генерирует его один раз при signup криптографически безопасным случайным способом
+в формате `TB` + 10 символов `A-Z0-9` и отправляет в этом запросе. Email, `user.id`
+и другие пользовательские данные в генерации не используются.
 
 `partner` — код из URL-параметра `?partner=CODE`. Если он передан, backend
 записывает значение в колонку `users.partner`. Параметр не смешивается с
-`utm_source` и не переименовывается в `ref`.
+`utm_source` или `partner_id` и не переименовывается в `ref`.
 Resp 201: `{ access_token, refresh_token, user: User }`
 
 ### POST `/api/auth/login`
@@ -82,15 +87,15 @@ affiliate-код вместе с общей статистикой по всем
   "partner": "TBK7MP3XQA9D2F4",
   "advertisers": 8,
   "turnover": 61400.00,
-  "income": 4820.35,
   "withdrawn": 1200.00
 }
 ```
 
-- `partner` — код для ссылки `https://twinbid.io/?partner=CODE`;
+- `partner` — поле существующего stats-контракта; партнёрская ссылка во frontend
+  строится только из `partner_id`, полученного через профиль пользователя;
 - `advertisers` — количество закреплённых рекламодателей;
 - `turnover` — общая сумма, потраченная этими рекламодателями;
-- `income` — начисленный партнёрский доход;
+- партнёрский доход frontend рассчитывает строго как `turnover * 0.1`;
 - `withdrawn` — уже выведенные партнёром средства.
 
 ---
@@ -110,6 +115,7 @@ affiliate-код вместе с общей статистикой по всем
   "traffic_type": "mainstream | adult | mixed",
   "vertical": ["Dating", "Nutra"],
   "pricing_model": "cpm | cpc",
+  "type_model": 1,
   "base_price_cpm": 0.05,
   "base_price_cpc": 0.0001,
   "evenness_by_slot_mode": false,
@@ -139,6 +145,16 @@ affiliate-код вместе с общей статистикой по всем
 > Residential Proxy и Hosting/Datacenter. `block_vpn=false` — VPN-фильтрация
 > отключена. Для новых кампаний фронт по умолчанию отправляет `false`. Если у
 > старой кампании поле `block_vpn` отсутствует, фронт также трактует его как `false`.
+
+`type_model` определяет режим управления CPM-ставкой без изменения остальных
+полей кампании:
+
+- `1` — обычная модель CPM (и стандартное значение для CPC);
+- `2` — TwinBid CPM: `base_price` является максимальной CPM-ставкой, а система
+  оптимизирует фактическую цену выкупа трафика в пределах этого максимума.
+
+Frontend отправляет `pricing_model: "cpm"` для обоих CPM-режимов. Различие между
+обычным CPM и TwinBid CPM передаётся только через `type_model`.
 
 ### GET `/api/campaigns?status=&limit=&offset=` → `{ items: Campaign[], total }`
 ### GET `/api/campaigns/:id` → `Campaign`

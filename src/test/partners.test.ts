@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   capturePartnerCodeFromUrl,
-  createPartnerCode,
-  createPartnerLink,
+  createPartnerLinkFromCode,
+  generatePartnerId,
   getStoredPartnerCode,
   normalizePartnerCode,
 } from "@/lib/partners";
@@ -14,18 +14,19 @@ describe("TwinBid Partners attribution", () => {
     window.history.replaceState({}, "", "/");
   });
 
-  it("creates a stable non-sequential public code without exposing the identity", () => {
-    const code = createPartnerCode("advertiser@example.com");
+  it("creates short random partner ids with the TB prefix", () => {
+    const first = generatePartnerId();
+    const second = generatePartnerId();
 
-    expect(code).toBe(createPartnerCode("advertiser@example.com"));
-    expect(code).toMatch(/^TB[A-Z0-9]{14}$/);
-    expect(code).not.toContain("ADVERTISER");
-    expect(code).not.toContain("EXAMPLE");
+    expect(first).toMatch(/^TB[A-Z0-9]{10}$/);
+    expect(second).toMatch(/^TB[A-Z0-9]{10}$/);
+    expect(first).not.toBe(second);
   });
 
   it("builds a partner URL for the supplied origin", () => {
-    expect(createPartnerLink("advertiser@example.com", "https://twinbid.io/"))
-      .toBe(`https://twinbid.io/?partner=${createPartnerCode("advertiser@example.com")}`);
+    const partnerId = "TBABC123XYZ";
+    expect(createPartnerLinkFromCode(partnerId, "https://twinbid.io/"))
+      .toBe(`https://twinbid.io/?partner=${partnerId}`);
   });
 
   it("captures partner independently from the marketing source", () => {

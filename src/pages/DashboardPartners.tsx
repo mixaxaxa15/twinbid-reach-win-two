@@ -1,32 +1,29 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowDown, Check, CircleDollarSign, Copy, Link2, Network, TrendingUp, Users, WalletCards } from "lucide-react";
 import { toast } from "sonner";
 import { api, type PartnerStatsResponse } from "@/api";
-import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { createPartnerCode, createPartnerLinkFromCode } from "@/lib/partners";
+import { createPartnerLinkFromCode } from "@/lib/partners";
 
 const EMPTY_STATS: Omit<PartnerStatsResponse, "partner"> = {
   advertisers: 0,
   turnover: 0,
-  income: 0,
   withdrawn: 0,
 };
 
 const formatMoney = (value: number) => `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function DashboardPartners() {
-  const { user } = useAuth();
+  const { profile } = useProfile();
   const { t } = useLanguage();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [partnerStats, setPartnerStats] = useState<PartnerStatsResponse | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const identity = user?.email || user?.id || "";
-  const fallbackPartnerCode = useMemo(() => createPartnerCode(identity), [identity]);
 
   useEffect(() => {
     let active = true;
@@ -38,16 +35,20 @@ export default function DashboardPartners() {
     return () => { active = false; };
   }, []);
 
-  const stats = partnerStats ?? { partner: fallbackPartnerCode, ...EMPTY_STATS };
-  const partnerLink = createPartnerLinkFromCode(stats.partner);
+  const stats = partnerStats ?? { partner: "", ...EMPTY_STATS };
+  const income = stats.turnover * 0.1;
+  const partnerLink = profile?.partnerId
+    ? createPartnerLinkFromCode(profile.partnerId)
+    : "";
   const metrics = [
     { key: "advertisers", label: t("partners.stats.total"), value: String(stats.advertisers), icon: Users },
     { key: "turnover", label: t("partners.stats.turnover"), value: formatMoney(stats.turnover), icon: TrendingUp },
-    { key: "income", label: t("partners.stats.income"), value: formatMoney(stats.income), icon: CircleDollarSign, featured: true },
+    { key: "income", label: t("partners.stats.income"), value: formatMoney(income), icon: CircleDollarSign, featured: true },
     { key: "withdrawn", label: t("partners.stats.withdrawn"), value: formatMoney(stats.withdrawn), icon: WalletCards },
   ];
 
   const copyLink = async () => {
+    if (!partnerLink) return;
     try {
       await navigator.clipboard.writeText(partnerLink);
       toast.success(t("partners.link.copied"));
@@ -95,7 +96,7 @@ export default function DashboardPartners() {
         <CardContent>
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row">
             <div className="min-w-0 flex-1 rounded-lg border border-border bg-background px-4 py-3 font-mono text-sm text-foreground"><span className="block truncate">{partnerLink}</span></div>
-            <Button type="button" onClick={copyLink} className="shrink-0 gap-2"><Copy className="h-4 w-4" aria-hidden="true" />{t("partners.link.copy")}</Button>
+            <Button type="button" onClick={copyLink} disabled={!partnerLink} className="shrink-0 gap-2"><Copy className="h-4 w-4" aria-hidden="true" />{t("partners.link.copy")}</Button>
           </div>
           <p className="mt-3 max-w-4xl text-sm leading-relaxed text-muted-foreground">{t("partners.link.description")}</p>
         </CardContent>
