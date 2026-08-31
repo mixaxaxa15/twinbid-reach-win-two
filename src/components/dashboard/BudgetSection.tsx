@@ -30,11 +30,18 @@ interface PaymentModelOption {
   pricingModel: PricingModel;
   typeModel: CampaignTypeModel;
   label: string;
+  disabled?: boolean;
 }
 
 function getAvailableModels(formatKey: string): PaymentModelOption[] {
   const cpm: PaymentModelOption = { key: "cpm", pricingModel: "cpm", typeModel: 1, label: "CPM" };
-  const twinBidCpm: PaymentModelOption = { key: "twinbid-cpm", pricingModel: "cpm", typeModel: 2, label: "TwinBid CPM" };
+  const twinBidCpm: PaymentModelOption = {
+    key: "twinbid-cpm",
+    pricingModel: "cpm",
+    typeModel: 2,
+    label: "TwinBid CPM",
+    disabled: true,
+  };
   const cpc: PaymentModelOption = { key: "cpc", pricingModel: "cpc", typeModel: 1, label: "CPC" };
   if (formatKey === "popunder") return [cpm, twinBidCpm, cpc];
   if (formatKey === "push") return [cpc];
@@ -189,12 +196,16 @@ export function BudgetSection({
           <div className="flex flex-wrap gap-2">
             {availableModels.map((model) => (
               <Button key={model.key} type="button" variant="outline" size="sm"
+                disabled={model.disabled}
                 onClick={() => {
+                  if (model.disabled) return;
                   setPricingModel(model.pricingModel);
                   setTypeModel(model.typeModel);
                 }}
                 className={cn(
-                  selectedModelKey === model.key
+                  model.disabled
+                    ? "cursor-not-allowed border-border bg-muted text-muted-foreground opacity-60"
+                    : selectedModelKey === model.key
                     ? "bg-primary text-primary-foreground border-primary"
                     : "border-border"
                 )}>
